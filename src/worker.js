@@ -1,6 +1,6 @@
 const FEEDS = [
-  "https://blog.ethereum.org/feed.xml",
-  "https://www.base.org/blog/rss.xml"
+  "https://blog.ethereum.org/en/feed.xml",
+  "https://blog.base.dev/feed"
 ];
 const PRODUCT = { id: "daily_report", amountUsdCents: 100, title: "Crypto Opportunity Scout — Detailed Report" };
 
