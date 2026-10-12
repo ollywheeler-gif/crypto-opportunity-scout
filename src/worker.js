@@ -141,7 +141,20 @@ async function collectReport() {
         const date = cleanXml(getTag(block, "pubDate") || getTag(block, "updated") || getTag(block, "published"));
         const summary = cleanXml(getTag(block, "description") || getTag(block, "summary") || getTag(block, "content"));
         if (!title || !/^https:\/\/[^/]/i.test(href)) continue;
-        all.push({ title: title.slice(0, 200), url: href, source, date, summary: summary.slice(0, 280), category: classify(title+" "+summary), reward: "Unverified", cost: "Not established", verification: "Research lead only. Verify campaign, eligibility, fees and withdrawal conditions at the official source." });
+        const text = title + " " + summary;
+        const lower = text.toLowerCase();
+        let category = classify(text);
+        let relevance = 20;
+        if (/airdrop|claim|reward|incentive|quest|points campaign|retroactive|testnet|mainnet incentive/.test(lower)) relevance += 45;
+        if (/eligibility|snapshot|deadline|registration|official campaign/.test(lower)) relevance += 20;
+        if (/security|exploit|phishing|governance|upgrade|research paper/.test(lower)) relevance -= 10;
+        if (source.includes("ethereum.org") || source.includes("base.dev")) relevance += 5;
+        const item = {
+          title: title.slice(0, 200), url: href, source, date, summary: summary.slice(0, 280),
+          category, relevance, reward: "Unverified", cost: "Not established",
+          verification: "Research lead only. Verify campaign, eligibility, fees and withdrawal conditions at the official source."
+        };
+        all.push(item);
         accepted++;
       }
       sources.push({ source, ok: true, status: response.status, entriesFound: blocks.length, itemsAccepted: accepted, issue: blocks.length ? (accepted ? null : "Feed entries were found, but none had a usable title and HTTPS link.") : "No RSS or Atom entries matched the expected format." });
@@ -149,11 +162,12 @@ async function collectReport() {
       sources.push({ source, ok: false, status: null, entriesFound: 0, itemsAccepted: 0, issue: error?.name === "TimeoutError" ? "Feed request timed out." : "Feed could not be fetched or parsed." });
     }
   }
-  const items = [...new Map(all.map(x => [x.url, x])).values()].sort((a,b)=>(Date.parse(b.date)||0)-(Date.parse(a.date)||0)).slice(0, 15);
+  const unique = [...new Map(all.map(x => [x.url, x])).values()];
+  const items = unique.sort((a,b) => b.relevance - a.relevance || (Date.parse(b.date)||0)-(Date.parse(a.date)||0)).slice(0, 15);
   return {
     date: new Date().toISOString().slice(0,10), generatedAt: new Date().toISOString(), items, sources,
     disclaimer: items.length
-      ? "Automated public-source leads, not verified airdrops or guaranteed income. Never deposit funds, reveal a seed phrase, or sign a transaction solely because of a listing."
+      ? "Ranked public-source research leads, not verified airdrops or guaranteed income. Scores indicate keyword relevance only, not likelihood of reward. Never deposit funds, reveal a seed phrase, or sign a transaction solely because of a listing."
       : "No usable leads were collected. Source diagnostics are available to help identify whether a feed was unavailable or its format changed."
   };
 }
