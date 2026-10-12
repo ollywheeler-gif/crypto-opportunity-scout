@@ -1,6 +1,10 @@
 const FEEDS = [
   "https://blog.ethereum.org/en/feed.xml",
-  "https://blog.base.dev/feed"
+  "https://blog.base.dev/feed",
+  "https://offchain.medium.com/feed",
+  "https://optimism.mirror.xyz/feed/atom",
+  "https://blog.chain.link/rss/",
+  "https://www.circle.com/blog/rss.xml"
 ];
 const PRODUCT = { id: "daily_report", amountUsdCents: 100, title: "Crypto Opportunity Scout — Detailed Report" };
 
