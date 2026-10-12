@@ -5,7 +5,7 @@ const FEEDS = [
   "https://optimism.mirror.xyz/feed/atom",
   "https://blog.chain.link/rss/",
   "https://www.circle.com/blog/rss.xml",
-  "https://solana.com/news/rss.xml",
+  "https://solana.com/changelog/rss.xml",
   "https://www.bnbchain.org/en/blog/rss.xml",
   "https://trondao.org/blog/feed/"
 ];
