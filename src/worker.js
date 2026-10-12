@@ -139,7 +139,7 @@ function classify(s) {
   return "Ecosystem announcement";
 }
 function getTag(s, tag) {
-  const re = new RegExp("<"+tag+"(?:\\\\s[^>]*)?>([\\\\s\\\\S]*?)</"+tag+">", "i");
+  const re = new RegExp("<"+tag+"(?:\\s[^>]*)?>([\\s\\S]*?)</"+tag+">", "i");
   const m = s.match(re); return m ? m[1].replace(/<!\\[CDATA\\[|\\]\\]>/g, "") : "";
 }
 function cleanXml(s) {
