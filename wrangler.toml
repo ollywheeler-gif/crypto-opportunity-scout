@@ -1,0 +1,10 @@
+name = "crypto-opportunity-scout"
+main = "src/worker.js"
+compatibility_date = "2026-10-12"
+
+[[kv_namespaces]]
+binding = "SCOUT_KV"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+[triggers]
+crons = ["15 8 * * *"]
