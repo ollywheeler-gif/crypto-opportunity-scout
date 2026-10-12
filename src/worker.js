@@ -16,6 +16,16 @@ export default {
       return Response.json(await readLatest(env));
     }
 
+    if (request.method === "POST" && url.pathname === "/api/refresh") {
+      if (!env.SCOUT_KV) return Response.json({ error: "Report storage is not configured." }, { status: 503 });
+      const lock = await env.SCOUT_KV.get("refresh:lock");
+      if (lock) return Response.json({ ...(await readLatest(env)), refresh: "cooldown" }, { status: 429, headers: { "Retry-After": "300" } });
+      await env.SCOUT_KV.put("refresh:lock", "1", { expirationTtl: 300 });
+      const report = await collectReport();
+      await env.SCOUT_KV.put("report:latest", JSON.stringify(report), { expirationTtl: 864000 });
+      return Response.json({ ...report, refresh: "completed" });
+    }
+
     if (request.method === "POST" && url.pathname === "/checkout") {
       if (!env.SHIELDZ_API_KEY) return Response.json({ error: "Checkout is not configured. Add the provider test API key in Worker secrets first." }, { status: 503 });
       const body = await request.json().catch(() => ({}));
