@@ -139,7 +139,7 @@ async function collectReport() {
         continue;
       }
       const xml = await response.text();
-      const blocks = [...xml.matchAll(/<(item|entry)\\b[\\s\\S]*?<\\/\\1>/gi)].map(m => m[0]).slice(0, 30);
+      const blocks = [...xml.matchAll(/<(item|entry)\b[\s\S]*?<\/\1>/gi)].map(m => m[0]).slice(0, 30);
       let accepted = 0;
       for (const block of blocks) {
         const title = cleanXml(getTag(block, "title"));
@@ -147,7 +147,7 @@ async function collectReport() {
         const href = (block.match(/<link[^>]+href=["']([^"']+)/i) || [])[1] || cleanXml(linkTag);
         const date = cleanXml(getTag(block, "pubDate") || getTag(block, "updated") || getTag(block, "published"));
         const summary = cleanXml(getTag(block, "description") || getTag(block, "summary") || getTag(block, "content"));
-        if (!title || !/^https:\\/\\/[^/]/i.test(href)) continue;
+        if (!title || !/^https:\/\/[^/]/i.test(href)) continue;
         const text = title + " " + summary;
         const lower = text.toLowerCase();
         let category = classify(text);
@@ -185,11 +185,11 @@ function classify(s) {
   return "Ecosystem announcement";
 }
 function getTag(s, tag) {
-  const re = new RegExp("<"+tag+"(?:\\\\s[^>]*)?>([\\\\s\\\\S]*?)</"+tag+">", "i");
-  const m = s.match(re); return m ? m[1].replace(/<!\\[CDATA\\[|\\]\\]>/g, "") : "";
+  const re = new RegExp("<"+tag+"(?:\\s[^>]*)?>([\\s\\S]*?)</"+tag+">", "i");
+  const m = s.match(re); return m ? m[1].replace(/<!\[CDATA\[|\]\]>/g, "") : "";
 }
 function cleanXml(s) {
-  return String(s||"").replace(/<[^>]*>/g," ").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/\\s+/g," ").trim();
+  return String(s||"").replace(/<[^>]*>/g," ").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/\s+/g," ").trim();
 }
 function randomToken() { return [...crypto.getRandomValues(new Uint8Array(32))].map(b=>b.toString(16).padStart(2,"0")).join(""); }
 function constantTimeEqual(a,b) { if(typeof a!=="string"||typeof b!=="string"||a.length!==b.length)return false;let d=0;for(let i=0;i<a.length;i++)d|=a.charCodeAt(i)^b.charCodeAt(i);return d===0; }
