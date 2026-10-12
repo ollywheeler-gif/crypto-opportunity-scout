@@ -36,6 +36,7 @@ export default {
     if (request.method === "POST" && url.pathname === "/checkout") {
       if (!env.SCOUT_KV) return Response.json({ error: "Report storage is not configured." }, { status: 503 });
       if (!env.SHIELDZ_API_KEY || !env.SHIELDZ_API_KEY.startsWith("sk_test_")) return Response.json({ error: "Checkout is locked to Shieldz test mode until end-to-end payment checks pass." }, { status: 503 });
+      if (!env.SHIELDZ_WEBHOOK_SECRET) return Response.json({ error: "Shieldz webhook signing secret is not configured; checkout remains disabled." }, { status: 503 });
       if (!env.SCOUT_SETTLEMENT_ADDRESS) return Response.json({ error: "Set the merchant receiving wallet address as SCOUT_SETTLEMENT_ADDRESS before testing checkout." }, { status: 503 });
       const body = await request.json().catch(() => ({}));
       if (body.product !== PRODUCT.id || typeof body.itemUrl !== "string") return Response.json({ error: "Choose a specific opportunity to purchase a report for." }, { status: 400 });
@@ -63,6 +64,7 @@ export default {
       await env.SCOUT_KV.put(`order:${orderId}`, JSON.stringify({
         id: orderId, invoiceId: invoice.id, product: PRODUCT.id, item,
         expectedAmountUsdCents: PRODUCT.amountUsdCents, expectedChain: "BASE", expectedAsset: "USDC",
+        expectedMode: "test", expectedSettlementAddress: env.SCOUT_SETTLEMENT_ADDRESS,
         status: "pending", accessToken, createdAt: new Date().toISOString()
       }), { expirationTtl: 60 * 60 * 24 * 45 });
       return Response.json({ checkout_url: invoice.pay_url, report_url: `${url.origin}/report?order=${encodeURIComponent(orderId)}&token=${encodeURIComponent(accessToken)}` });
@@ -82,7 +84,7 @@ export default {
         if (!orderId || !invoice?.id) return new Response("Missing invoice details", { status: 400 });
         const order = await env.SCOUT_KV.get(`order:${orderId}`, "json");
         if (!order || order.invoiceId !== invoice.id) return new Response("Order/invoice mismatch", { status: 404 });
-        if (invoice.status !== "paid" || invoice.amount_usd_cents !== order.expectedAmountUsdCents || invoice.settlement?.chain?.toUpperCase() !== order.expectedChain || invoice.settlement?.asset?.toUpperCase() !== order.expectedAsset) return new Response("Invoice amount, status or settlement mismatch", { status: 400 });
+        if (invoice.status !== "paid" || invoice.mode !== order.expectedMode || invoice.amount_usd_cents !== order.expectedAmountUsdCents || invoice.settlement?.chain?.toUpperCase() !== order.expectedChain || invoice.settlement?.asset?.toUpperCase() !== order.expectedAsset || invoice.settlement?.address !== order.expectedSettlementAddress) return new Response("Invoice mode, amount, status or settlement mismatch", { status: 400 });
         if (order.status !== "paid") {
           order.status = "paid";
           order.paidAt = new Date().toISOString();
