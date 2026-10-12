@@ -119,12 +119,21 @@ async function readLatest(env) {
 }
 async function collectReport() {
   const all = [];
+  const sources = [];
   for (const feedUrl of FEEDS) {
+    const source = new URL(feedUrl).hostname;
     try {
-      const response = await fetch(feedUrl, { headers: { "User-Agent": "CryptoOpportunityScout/1.0" } });
-      if (!response.ok) continue;
+      const response = await fetch(feedUrl, {
+        headers: { "User-Agent": "CryptoOpportunityScout/1.0", "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*" },
+        signal: AbortSignal.timeout(10000)
+      });
+      if (!response.ok) {
+        sources.push({ source, ok: false, status: response.status, entriesFound: 0, itemsAccepted: 0, issue: "Feed returned a non-success HTTP status." });
+        continue;
+      }
       const xml = await response.text();
-      const blocks = [...xml.matchAll(/<(item|entry)\b[\s\S]*?<\/\1>/gi)].map(m => m[0]).slice(0, 20);
+      const blocks = [...xml.matchAll(/<(item|entry)\b[\s\S]*?<\/\1>/gi)].map(m => m[0]).slice(0, 30);
+      let accepted = 0;
       for (const block of blocks) {
         const title = cleanXml(getTag(block, "title"));
         const linkTag = getTag(block, "link");
@@ -132,14 +141,20 @@ async function collectReport() {
         const date = cleanXml(getTag(block, "pubDate") || getTag(block, "updated") || getTag(block, "published"));
         const summary = cleanXml(getTag(block, "description") || getTag(block, "summary") || getTag(block, "content"));
         if (!title || !/^https:\/\/[^/]/i.test(href)) continue;
-        all.push({ title: title.slice(0, 200), url: href, source: new URL(feedUrl).hostname, date, summary: summary.slice(0, 280), category: classify(title+" "+summary), reward: "Unverified", cost: "Not established", verification: "Research lead only. Verify campaign, eligibility, fees and withdrawal conditions at the official source." });
+        all.push({ title: title.slice(0, 200), url: href, source, date, summary: summary.slice(0, 280), category: classify(title+" "+summary), reward: "Unverified", cost: "Not established", verification: "Research lead only. Verify campaign, eligibility, fees and withdrawal conditions at the official source." });
+        accepted++;
       }
-    } catch (_) {}
+      sources.push({ source, ok: true, status: response.status, entriesFound: blocks.length, itemsAccepted: accepted, issue: blocks.length ? (accepted ? null : "Feed entries were found, but none had a usable title and HTTPS link.") : "No RSS or Atom entries matched the expected format." });
+    } catch (error) {
+      sources.push({ source, ok: false, status: null, entriesFound: 0, itemsAccepted: 0, issue: error?.name === "TimeoutError" ? "Feed request timed out." : "Feed could not be fetched or parsed." });
+    }
   }
   const items = [...new Map(all.map(x => [x.url, x])).values()].sort((a,b)=>(Date.parse(b.date)||0)-(Date.parse(a.date)||0)).slice(0, 15);
   return {
-    date: new Date().toISOString().slice(0,10), generatedAt: new Date().toISOString(), items,
-    disclaimer: "Automated public-source leads, not verified airdrops or guaranteed income. Never deposit funds, reveal a seed phrase, or sign a transaction solely because of a listing."
+    date: new Date().toISOString().slice(0,10), generatedAt: new Date().toISOString(), items, sources,
+    disclaimer: items.length
+      ? "Automated public-source leads, not verified airdrops or guaranteed income. Never deposit funds, reveal a seed phrase, or sign a transaction solely because of a listing."
+      : "No usable leads were collected. Source diagnostics are available to help identify whether a feed was unavailable or its format changed."
   };
 }
 function classify(s) {
