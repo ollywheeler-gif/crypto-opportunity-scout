@@ -53,3 +53,4 @@ Research/testing only. No paid provisioning, broker credential collection in cha
 ### Platform compile workaround — 2026-10-13
 - Added a GitHub-hosted Windows workflow that downloads the official MT5 installer, verifies its Authenticode signature, initializes an isolated MQL5 include tree, compiles STRAT-002 with MetaEditor, fails on compiler errors/warnings, and uploads compile logs/EX5 evidence.
 - This is a no-account compile only. It does not run the Strategy Tester, connect a broker, or establish trading performance. The workflow itself and its first run remain unverified until a successful artifact is observed.
+- Added static project checks requiring the Windows compile workflow and checking its signature verification, warning gate, evidence upload and absence of credential fields.
