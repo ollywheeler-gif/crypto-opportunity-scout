@@ -26,12 +26,13 @@ The repository currently contains agent instructions and starter automation. It 
 
 ## Critical path
 1. Validate repository files and tests in CI.
-2. Compile STRAT-002 in a dedicated Windows MT5/MetaEditor environment.
-3. Reconcile warnings, then run a short mechanics-only test with no real account.
-4. Obtain public or owner-supplied broker contract specs; calculate feasibility at £100 before large backtests.
-5. If feasible, execute pre-registered chronological, cost-stressed tests.
-6. Agent 4 reviews the evidence independently; Agent 0 records disposition.
-7. Demo forward testing only after all prior gates pass; owner decision is required before live use.
+2. Inspect the temporary Windows MetaEditor compile workflow and preserve its evidence; repair any installer, include-path, compiler or warning failures.
+3. If automated compile cannot be made reliable, compile STRAT-002 in a dedicated Windows MT5/MetaEditor environment.
+4. Reconcile warnings, then run a short mechanics-only test with no real account.
+5. Obtain public or owner-supplied broker contract specs; calculate feasibility at £100 before large backtests.
+6. If feasible, execute pre-registered chronological, cost-stressed tests.
+7. Agent 4 reviews the evidence independently; Agent 0 records disposition.
+8. Demo forward testing only after all prior gates pass; owner decision is required before live use.
 
 ## Blocker handling
 For each blocker, record the exact missing item, impact, safe workarounds attempted, chosen workaround and whether the gate remains blocked. Escalate only when no safe, no-cost workaround can produce reliable evidence or a decision is genuinely owner-controlled.
