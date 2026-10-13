@@ -13,6 +13,8 @@ This is project scaffolding, not a deployed autonomous agent service. No Windows
 - No live deployment without separate explicit owner approval.
 
 ## Research and controls
+- [Project director / Agent 0](agents/agent_0_project_director.md) coordinates the four specialist agents and enforces evidence gates.
+- [Multi-agent operating protocol](docs/MULTI_AGENT_OPERATING_PROTOCOL.md) defines handoffs, artifacts, blocker handling and the critical path.
 - [Ten initial strategy hypotheses](research/candidate_register.md) — hypotheses, not performance claims.
 - [First deterministic test specification](research/specs/STRAT-002-donchian-breakout-v1.md) — source is written but not yet compiled or tested.
 - [Acceptance gates](docs/ACCEPTANCE_GATES.md) — feasibility, costs, chronological testing, review and demo gates.
