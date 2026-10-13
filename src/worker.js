@@ -156,6 +156,10 @@ async function collectReport() {
         const date = cleanXml(getTag(block, "pubDate") || getTag(block, "updated") || getTag(block, "published"));
         const summary = cleanXml(getTag(block, "description") || getTag(block, "summary") || getTag(block, "content"));
         if (!title || !/^https:\/\/[^/]/i.test(href)) continue;
+        // Keep the digest fresh: old or undated announcements are not useful as current opportunity leads.
+        const publishedAt = Date.parse(date);
+        const ageMs = Date.now() - publishedAt;
+        if (!Number.isFinite(publishedAt) || ageMs < -24 * 60 * 60 * 1000 || ageMs > 45 * 24 * 60 * 60 * 1000) continue;
         const text = title + " " + summary;
         const lower = text.toLowerCase();
         let category = classify(text);
@@ -175,7 +179,7 @@ async function collectReport() {
         all.push(item);
         accepted++;
       }
-      sources.push({ source, ok: true, status: response.status, entriesFound: blocks.length, itemsAccepted: accepted, issue: blocks.length ? (accepted ? null : "Feed entries were found, but none had a usable title and HTTPS link.") : "No RSS or Atom entries matched the expected format." });
+      sources.push({ source, ok: true, status: response.status, entriesFound: blocks.length, itemsAccepted: accepted, issue: blocks.length ? (accepted ? null : "Entries were found, but none passed link, date and 45-day freshness checks.") : "No RSS or Atom entries matched the expected format." });
     } catch (error) {
       sources.push({ source, ok: false, status: null, entriesFound: 0, itemsAccepted: 0, issue: error?.name === "TimeoutError" ? "Feed request timed out." : "Feed could not be fetched or parsed." });
     }
