@@ -1,0 +1,18 @@
+# Local MT5 outputs and private account data
+artifacts/
+reports/
+logs/
+*.ex5
+*.log
+*.set
+*.ini
+*.hst
+*.fxt
+*.tks
+*.dat
+*.bak
+*.tmp
+.env
+.env.*
+!example*.ini
+!example*.set
