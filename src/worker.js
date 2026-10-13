@@ -4,11 +4,10 @@ const FEEDS = [
   "https://blog.base.dev/feed",
   "https://offchain.medium.com/feed",
   "https://blog.arbitrum.io/rss/",
-  "https://blog.uniswap.org/rss.xml",
   "https://blog.celestia.org/rss/",
   "https://solana.com/changelog/rss.xml",
-  "https://www.circle.com/blog/rss.xml",
-  "https://filecoin.io/blog/feed/index.xml"
+  "https://blog.celer.network/feed/",
+  "https://blog.chain.link/rss/"
 ];
 const PRODUCT = { id: "daily_report", amountUsdCents: 100, title: "Crypto Opportunity Scout — Detailed Report" };
 
