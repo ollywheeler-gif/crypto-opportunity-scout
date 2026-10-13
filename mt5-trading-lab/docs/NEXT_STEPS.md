@@ -11,7 +11,7 @@ Follow [the runtime decision and acceptance plan](BACKGROUND_AGENT_RUNTIME_DECIS
 ## Parallel workstreams
 The bounded team is Agent 0 (director) plus seven specialist roles. Run these workstreams concurrently where independent:
 - Agent 1: strategy research and specification drafts.
-- Agent 5: public broker/instrument research and £100 feasibility.
+- Agent 5: public broker/instrument research and £200 feasibility.
 - Agent 6: independent data, metric, leakage and cost-ledger tests.
 - Agent 7: build/CI reliability and artifact capture.
 - Agents 2 and 3: implement and test only frozen, feasible specifications.
@@ -37,7 +37,7 @@ Agent 0 sequences dependencies and assigns one writer per file. Do not create mo
 1. Verify current main-branch Python tests and project validation.
 2. Finish the current compile pass for all EA sources and the shared RiskGuard include; require zero errors and zero warnings and retain source/include/EX5 hashes.
 3. Verify the daily-loss and peak-drawdown circuit-breakers in a mechanics-only tester run, including halt thresholds, position-close retries, daily reset and restart persistence.
-4. Select a broker/demo environment, export exact symbol contract metadata, and reject £100-infeasible symbol/strategy combinations before extensive testing.
+4. Select a broker/demo environment, export exact symbol contract metadata, and reject £200-infeasible symbol/strategy combinations before extensive testing.
 5. Only after mechanics and feasibility gates pass, execute pre-registered chronological tests, cost reconciliation, walk-forward and stress analysis.
 6. Agent 6 audits data/metrics; Agent 4 independently reviews the complete evidence; Agent 0 updates the gate register. No EA becomes a demo candidate until the risk guard and broker feasibility gates pass.
 
