@@ -1,5 +1,9 @@
 # Project execution plan
 
+## Background agent runtime
+
+Follow [the runtime decision and acceptance plan](BACKGROUND_AGENT_RUNTIME_DECISION.md). Implement the credential-free dry-run coordinator and tests before any model calls. Do not enable scheduled model calls or add paid infrastructure until the owner explicitly approves API usage. Reports should be evidence-linked artifacts; direct delivery into this ChatGPT thread is not assumed.
+
 ## Parallel workstreams
 The bounded team is Agent 0 (director) plus seven specialist roles. Run these workstreams concurrently where independent:
 - Agent 1: strategy research and specification drafts.
