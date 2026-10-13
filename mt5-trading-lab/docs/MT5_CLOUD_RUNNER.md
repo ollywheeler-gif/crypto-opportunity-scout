@@ -1,31 +1,46 @@
-# MT5 cloud runner runbook
-This document is a checklist, not evidence that a runner is provisioned.
+# MT5 Windows runner runbook
 
-Prerequisites: compatible Windows environment with MT5 and MetaEditor, test/demo terminal profile, required historical data, broker symbol/cost specifications, Python 3.11+, isolated working directory and artifact retention.
+This is a checklist, not evidence that a runner is provisioned or that the EA has compiled. MetaEditor and Strategy Tester must run on a Windows environment with a real MT5 installation.
 
-A common MetaEditor CLI pattern (verify against installed build):
+## Prerequisites
+- MT5 and MetaEditor installed.
+- A dedicated demo/test terminal profile with no real-account login.
+- Historical data and exact broker symbol specifications.
+- A known data folder, accessible through MT5 **File → Open Data Folder**.
+- Broker inputs for spread, commission, tick value, minimum volume, margin and financing.
+- An isolated artifact directory.
+
+## Install the repository EA
+From a local checkout of the repository, run this from PowerShell after verifying the terminal data-folder path:
+
+```powershell
+.\mt5-trading-lab\scripts\install_mt5_candidate.ps1 -TerminalDataFolder "C:\Users\<you>\AppData\Roaming\MetaQuotes\Terminal\<terminal-id>" -RepositorySource "C:\path\to\repo\mt5-trading-lab\mql5\Experts\STRAT-002_DonchianBreakout.mq5"
+```
+
+The installer copies the source into `MQL5\Experts\TradingLab`, backs up a differing existing source, and verifies SHA-256. It does not compile, launch MT5, log into an account, or trade.
+
+## Compile manually first
+The documented MetaEditor command-line pattern uses `/compile` and `/log`. The compiler log is written beside the source file; copy it into the artifact directory after compilation.
+
 ```powershell
 $metaEditor = "C:\Path\To\MetaEditor64.exe"
-$source = "C:\Path\To\MQL5\Experts\TradingLab\Candidate.mq5"
-$log = "C:\Path\To\logs\Candidate-compile.log"
-& $metaEditor "/compile:$source" "/log:$log"
+$source = "C:\Path\To\MQL5\Experts\TradingLab\STRAT-002_DonchianBreakout.mq5"
+$sourceLog = [System.IO.Path]::ChangeExtension($source, ".log")
+& $metaEditor "/compile:$source" "/log"
 $exitCode = $LASTEXITCODE
-Get-Content $log
+Get-Content $sourceLog
+Copy-Item $sourceLog "C:\Path\To\artifacts\compile.log"
 if ($exitCode -ne 0) { throw "MetaEditor compile returned $exitCode" }
 ```
-Confirm the compiler log and a fresh EX5; exit code alone is insufficient. For Strategy Tester preserve INI/config, terminal/tester logs, raw report, normalized CSV and reconciliation notes. Never use live credentials in unattended jobs. Do not enable live trading in test jobs.
 
+Check the complete log for errors and warnings, and verify that a fresh EX5 exists. A zero exit code alone is not acceptance evidence. The runner removes any previous EX5 before compiling to prevent accidental reuse of a stale binary.
 
-## Install the repository EA into a terminal data folder
-Use the helper after identifying the exact data folder via MT5 **File → Open Data Folder**. It copies the source and verifies SHA-256; it does not compile or launch MT5.
+## Tester configuration and execution
+- Use a disposable terminal profile that is not logged into a real account. The runner rejects account credential fields in the supplied INI, but cannot inspect the account already logged into a terminal.
+- The INI must include a `[Tester]` section and explicit `Expert`, `Symbol`, `Period`, `FromDate`, `ToDate`, `Model`, `Deposit`, `Currency`, `Leverage`, and `Report` settings.
+- Set `Expert=` to the expert path relative to `MQL5\Experts` (for example `TradingLab\STRAT-002_DonchianBreakout`, without `.ex5`). Verify the exact syntax accepted by the installed MT5 build.
+- The report path in the INI must match the runner's `ReportPath` argument. The runner refuses to archive a report that was not updated by the current run.
+- Set the EA inputs explicitly: enable the strategy only in the tester/demo environment, set `ConfirmBrokerCostsReviewed=true` only after review, and enter positive spread and slippage sizing allowances. These allowances do not replace the tester's actual cost settings.
+- Preserve the INI, compiler log, terminal/tester logs, raw report, normalized trade CSV and reconciliation notes.
 
-```powershell
-.\\install_mt5_candidate.ps1 -TerminalDataFolder "C:\\Users\\<you>\\AppData\\Roaming\\MetaQuotes\\Terminal\\<terminal-id>" -RepositorySource "C:\\path\\to\\repo\\mt5-trading-lab\\mql5\\Experts\\STRAT-002_DonchianBreakout.mq5"
-```
-
-## Important setup notes before using the runner
-- Put the EA source in the selected MT5 terminal's own data-folder `MQL5/Experts/TradingLab/` directory before compiling. The Strategy Tester must use the resulting EX5 from that same terminal's data folder. The repository copy is the source of record; compare its SHA-256 with the installed copy.
-- Set `Expert=` in the tester INI to the expert name/path relative to `MQL5/Experts` (for example, `TradingLab\\STRAT-002_DonchianBreakout`, without the `.ex5` suffix). Verify the exact syntax accepted by the installed MT5 build.
-- Use a fresh, dedicated demo/test terminal profile. The runner rejects account credential fields in the supplied INI, but it cannot inspect or guarantee the account already logged into an existing terminal. Do not point it at a terminal logged into a real account.
-- Configure spread and commission realistically in the tester. The EA's `EstimatedSpreadCostPerLot`, `EstimatedRoundTurnCostPerLot` and `EstimatedSlippageCostPerLot` are sizing allowances, not substitutes for tester cost settings. The EA refuses to run when enabled if spread or slippage allowances are zero.
-- The runner is a guarded starter, not yet proven against the user's MT5 build. Validate first on a disposable test installation and inspect all logs. It cannot certify that a report is a complete Strategy Tester report; manual reconciliation remains mandatory.
+The runner is a guarded starter, not yet proven against the user's installed MT5 build. A report file existing is not proof of a valid completed backtest. Reconcile symbol, dates, modelling mode, deposit/currency/leverage, costs, trades, P/L and logs before using any metrics.
