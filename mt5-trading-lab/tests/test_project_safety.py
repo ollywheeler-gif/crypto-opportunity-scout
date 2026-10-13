@@ -36,6 +36,8 @@ class ProjectSafetyTests(unittest.TestCase):
         self.assertIn("ReportPath argument must exactly match", RUNNER)
         self.assertIn("Report was not freshly updated", RUNNER)
         self.assertIn("Compile failed or produced no EX5", RUNNER)
+        self.assertIn("A process named", RUNNER)
+        self.assertIn("Close MT5 instances", RUNNER)
 
     def test_installer_only_copies_and_verifies_source(self):
         self.assertIn("Get-FileHash", INSTALLER)
