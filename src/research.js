@@ -202,7 +202,7 @@ export async function enrichResearchItem(item) {
     || compact.match(/\b([\d,]+(?:\.\d+)?)\s*(?:USDC|USDT|USD)\b/i);
   const numericValueContext = numericValueMatch ? (compact.split(/(?<=[.!?])\s+/).find(sentence => sentence.includes(numericValueMatch[0]) && /\b(?:reward|prize|pool|earn|receive|allocation|bonus|payout|return)\b/i.test(sentence)) || "") : "";
   const explicitNoCapital = /\b(?:free to participate|no purchase necessary|no deposit required|without (?:a )?deposit|no upfront capital)\b/i.test(compact);
-  const capitalRisk = /\b(?:deposit|minimum balance|minimum purchase|trading volume|leverage|borrow|collateral|lock(?:ed)? funds|stake at least)\b/i.test(compact);
+  const capitalRisk = /\b(?:deposit|minimum balance|minimum purchase|trading volume|leverage|borrow|collateral|lock(?:ed)? funds|stake at least)\b/i.test(compact.replace(/\bno deposit required\b|\bwithout (?:a )?deposit\b/gi, ""));
   const walletRisk = /\b(?:connect (?:your )?wallet|sign (?:a )?(?:message|transaction)|approve (?:the )?token)\b/i.test(compact);
   const highReturn = Boolean(percentReturnMatch && Number(percentReturnMatch[1]) >= 5 && /\b(?:day|week|weekend|24 hours?|48 hours?|short term|short-term)\b/i.test(compact));
   const riskLevel = highReturn || /\b(?:guaranteed returns?|risk[- ]free|double your money|100% profit|leverage|borrow)\b/i.test(compact)
