@@ -229,7 +229,7 @@ double CalculateVolume(const ENUM_ORDER_TYPE orderType, const double entry, cons
 {
    double equity = AccountInfoDouble(ACCOUNT_EQUITY);
    double minVolume = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
-   if(equity <= 0 || minVolume <= 0 || TargetRiskPct <= 0 || HardMaxRiskPct <= 0 ||
+   if(equity <= 0 || minVolume <= 0 || TargetRiskPct <= 0 || HardMaxRiskPct > 0.50 || HardMaxRiskPct <= 0 ||
       TargetRiskPct > HardMaxRiskPct)
       return 0.0;
 
@@ -278,7 +278,7 @@ int OnInit()
        !BrokerUsesEuropeanDST || BrokerServerUtcOffsetSummerHours != BrokerServerUtcOffsetWinterHours + 1 ||
        EstimatedSpreadCostPerLot <= 0 || EstimatedSlippageCostPerLot <= 0 ||
        EstimatedGapCostPerLot <= 0 || MaxSpreadPoints <= 0)) ||
-      AtrPeriod < 2 || TargetRiskPct <= 0 || HardMaxRiskPct < TargetRiskPct ||
+      AtrPeriod < 2 || TargetRiskPct <= 0 || HardMaxRiskPct > 0.50 || HardMaxRiskPct < TargetRiskPct ||
       BrokerServerUtcOffsetWinterHours < -12 || BrokerServerUtcOffsetWinterHours > 14 ||
       BrokerServerUtcOffsetSummerHours < -12 || BrokerServerUtcOffsetSummerHours > 14 ||
       EstimatedSpreadCostPerLot < 0 || EstimatedRoundTurnCostPerLot < 0 ||
