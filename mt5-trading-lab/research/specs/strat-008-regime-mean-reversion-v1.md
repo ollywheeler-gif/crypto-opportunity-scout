@@ -2,7 +2,7 @@
 
 Candidate ID: STRAT-008
 Version: v1
-Status: SPECIFICATION DRAFT — not implemented, compiled, backtested or approved.
+Status: FROZEN SPECIFICATION v1 — deterministic rules accepted for implementation. Not backtested or approved for demo/live.
 
 ## Hypothesis
 A simple, deterministic range-bound mean reversion rule may capture a repeatable market effect, but it may fail after realistic costs, regime changes and the £100 feasibility constraint. The test must attempt to falsify the idea.
@@ -42,3 +42,10 @@ Compile log with warnings resolved; source/spec/config hashes; exact MT5 build; 
 
 ## Approval status
 Draft v1 research rules only. Agent 0 must freeze the specification after a rule/code consistency review. No candidate is approved for demo or live use by this document.
+
+
+## Agent 0 freeze record
+- Freeze date: 2026-10-13.
+- Rules frozen: H1 ADX(14) below 18; Bollinger(20, 2σ) close excursion plus RSI(2) below 10/above 90; 2.0 × ATR(20) stop; exit at middle band or after 8 completed H1 bars; no averaging.
+- Agent 2 source: `mql5/Experts/STRAT-008_RegimeMeanReversion.mq5`.
+- Freeze is not compile, broker-feasibility, tester or deployment approval.
