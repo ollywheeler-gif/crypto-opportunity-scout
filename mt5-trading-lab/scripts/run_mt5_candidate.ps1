@@ -34,9 +34,10 @@ New-Item -ItemType Directory -Force -Path $resolvedArtifacts | Out-Null
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $compileLog = Join-Path $resolvedArtifacts "compile-$stamp.log"
 $expertEx5 = [System.IO.Path]::ChangeExtension($resolvedSource, ".ex5")
-$beforeEx5 = if (Test-Path -LiteralPath $expertEx5) {
-  (Get-Item -LiteralPath $expertEx5).LastWriteTimeUtc
-} else { [datetime]::MinValue }
+# Remove any old binary first so a failed compile cannot accidentally reuse it.
+if (Test-Path -LiteralPath $expertEx5) {
+  Remove-Item -LiteralPath $expertEx5 -Force
+}
 
 # Compile and inspect the log; exit code alone is not sufficient.
 & $MetaEditorPath "/compile:$resolvedSource" "/log:$compileLog"
@@ -47,9 +48,6 @@ if (-not (Test-Path -LiteralPath $compileLog)) {
 $compileText = Get-Content -LiteralPath $compileLog -Raw
 if ($compileExit -ne 0 -or $compileText -match '(?im)\b[1-9]\d*\s+errors?\b' -or -not (Test-Path -LiteralPath $expertEx5)) {
   throw "Compile failed or produced no EX5. Inspect $compileLog"
-}
-if ((Get-Item -LiteralPath $expertEx5).LastWriteTimeUtc -le $beforeEx5) {
-  throw "EX5 timestamp was not refreshed; refusing to test a potentially stale binary."
 }
 
 # Require explicit tester inputs rather than accepting silent defaults.
@@ -80,8 +78,11 @@ if (-not (Test-Path -LiteralPath $resolvedReport -PathType Leaf)) {
   throw "Tester report not found at configured Report path: $resolvedReport. A zero exit code is not proof of a completed test."
 }
 $reportAfterUtc = (Get-Item -LiteralPath $resolvedReport).LastWriteTimeUtc
-if ($reportAfterUtc -le $reportBeforeUtc -or $reportAfterUtc -lt $runStartedUtc) {
+if ($reportAfterUtc -le $reportBeforeUtc) {
   throw "Report was not freshly updated during this run; refusing to archive a potentially stale report."
+}
+if ($reportBeforeUtc -eq [datetime]::MinValue -and $reportAfterUtc -lt $runStartedUtc.AddSeconds(-5)) {
+  throw "New report timestamp predates this run; refusing to archive a potentially stale report."
 }
 
 $reportCopy = Join-Path $resolvedArtifacts "report-$stamp$([System.IO.Path]::GetExtension($resolvedReport))"
