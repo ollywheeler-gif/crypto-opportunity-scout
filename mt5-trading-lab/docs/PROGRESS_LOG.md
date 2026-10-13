@@ -56,3 +56,11 @@ Research/testing only. No paid provisioning, broker credential collection in cha
 - Added static project checks requiring the Windows compile workflow and checking its signature verification, warning gate, evidence upload and absence of credential fields.
 - Agent 2 code review identified that the EA's initial sizing reserve did not separately represent stop-gap losses. Added a per-lot gap-cost reserve, required it to be positive before enabling the EA, and added a static safety test. This remains uncompiled until the Windows workflow provides evidence.
 - Expanded research coverage with nine deterministic v1 spec drafts for the remaining candidate hypotheses. Agent 0/Agent 1 review and freezing are still required; none is implemented or performance-tested yet.
+
+
+### First verified MetaEditor compile — 2026-10-13
+- GitHub Actions quality run [38390209713](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38390209713) passed; repository validation and Python unit tests completed successfully on the then-current main revision.
+- Windows compile run [38390155862](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38390155862) completed successfully. MetaEditor version 5.0.0.6257 reported **0 errors, 0 warnings** for STRAT-002; a fresh EX5 and UTF-16 compiler log were retained in artifact [11808267275](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38390155862/artifacts/11808267275).
+- Compiler manifest commit: `e2e987c88e64c95e8ad1e4eb3efdc9de090fa0c1`. EX5 SHA-256: `fa968097e114fa2fbcdb29c1df1079248741d8c32c312e5e8c5656e76d447c84`. Source SHA-256: `858F5A1AE3AF6F77A34F3CBF0D56036CE0B8EB46E33D2912DA6810EB4500F6CE`.
+- The first compile workflow attempts exposed two automation issues (installer argument handling and asynchronous compiler process/exit-code interpretation). These were corrected. MetaEditor may return process exit code 1 despite the compiler summary reporting zero errors/warnings, so acceptance now requires the compiler summary and fresh EX5, while retaining the process code diagnostically.
+- This verifies source compilation only. It does not validate strategy mechanics, broker constraints, Strategy Tester results, costs or profitability.
