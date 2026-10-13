@@ -4,6 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 EA = (ROOT / "mql5/Experts/STRAT-002_DonchianBreakout.mq5").read_text(encoding="utf-8")
+EMA_EA = (ROOT / "mql5/Experts/STRAT-003_EMATrend.mq5").read_text(encoding="utf-8")
 CONFIG = json.loads((ROOT / "config/project_config.json").read_text(encoding="utf-8"))
 RUNNER = (ROOT / "scripts/run_mt5_candidate.ps1").read_text(encoding="utf-8")
 INSTALLER = (ROOT / "scripts/install_mt5_candidate.ps1").read_text(encoding="utf-8")
@@ -36,6 +37,17 @@ class ProjectSafetyTests(unittest.TestCase):
         self.assertIn("Upload compiler evidence", COMPILE_WORKFLOW)
         self.assertNotIn("Password=", COMPILE_WORKFLOW)
         self.assertNotIn("Login=", COMPILE_WORKFLOW)
+
+    def test_strat003_is_disabled_and_has_core_safety_gates(self):
+        self.assertIn("input bool   EnableStrategy = false", EMA_EA)
+        self.assertIn("ACCOUNT_TRADE_MODE_REAL", EMA_EA)
+        self.assertIn("SYMBOL_TRADE_TICK_SIZE", EMA_EA)
+        self.assertIn("EstimatedGapCostPerLot <= 0", EMA_EA)
+        self.assertIn("MaxSpreadPoints <= 0", EMA_EA)
+        self.assertIn("OrderCalcProfit", EMA_EA)
+        self.assertIn("OrderCalcMargin", EMA_EA)
+        self.assertNotIn("martingale", EMA_EA.lower())
+        self.assertNotIn("grid", EMA_EA.lower())
 
     def test_live_and_paid_provisioning_disabled(self):
         self.assertIs(CONFIG["live_trading_enabled"], False)
