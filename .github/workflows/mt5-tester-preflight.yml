@@ -1,0 +1,86 @@
+name: MT5 tester pipeline preflight (no account)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'mt5-trading-lab/scripts/validate_tester_config.py'
+      - 'mt5-trading-lab/research/mt5_tester_smoke_template.ini'
+      - '.github/workflows/mt5-tester-preflight.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run config-validator unit tests
+        shell: pwsh
+        run: |
+          python -m unittest mt5-trading-lab/tests/test_validate_tester_config.py -v
+
+      - name: Validate credential-free tester template
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $artifactDir = Join-Path $env:RUNNER_TEMP 'mt5-tester-preflight'
+          New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
+          python mt5-trading-lab/scripts/validate_tester_config.py mt5-trading-lab/research/mt5_tester_smoke_template.ini --output (Join-Path $artifactDir 'tester-config-validation.json')
+          if ($LASTEXITCODE -ne 0) { throw 'Tester configuration validation failed.' }
+          "MT5_PREFLIGHT_ARTIFACTS=$artifactDir" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Download and verify official MT5 installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installer = Join-Path $env:RUNNER_TEMP 'mt5setup.exe'
+          Invoke-WebRequest -Uri 'https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe' -OutFile $installer
+          $signature = Get-AuthenticodeSignature -FilePath $installer
+          if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'MetaQuotes') {
+            throw "Official MT5 installer signature verification failed: $($signature.Status) / $($signature.SignerCertificate.Subject)"
+          }
+          [PSCustomObject]@{
+            status = 'OFFICIAL_INSTALLER_SIGNATURE_VALID'
+            signer = $signature.SignerCertificate.Subject
+            timestamp = (Get-Date).ToUniversalTime().ToString('o')
+            note = 'Installer was verified; this preflight does not install or launch a terminal.'
+          } | ConvertTo-Json -Depth 3 | Set-Content (Join-Path $env:MT5_PREFLIGHT_ARTIFACTS 'installer-verification.json') -Encoding UTF8
+
+      - name: Record truthful preflight outcome
+        if: always()
+        shell: pwsh
+        run: |
+          $result = [PSCustomObject]@{
+            status = 'PREFLIGHT_ONLY_NOT_A_BACKTEST'
+            repository_commit = $env:GITHUB_SHA
+            config_validator_tests = 'See workflow step result'
+            terminal_launched = $false
+            broker_login_attempted = $false
+            history_downloaded = $false
+            strategy_tester_executed = $false
+            performance_claim_allowed = $false
+            required_next_step = 'Use a verified demo-terminal history source and run the dedicated tester with retained raw report, logs, symbol contract and reconciled costs.'
+          }
+          $result | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $env:RUNNER_TEMP 'mt5-preflight-result.json') -Encoding UTF8
+          if (Test-Path $env:MT5_PREFLIGHT_ARTIFACTS) {
+            Copy-Item (Join-Path $env:RUNNER_TEMP 'mt5-preflight-result.json') $env:MT5_PREFLIGHT_ARTIFACTS -Force
+          }
+
+      - name: Upload preflight evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mt5-tester-preflight
+          path: ${{ runner.temp }}/mt5-tester-preflight/**
+          if-no-files-found: warn
+          retention-days: 30
