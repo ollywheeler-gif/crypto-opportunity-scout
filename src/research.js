@@ -229,11 +229,12 @@ export async function collectReport() {
 }
 
 export async function enrichResearchItem(item) {
-  const enriched = { ...item };
+  const enriched = { ...item, canonicalUrl: item.url };
   let page = null;
   try { page = await fetchArticlePage(item.url); } catch { page = null; }
 
   const combined = (item.title + " " + item.summary + " " + (page?.title || "") + " " + (page?.description || "") + " " + (page?.text || "")).slice(0, 30000);
+  if (page?.canonicalUrl) enriched.canonicalUrl = page.canonicalUrl;
   const compact = combined.replace(/\s+/g, " ").trim();
   const rewardSignal = REWARD_TERMS.test(compact);
   const actionSignal = ACTION_TERMS.test(compact);
@@ -402,7 +403,8 @@ async function fetchArticlePage(url) {
   )).slice(0, 25000);
   const feedHost = new URL(url).hostname;
   const finalHost = new URL(response.url || url).hostname;
-  return { title, description, text, sameHostAsFeed: finalHost === feedHost || finalHost.endsWith("." + feedHost) };
+  const canonicalUrl = extractCanonicalUrl(html, response.url || url, feedHost);
+  return { title, description, text, canonicalUrl, sameHostAsFeed: finalHost === feedHost || finalHost.endsWith("." + feedHost) };
 }
 
 function extractCampaignLinks(html, directory) {
@@ -430,17 +432,33 @@ function extractCampaignLinks(html, directory) {
   return [...found.values()].slice(0, 80);
 }
 
-function extractFeedLink(block) {
+export function extractFeedLink(block) {
   const links = [...block.matchAll(/<link\b([^>]*)\/?>/gi)];
   for (const match of links) {
     const attrs = match[1];
     const href = attrs.match(/\bhref=["']([^"']+)["']/i)?.[1];
-    const rel = attrs.match(/\brel=["']([^"']+)["']/i)?.[1];
-    if (href && (!rel || rel === "alternate")) return decodeEntities(href);
+    const rel = attrs.match(/\brel=["']([^"']+)["']/i)?.[1]?.trim().toLowerCase();
+    if (href && (!rel || rel === "alternate" || rel.endsWith("/alternate"))) return decodeEntities(href);
   }
   return cleanXml(getTag(block, "link"));
 }
 
+export function extractCanonicalUrl(html, baseUrl, expectedHost = new URL(baseUrl).hostname) {
+  const tags = [...String(html || "").matchAll(/<link\b[^>]*>/gi)];
+  for (const tag of tags) {
+    const attrs = tag[0];
+    const rel = attrs.match(/\brel=["']([^"']+)["']/i)?.[1]?.trim().toLowerCase();
+    const href = attrs.match(/\bhref=["']([^"']+)["']/i)?.[1];
+    if (rel !== "canonical" || !href) continue;
+    let parsed;
+    try { parsed = new URL(decodeEntities(href), baseUrl); } catch { continue; }
+    const host = parsed.hostname.toLowerCase();
+    const allowed = expectedHost.toLowerCase();
+    if (parsed.protocol !== "https:" || parsed.username || parsed.password || !(host === allowed || host.endsWith("." + allowed))) continue;
+    return normalizeArticleUrl(parsed.toString()) || normalizeArticleUrl(baseUrl);
+  }
+  return normalizeArticleUrl(baseUrl);
+}
 function normalizeArticleUrl(value) {
   try {
     const url = new URL(String(value || "").trim());
