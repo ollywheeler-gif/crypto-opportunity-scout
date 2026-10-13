@@ -32,6 +32,7 @@ $resolvedReport = [System.IO.Path]::GetFullPath($ReportPath)
 $resolvedArtifacts = [System.IO.Path]::GetFullPath($ArtifactDirectory)
 New-Item -ItemType Directory -Force -Path $resolvedArtifacts | Out-Null
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$compileLogSource = [System.IO.Path]::ChangeExtension($resolvedSource, ".log")
 $compileLog = Join-Path $resolvedArtifacts "compile-$stamp.log"
 $expertEx5 = [System.IO.Path]::ChangeExtension($resolvedSource, ".ex5")
 # Remove any old binary first so a failed compile cannot accidentally reuse it.
@@ -40,8 +41,12 @@ if (Test-Path -LiteralPath $expertEx5) {
 }
 
 # Compile and inspect the log; exit code alone is not sufficient.
-& $MetaEditorPath "/compile:$resolvedSource" "/log:$compileLog"
+if (Test-Path -LiteralPath $compileLogSource) { Remove-Item -LiteralPath $compileLogSource -Force }
+& $MetaEditorPath "/compile:$resolvedSource" "/log"
 $compileExit = $LASTEXITCODE
+if (Test-Path -LiteralPath $compileLogSource) {
+  Copy-Item -LiteralPath $compileLogSource -Destination $compileLog -Force
+}
 if (-not (Test-Path -LiteralPath $compileLog)) {
   throw "Compiler did not produce a log. Exit code: $compileExit"
 }
