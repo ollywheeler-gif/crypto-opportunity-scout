@@ -10,6 +10,8 @@ required = [
     "config/project_config.json",
     "agents/agent_0_project_director.md", "agents/agent_1_researcher.md", "agents/agent_2_developer.md",
     "agents/agent_3_tester.md", "agents/agent_4_reviewer.md",
+    "agents/agent_5_broker_feasibility.md", "agents/agent_6_independent_test_analyst.md",
+    "agents/agent_7_build_automation.md",
     "research/strategy_spec_template.md", "research/candidate_register.md",
     "research/specs/strat-001-timeseries-momentum-v1.md",
     "research/specs/STRAT-002-donchian-breakout-v1.md",
@@ -18,10 +20,11 @@ required = [
     "research/specs/strat-007-volatility-contraction-v1.md", "research/specs/strat-008-regime-mean-reversion-v1.md",
     "research/specs/strat-009-rsi-pullback-v1.md", "research/specs/strat-010-swap-aware-fx-momentum-v1.md",
     "research/capital_feasibility_template.csv", "research/normalized_cost_ledger_template.csv", "research/reviews/STRAT-002-code-review-v1.md",
-    "scripts/analyze_trades.py", "scripts/capital_feasibility.py",
+    "scripts/analyze_trades.py", "scripts/capital_feasibility.py", "scripts/reconcile_costs.py",
     "scripts/run_mt5_candidate.ps1", "scripts/install_mt5_candidate.ps1",
     "mql5/Experts/STRAT-002_DonchianBreakout.mq5", "mql5/Experts/STRAT-003_EMATrend.mq5", "mql5/Scripts/TradingLab/ExportSymbolContract.mq5",
     "tests/test_project_safety.py", "tests/test_analyze_trades.py", "tests/test_capital_feasibility.py",
+    "tests/test_donchian_reference.py", "tests/test_reconcile_costs.py",
 ]
 missing = [p for p in required if not (ROOT / p).is_file()]
 if missing:
