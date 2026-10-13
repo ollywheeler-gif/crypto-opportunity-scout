@@ -91,8 +91,11 @@ export async function collectReport() {
   const deduped = [...new Map(all.map(item => [item.url, item])).values()];
   deduped.sort((a, b) => Number(b.rewardSignal) - Number(a.rewardSignal) || b.relevance - a.relevance || Date.parse(b.publishedAt) - Date.parse(a.publishedAt));
   const candidates = deduped.slice(0, MAX_ITEMS);
-  const items = await Promise.all(candidates.map(item => enrichResearchItem(item)));
-  items.sort((a, b) => Number(b.rewardSignal) - Number(a.rewardSignal) || b.researchCompleteness - a.researchCompleteness || b.relevance - a.relevance || Date.parse(b.publishedAt) - Date.parse(a.publishedAt));
+  const researchedItems = await Promise.all(candidates.map(item => enrichResearchItem(item)));
+  // A reachable page is not an opportunity. Publish only leads with page evidence,
+  // explicit reward wording and a concrete participation/action signal.
+  const items = researchedItems.filter(item => item.actionable === true);
+  items.sort((a, b) => b.relevance - a.relevance || Date.parse(b.publishedAt) - Date.parse(a.publishedAt));
 
   return {
     date: new Date().toISOString().slice(0, 10),
@@ -103,13 +106,15 @@ export async function collectReport() {
     qualitySummary: {
       feedsChecked: sources.length,
       feedsAvailable: sources.filter(source => source.ok).length,
-      candidatePagesChecked: items.filter(item => item.pageCheckedAt).length,
-      possibleRewardSignals: items.filter(item => item.rewardSignal).length,
+      candidatePagesChecked: researchedItems.filter(item => item.pageCheckedAt).length,
+      possibleRewardSignals: researchedItems.filter(item => item.rewardSignal).length,
+      actionableLeadsPublished: items.length,
+      rejectedAsInsufficientEvidence: researchedItems.length - items.length,
       fullyVerifiedRewards: 0
     },
     disclaimer: items.length
-      ? "Automated public-source research leads. A page fetch and keyword match are not independent proof that an offer is genuine, active, available in your country or payable. No reward is labelled confirmed by this pipeline. Verify the linked official terms before acting."
-      : "No usable leads were collected. The source diagnostics show which feeds were unavailable or produced no fresh, parseable entries."
+      ? "Only leads with a fetched source page, explicit reward-related wording and an action signal are shown. These are still unverified leads, not confirmed or guaranteed rewards. Check campaign status, eligibility, deadlines, costs and official terms before acting."
+      : "No actionable opportunities met the evidence threshold today. This is preferable to presenting generic announcements as opportunities. Source diagnostics show feed health; rejected candidates lacked sufficient evidence of a concrete reward and action."
   };
 }
 
@@ -121,6 +126,9 @@ export async function enrichResearchItem(item) {
   const combined = (item.title + " " + item.summary + " " + (page?.title || "") + " " + (page?.description || "") + " " + (page?.text || "")).slice(0, 30000);
   const compact = combined.replace(/\s+/g, " ").trim();
   const rewardSignal = REWARD_TERMS.test(compact);
+  const actionSignal = ACTION_TERMS.test(compact);
+  const endedSignal = /\b(?:campaign|airdrop|rewards?)\b.{0,50}\b(?:ended|closed|expired|has finished|is over)\b|\b(?:ended|closed|expired)\b.{0,50}\b(?:campaign|airdrop|rewards?)\b/i.test(compact);
+  const actionable = Boolean(page && rewardSignal && actionSignal && !endedSignal);
   const eligibilityMatch = findContext(compact, /\b(?:eligible|eligibility|available in|excluding|excluded|residents of|restricted in|region|country|countries)\b/i);
   const costMatch = findContext(compact, /\b(?:fee|fees|deposit|minimum purchase|minimum balance|trading volume|gas cost|transaction cost|purchase at least|spend at least)\b/i);
   const deadlineMatch = findContext(compact, /\b(?:deadline|ends? on|ending on|expires? on|until|by \w+day|before \w+ \d{1,2})\b/i);
@@ -137,19 +145,21 @@ export async function enrichResearchItem(item) {
   enriched.reward = "Not confirmed";
   enriched.cost = "Not established — check original terms";
   enriched.rewardSignal = rewardSignal;
-  enriched.evidenceStatus = rewardSignal
-    ? (page ? "Reward-related wording found on the linked page; reward and eligibility not independently confirmed" : "Reward-related wording found in feed; linked page could not be checked")
-    : "No explicit reward signal confirmed by automated checks";
+  enriched.actionSignal = actionSignal;
+  enriched.actionable = actionable;
+  enriched.evidenceStatus = actionable
+    ? "Source page fetched; reward-related wording and a participation/action signal found, but offer status and terms remain unverified"
+    : (!page ? "Rejected from report: source page could not be fetched" : (!rewardSignal ? "Rejected from report: no explicit reward-related wording found" : (!actionSignal ? "Rejected from report: no concrete participation/action signal found" : "Rejected from report: source appears to describe an ended campaign")));
   enriched.deadline = deadlineMatch || "Not extracted — check original terms";
   enriched.eligibility = eligibilityMatch || "Not extracted — check original terms";
   enriched.costsAndRequirements = costMatch || "Not extracted — check original terms";
   enriched.risks = [...new Set(risks)];
-  enriched.verdict = rewardSignal
-    ? "Investigate — verify the official terms and eligibility before acting"
-    : (/\btestnet\b|\bdevnet\b|\bpoints\b/i.test(compact) ? "Monitor — participation does not guarantee a reward" : "Skip as a reward lead — no concrete reward identified");
-  enriched.nextStep = rewardSignal
-    ? "Read the linked campaign terms. Confirm that the offer is live, you are eligible in your country, the deadline has not passed, and the expected value exceeds fees and capital risk."
-    : "Treat this as ecosystem information unless the original source explicitly confirms an open campaign with published terms.";
+  enriched.verdict = actionable
+    ? "Potential lead — verify live status, eligibility and net value before acting"
+    : "Reject — insufficient evidence of a current, actionable reward opportunity";
+  enriched.nextStep = actionable
+    ? "Check the official campaign page for current status, your country eligibility, exact tasks, deadline, fees and capital requirements. Do not participate until these are clear."
+    : "Not shown in the daily opportunity report. A reachable source page alone is not evidence of an opportunity.";
   const completeness = [
     Boolean(page), Boolean(page?.title), Boolean(page?.description || item.summary),
     Boolean(Number.isFinite(Date.parse(item.publishedAt))), Boolean(rewardSignal),
