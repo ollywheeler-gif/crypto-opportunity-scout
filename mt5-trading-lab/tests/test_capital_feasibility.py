@@ -38,6 +38,8 @@ class CapitalFeasibilityTests(unittest.TestCase):
     def test_invalid_risk_cap_and_volume_step_fail_closed(self):
         with self.assertRaisesRegex(ValueError, "risk_cap_pct"):
             evaluate(ROW, 0)
+        with self.assertRaisesRegex(ValueError, "hard cap"):
+            evaluate(ROW, 0.5001)
         row = dict(ROW)
         row["volume_step"] = "0.03"
         with self.assertRaisesRegex(ValueError, "volume_step"):
@@ -68,6 +70,10 @@ class CapitalFeasibilityTests(unittest.TestCase):
                 row[key] = value
                 with self.assertRaises(ValueError):
                     evaluate(row)
+
+    def test_empty_broker_row_fails_closed(self):
+        with self.assertRaisesRegex(ValueError, "Missing required"):
+            evaluate({})
 
     def test_negative_margin_fails_closed(self):
         row = dict(ROW)
