@@ -5,7 +5,7 @@ Version: v1
 Status: FROZEN SPECIFICATION v1 — deterministic session rules accepted for implementation. Not backtested or approved for demo/live.
 
 ## Hypothesis
-A simple, deterministic london range breakout rule may capture a repeatable market effect, but it may fail after realistic costs, regime changes and the £100 feasibility constraint. The test must attempt to falsify the idea.
+A simple, deterministic london range breakout rule may capture a repeatable market effect, but it may fail after realistic costs, regime changes and the £200 feasibility constraint. The test must attempt to falsify the idea.
 
 ## Initial scope
 - Timeframe: M15.
@@ -19,11 +19,11 @@ Define the session in Europe/London civil time with daylight-saving conversion e
 Range 07:00–07:45 London; trade window 08:00–15:45; max one attempt/date; ATR20 filter.
 
 ## Main falsification risks
-DST/calendar errors, broker bar timestamps, spread spikes, entry slippage, stop too large for £100.
+DST/calendar errors, broker bar timestamps, spread spikes, entry slippage, stop too large for £200.
 
 ## Shared hard gates
 - Research-only. No live account, no paid data, no performance claim until actual MT5 evidence exists.
-- First feasibility instrument must be chosen from a broker's published symbol contract. £100 account reference; target risk 0.25%, reject if modeled minimum-volume loss including spread, commission, swaps, slippage and gap reserve exceeds 0.50% equity or margin is insufficient.
+- First feasibility instrument must be chosen from a broker's published symbol contract. £200 account reference; target risk 0.25%, reject if modeled minimum-volume loss including spread, commission, swaps, slippage and gap reserve exceeds 0.50% equity or margin is insufficient.
 - Size down to a legal volume step; if minimum volume breaches the hard cap, skip/reject the symbol rather than distort risk.
 - Use completed bars only; no look-ahead, repainting or same-bar reverse/re-entry. One position per symbol and strategy magic number. No averaging down, martingale, grid, pyramiding or discretionary filters.
 - Cost assumptions and server timezone/DST must be recorded. Backtests require chronological train/validation/locked-out-of-sample splits, walk-forward, modest parameter perturbations, higher-cost stress and independent Agent 4 review.
