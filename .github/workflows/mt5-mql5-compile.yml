@@ -89,8 +89,9 @@ jobs:
           $log = [System.IO.Path]::ChangeExtension($source, '.log')
           Remove-Item $ex5,$log -Force -ErrorAction SilentlyContinue
           $metaEditor = Join-Path $env:MT5_INSTALL_DIR 'metaeditor64.exe'
-          & $metaEditor "/compile:$source" "/include:$env:MQL5_ROOT" '/log'
-          $exitCode = $LASTEXITCODE
+          $compileArgs = @("/compile:`"$source`"", "/include:`"$env:MQL5_ROOT`"", '/log')
+          $compileProcess = Start-Process -FilePath $metaEditor -ArgumentList $compileArgs -Wait -PassThru
+          $exitCode = $compileProcess.ExitCode
           if (-not (Test-Path $log -PathType Leaf)) {
             throw "MetaEditor produced no compiler log (exit code $exitCode)."
           }
