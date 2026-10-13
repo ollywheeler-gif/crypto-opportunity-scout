@@ -21,6 +21,7 @@ This is project scaffolding, not a deployed autonomous agent service. No Windows
 - [Acceptance gates](docs/ACCEPTANCE_GATES.md) — feasibility, costs, chronological testing, review and demo gates.
 - [Pre-registered test protocol](docs/PRE_REGISTERED_TEST_PROTOCOL.md) — fixed date-split policy, stress tests, rejection gates and manifest requirements.
 - [Capital feasibility worksheet](research/capital_feasibility_template.csv) and [calculator](scripts/capital_feasibility.py) — require real broker inputs; estimates only.
+- [MQL5 symbol contract exporter](mql5/Scripts/TradingLab/ExportSymbolContract.mq5) captures broker symbol metadata to a local CSV without sending orders; the result must be checked against broker documentation and historical costs.
 - [Artifact and data conventions](docs/ARTIFACTS_AND_DATA.md).
 - Static tests check safety invariants in the EA source; these do not replace MetaEditor compilation.
 - [Donchian reference model](scripts/donchian_reference.py) and unit tests validate channel indexing and strict signal boundaries only; they do not simulate fills or broker execution.
