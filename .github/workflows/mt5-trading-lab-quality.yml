@@ -22,3 +22,12 @@ jobs:
           python-version: '3.11'
       - run: python mt5-trading-lab/scripts/validate_project.py
       - run: python -m unittest discover -s mt5-trading-lab/tests -v
+      - name: Run credential-free agent coordinator dry run
+        run: python mt5-trading-lab/scripts/agent_coordinator.py
+      - name: Upload dry-run report
+        uses: actions/upload-artifact@v4
+        with:
+          name: mt5-agent-coordinator-dry-run
+          path: mt5-trading-lab/reports/agent_runs/
+          if-no-files-found: error
+          retention-days: 14
