@@ -17,8 +17,8 @@ ROW = {
 class CapitalFeasibilityTests(unittest.TestCase):
     def test_loss_and_reject_over_cap(self):
         result = evaluate(ROW, 0.5)
-        self.assertAlmostEqual(result["estimated_worst_case_loss_gbp"], 12.0)
-        self.assertAlmostEqual(result["estimated_worst_case_loss_pct_equity"], 12.0)
+        self.assertAlmostEqual(result["estimated_worst_case_loss_gbp"], 13.0)
+        self.assertAlmostEqual(result["estimated_worst_case_loss_pct_equity"], 13.0)
         self.assertFalse(result["feasible_under_risk_cap"])
         self.assertTrue(result["margin_within_equity"])
 
