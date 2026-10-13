@@ -20,11 +20,11 @@ required = [
     "research/specs/strat-007-volatility-contraction-v1.md", "research/specs/strat-008-regime-mean-reversion-v1.md",
     "research/specs/strat-009-rsi-pullback-v1.md", "research/specs/strat-010-swap-aware-fx-momentum-v1.md",
     "research/capital_feasibility_template.csv", "research/normalized_cost_ledger_template.csv", "research/reviews/STRAT-002-code-review-v1.md",
-    "scripts/analyze_trades.py", "scripts/capital_feasibility.py", "scripts/reconcile_costs.py", "scripts/agent_coordinator.py",
+    "scripts/analyze_trades.py", "scripts/contract_export_to_feasibility.py", "scripts/capital_feasibility.py", "scripts/reconcile_costs.py", "scripts/agent_coordinator.py",
     "scripts/run_mt5_candidate.ps1", "scripts/install_mt5_candidate.ps1",
     "mql5/Experts/STRAT-001_TimeSeriesMomentum.mq5", "mql5/Experts/STRAT-002_DonchianBreakout.mq5", "mql5/Experts/STRAT-003_EMATrend.mq5", "mql5/Experts/STRAT-004_TrendPullback.mq5", "mql5/Experts/STRAT-007_VolatilityContraction.mq5", "mql5/Scripts/TradingLab/ExportSymbolContract.mq5",
     "tests/test_project_safety.py", "tests/test_analyze_trades.py", "tests/test_capital_feasibility.py", "tests/test_agent_coordinator.py",
-    "tests/test_donchian_reference.py", "tests/test_reconcile_costs.py",
+    "tests/test_donchian_reference.py", "tests/test_contract_export_to_feasibility.py", "tests/test_reconcile_costs.py",
 ]
 missing = [p for p in required if not (ROOT / p).is_file()]
 if missing:
