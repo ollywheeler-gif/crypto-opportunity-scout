@@ -17,7 +17,7 @@ This is project scaffolding, not a deployed autonomous agent service. No Windows
 - [Multi-agent operating protocol](docs/MULTI_AGENT_OPERATING_PROTOCOL.md) defines handoffs, artifacts, blocker handling and the critical path.
 - [Ten initial strategy hypotheses](research/candidate_register.md) — hypotheses, not performance claims.
 - [First deterministic test specification](research/specs/STRAT-002-donchian-breakout-v1.md) — source is written but not yet compiled or tested.
-- [Nine additional deterministic strategy-spec drafts](research/specs/) cover time-series momentum, EMA trend, pullback, London breakout, index opening range, volatility contraction, regime mean reversion, RSI pullback and swap-aware FX momentum. These are drafts, not validated strategies.
+- [Eight additional deterministic strategy-spec drafts](research/specs/) cover time-series momentum, EMA trend, pullback, London breakout, index opening range, volatility contraction, regime mean reversion, RSI pullback and swap-aware FX momentum. These are drafts, not validated strategies.
 - [Acceptance gates](docs/ACCEPTANCE_GATES.md) — feasibility, costs, chronological testing, review and demo gates.
 - [Capital feasibility worksheet](research/capital_feasibility_template.csv) and [calculator](scripts/capital_feasibility.py) — require real broker inputs; estimates only.
 - [Artifact and data conventions](docs/ARTIFACTS_AND_DATA.md).
