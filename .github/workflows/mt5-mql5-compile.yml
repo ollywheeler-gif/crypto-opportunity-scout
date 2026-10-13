@@ -43,10 +43,8 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $installer = Join-Path $env:RUNNER_TEMP 'mt5setup.exe'
           $installDir = 'C:\MT5Compile'
-          $process = Start-Process -FilePath $installer -ArgumentList @('/auto', "/path:$installDir") -Wait -PassThru
-          if ($process.ExitCode -ne 0) {
-            throw "MT5 installer failed with exit code $($process.ExitCode)"
-          }
+          $argumentLine = '/auto /path:"' + $installDir + '"'
+          $process = Start-Process -FilePath $installer -ArgumentList $argumentLine -Wait -PassThru
           $metaEditor = Join-Path $installDir 'metaeditor64.exe'
           $terminal = Join-Path $installDir 'terminal64.exe'
           if (-not (Test-Path $metaEditor -PathType Leaf) -or -not (Test-Path $terminal -PathType Leaf)) {
