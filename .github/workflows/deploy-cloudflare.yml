@@ -95,11 +95,16 @@ jobs:
           curl --fail-with-body --silent --show-error --retry 5 --retry-delay 2 "$base/" -o /tmp/scout-home.html
           grep -q "Crypto Opportunity Scout" /tmp/scout-home.html
           grep -q "Collect latest public research" /tmp/scout-home.html
-          curl --fail-with-body --silent --show-error --retry 5 --retry-delay 2 "$base/api/daily" -o /tmp/scout-report.json
+          code=$(curl --silent --show-error --retry 5 --retry-delay 2 -X POST -w "%{http_code}" "$base/api/refresh" -o /tmp/scout-report.json)
+          if [ "$code" != "200" ] && [ "$code" != "429" ]; then
+            echo "Live research collection returned HTTP $code" >&2
+            cat /tmp/scout-report.json
+            exit 1
+          fi
           node --input-type=module -e '
             import fs from "node:fs";
             const report = JSON.parse(fs.readFileSync("/tmp/scout-report.json", "utf8"));
             if (!Array.isArray(report.items)) throw new Error("Report API did not return an items array");
             if (!report.qualitySummary || typeof report.qualitySummary !== "object") throw new Error("Report API is missing quality metrics");
-            console.log(JSON.stringify({ date: report.date, leads: report.items.length, qualified: report.qualitySummary.economicallyQualifiedLeads ?? 0 }));
+            console.log(JSON.stringify({ date: report.date, refresh: report.refresh ?? "cooldown", leads: report.items.length, qualified: report.qualitySummary.economicallyQualifiedLeads ?? 0, feedsAvailable: report.qualitySummary.feedsAvailable ?? 0, feedsChecked: report.qualitySummary.feedsChecked ?? 0 }));
           '
