@@ -1,5 +1,9 @@
 # Project execution plan
 
+## Backtest infrastructure
+
+Follow [the sourced backtest infrastructure plan](BACKTEST_INFRASTRUCTURE_PLAN.md). Avoid a paid VPS for now: the existing Windows GitHub Actions runner can host batch MT5 runs. The next critical task is a separate, fail-closed Strategy Tester workflow. The remaining owner dependency is registration of a free demo account if broker-specific history/contract metadata is required; account credentials must be added only as GitHub Actions secrets and never sent in chat. Use Dukascopy historical CSV for independent research checks, not as a substitute for broker CFD specifications.
+
 ## Background agent runtime
 
 Follow [the runtime decision and acceptance plan](BACKGROUND_AGENT_RUNTIME_DECISION.md). Implement the credential-free dry-run coordinator and tests before any model calls. Do not enable scheduled model calls or add paid infrastructure until the owner explicitly approves API usage. Reports should be evidence-linked artifacts; direct delivery into this ChatGPT thread is not assumed.
