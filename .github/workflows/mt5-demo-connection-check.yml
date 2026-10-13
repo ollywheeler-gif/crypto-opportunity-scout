@@ -1,0 +1,160 @@
+name: MT5 demo connection and symbol contract check
+
+on:
+  workflow_dispatch:
+    inputs:
+      symbol:
+        description: 'Broker symbol to inspect (must match the Pepperstone MT5 Market Watch name)'
+        required: true
+        default: 'EURUSD'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mt5-demo-connection-check
+  cancel-in-progress: false
+
+jobs:
+  demo-check:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Verify required secrets are present without printing values
+        shell: pwsh
+        env:
+          MT5_DEMO_LOGIN: ${{ secrets.MT5_DEMO_LOGIN }}
+          MT5_DEMO_PASSWORD: ${{ secrets.MT5_DEMO_PASSWORD }}
+          MT5_DEMO_SERVER: ${{ secrets.MT5_DEMO_SERVER }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $missing = @()
+          foreach ($name in @('MT5_DEMO_LOGIN','MT5_DEMO_PASSWORD','MT5_DEMO_SERVER')) {
+            if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) { $missing += $name }
+          }
+          if ($missing.Count -gt 0) { throw ('Required repository secrets missing or empty: ' + ($missing -join ', ')) }
+          if ($env:MT5_DEMO_LOGIN -notmatch '^\d+$') { throw 'MT5_DEMO_LOGIN must contain only the numeric demo account login.' }
+          "Secret presence check passed; values were not printed."
+
+      - name: Download and verify official MT5 installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installer = Join-Path $env:RUNNER_TEMP 'mt5setup.exe'
+          Invoke-WebRequest -Uri 'https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe' -OutFile $installer
+          $sig = Get-AuthenticodeSignature -FilePath $installer
+          if ($sig.Status -ne 'Valid' -or $sig.SignerCertificate.Subject -notmatch 'MetaQuotes') {
+            throw "Official MT5 installer signature check failed: $($sig.Status)"
+          }
+          $installDir = 'C:\MT5DemoCheck'
+          $p = Start-Process -FilePath $installer -ArgumentList ('/auto /path:"' + $installDir + '"') -Wait -PassThru
+          $terminal = Join-Path $installDir 'terminal64.exe'
+          $editor = Join-Path $installDir 'metaeditor64.exe'
+          if (-not (Test-Path $terminal) -or -not (Test-Path $editor)) { throw "MT5 installation did not produce expected executables (installer exit $($p.ExitCode))." }
+          "MT5_INSTALL_DIR=$installDir" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Compile read-only symbol contract exporter
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = $env:MT5_INSTALL_DIR
+          $mql = Join-Path $root 'MQL5'
+          $include = Join-Path $mql 'Include\Trade\Trade.mqh'
+          $deadline = (Get-Date).AddSeconds(60)
+          while ((Get-Date) -lt $deadline -and -not (Test-Path $include)) { Start-Sleep -Seconds 2 }
+          if (-not (Test-Path $include)) { throw 'MT5 standard MQL5 files were not initialized by installer; cannot compile exporter.' }
+          $src = Join-Path $mql 'Scripts\TradingLab\ExportSymbolContract.mq5'
+          New-Item -ItemType Directory -Force -Path (Split-Path $src -Parent) | Out-Null
+          Copy-Item 'mt5-trading-lab/mql5/Scripts/TradingLab/ExportSymbolContract.mq5' $src -Force
+          $log = [IO.Path]::ChangeExtension($src,'.log')
+          $ex5 = [IO.Path]::ChangeExtension($src,'.ex5')
+          Remove-Item $log,$ex5 -Force -ErrorAction SilentlyContinue
+          $editor = Join-Path $root 'metaeditor64.exe'
+          $p = Start-Process -FilePath $editor -ArgumentList @("/compile:`"$src`"", '/log') -Wait -PassThru
+          if (-not (Test-Path $log)) { throw "Exporter compiler log missing (exit $($p.ExitCode))." }
+          $logText = Get-Content $log -Raw
+          $summary = [regex]::Match($logText,'(?im)^\s*Result:\s*(\d+)\s+errors?,\s*(\d+)\s+warnings?')
+          if (-not $summary.Success -or [int]$summary.Groups[1].Value -ne 0 -or [int]$summary.Groups[2].Value -ne 0 -or -not (Test-Path $ex5)) {
+            throw 'Read-only symbol exporter must compile with zero errors and warnings.'
+          }
+
+      - name: Attempt demo login and export broker symbol metadata
+        shell: pwsh
+        env:
+          MT5_DEMO_LOGIN: ${{ secrets.MT5_DEMO_LOGIN }}
+          MT5_DEMO_PASSWORD: ${{ secrets.MT5_DEMO_PASSWORD }}
+          MT5_DEMO_SERVER: ${{ secrets.MT5_DEMO_SERVER }}
+          REQUESTED_SYMBOL: ${{ inputs.symbol }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = $env:MT5_INSTALL_DIR
+          $outDir = Join-Path $env:RUNNER_TEMP 'mt5-demo-evidence'
+          New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+          $contractName = 'TradingLab_symbol_contract.csv'
+          $config = Join-Path $env:RUNNER_TEMP 'mt5-demo-transient.ini'
+          # Credentials exist only in this temporary file for the login attempt.
+          # Never print, upload, or retain this file.
+          $ini = @(
+            '[Common]',
+            ('Login=' + $env:MT5_DEMO_LOGIN),
+            ('Password=' + $env:MT5_DEMO_PASSWORD),
+            ('Server=' + $env:MT5_DEMO_SERVER),
+            'KeepPrivate=1',
+            '',
+            '[Experts]',
+            'AllowLiveTrading=0',
+            'AllowDllImport=0',
+            '',
+            '[StartUp]',
+            'Script=TradingLab\ExportSymbolContract',
+            ('Symbol=' + $env:REQUESTED_SYMBOL),
+            'Period=D1'
+          ) -join "`r`n"
+          [IO.File]::WriteAllText($config,$ini,[Text.Encoding]::Unicode)
+          Remove-Item Env:MT5_DEMO_PASSWORD -ErrorAction SilentlyContinue
+          Remove-Item Env:MT5_DEMO_LOGIN -ErrorAction SilentlyContinue
+          Remove-Item Env:MT5_DEMO_SERVER -ErrorAction SilentlyContinue
+          try {
+            $argsLine = '/portable /config:"' + $config + '"'
+            $proc = Start-Process -FilePath (Join-Path $root 'terminal64.exe') -ArgumentList $argsLine -PassThru
+            $filesDir = Join-Path $root 'MQL5\Files'
+            $contract = Join-Path $filesDir $contractName
+            $deadline = (Get-Date).AddMinutes(5)
+            while ((Get-Date) -lt $deadline -and -not (Test-Path $contract)) {
+              if ($proc.HasExited) { break }
+              Start-Sleep -Seconds 5
+            }
+            if (Test-Path $contract) {
+              Copy-Item $contract (Join-Path $outDir 'symbol-contract.csv') -Force
+              $loginStatus = 'CONTRACT_EXPORT_FILE_PRESENT'
+            } else {
+              $loginStatus = 'NO_CONTRACT_EXPORT_FILE'
+            }
+            if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
+            $status = [ordered]@{
+              status = $loginStatus
+              requested_symbol = $env:REQUESTED_SYMBOL
+              terminal_process_started = $true
+              contract_file_present = (Test-Path (Join-Path $outDir 'symbol-contract.csv'))
+              credential_values_printed = $false
+              credential_config_uploaded = $false
+              tester_executed = $false
+              note = 'A missing export is not proof of bad credentials: inspect the retained non-secret terminal/journal evidence and verify symbol/history separately.'
+            }
+            $status | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $outDir 'connection-check.json') -Encoding UTF8
+          } finally {
+            Remove-Item $config -Force -ErrorAction SilentlyContinue
+          }
+          "MT5_DEMO_EVIDENCE=$outDir" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Upload non-secret diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mt5-demo-connection-check
+          path: ${{ runner.temp }}/mt5-demo-evidence/**
+          if-no-files-found: warn
+          retention-days: 14
