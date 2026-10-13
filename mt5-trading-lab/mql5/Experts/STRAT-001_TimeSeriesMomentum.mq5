@@ -232,8 +232,6 @@ void OnTick()
    double previousMomentum = closePrevious / closePreviousLookback - 1.0;
    bool longSignal = (momentum > 0.0);
    bool shortSignal = (momentum < 0.0);
-   bool longToShort = (previousMomentum >= 0.0 && momentum < 0.0);
-   bool shortToLong = (previousMomentum <= 0.0 && momentum > 0.0);
    if(HasForeignPositionOnSymbol())
    {
       Print("Foreign position exists on this symbol; no action taken.");
@@ -245,8 +243,8 @@ void OnTick()
    bool hasPosition = FindOurPosition(ticket, positionType);
    if(hasPosition)
    {
-      bool reverse = (positionType == POSITION_TYPE_BUY && longToShort) ||
-                     (positionType == POSITION_TYPE_SELL && shortToLong);
+      bool reverse = (positionType == POSITION_TYPE_BUY && shortSignal) ||
+                     (positionType == POSITION_TYPE_SELL && longSignal);
       if(reverse && (!trade.PositionClose(ticket) || !TradeRequestAccepted()))
          Print("Close failed. Retcode=", trade.ResultRetcode(), " ", trade.ResultRetcodeDescription());
       return;
