@@ -15,6 +15,7 @@ required = [
     "research/capital_feasibility_template.csv",
     "scripts/analyze_trades.py", "scripts/capital_feasibility.py",
     "scripts/run_mt5_candidate.ps1",
+    "mql5/Experts/STRAT-002_DonchianBreakout.mq5",
 ]
 missing = [p for p in required if not (ROOT / p).is_file()]
 if missing:
