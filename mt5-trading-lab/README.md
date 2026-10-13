@@ -29,6 +29,7 @@ This is role-based project scaffolding, not a deployed autonomous agent service.
 - [Strategy specifications](research/specs/) — frozen/draft status is recorded in the gate register; specifications are not validated strategies.
 - [Acceptance gates](docs/ACCEPTANCE_GATES.md) and [pre-registered test protocol](docs/PRE_REGISTERED_TEST_PROTOCOL.md).
 - [Capital feasibility worksheet](research/capital_feasibility_template.csv) and [calculator](scripts/capital_feasibility.py) — require verified broker inputs; estimates only.
+- [Preliminary broker feasibility research](docs/BROKER_FEASIBILITY_RESEARCH.md) compares public MT5 terms but does not select a broker or replace exact symbol metadata.
 - [MQL5 symbol contract exporter](mql5/Scripts/TradingLab/ExportSymbolContract.mq5) captures local broker symbol metadata without sending orders.
 - [Donchian reference model](scripts/donchian_reference.py) and [cost reconciliation](scripts/reconcile_costs.py), with tests, are narrow validation tools—not execution simulators.
 - [Windows MetaEditor compile workflow](../.github/workflows/mt5-mql5-compile.yml) retains no-account compile evidence; it is not an MT5 backtest.
