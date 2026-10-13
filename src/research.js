@@ -164,7 +164,7 @@ export async function collectReport() {
   return {
     date: new Date().toISOString().slice(0, 10),
     generatedAt: new Date().toISOString(),
-    pipelineVersion: "2.0",
+    pipelineVersion: "2.1",
     items,
     sources: [...sources, ...directoryDiagnostics],
     qualitySummary: {
@@ -180,7 +180,7 @@ export async function collectReport() {
       fullyVerifiedRewards: 0
     },
     disclaimer: items.length
-      ? "Only leads with a fetched source page, explicit reward-related wording and an action signal are shown. These are still unverified leads, not confirmed or guaranteed rewards. Check campaign status, eligibility, deadlines, costs and official terms before acting."
+      ? "Only leads with a fetched source page, explicit reward-related wording, an action signal and a strict preliminary worthwhile-economics pass are shown. This does not guarantee rewards or legitimacy. Check campaign status, eligibility, deadlines, costs and official terms before acting."
       : "No demonstrably worthwhile opportunities met the strict evidence threshold today. This is preferable to presenting generic announcements as opportunities. Source diagnostics show feed health; rejected candidates lacked sufficient evidence of a concrete reward and action."
   };
 }
