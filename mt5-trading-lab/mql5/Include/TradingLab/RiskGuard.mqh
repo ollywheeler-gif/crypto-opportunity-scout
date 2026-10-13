@@ -91,6 +91,7 @@ bool TLRG_Init()
       return false;
    }
 
+   bool hadDayState = GlobalVariableCheck(tlrgDayKey) && GlobalVariableCheck(tlrgDayStartKey);
    if(!TLRG_SetIfMissing(tlrgPeakKey, equity) ||
       !TLRG_SetIfMissing(tlrgDayKey, (double)day) ||
       !TLRG_SetIfMissing(tlrgDayStartKey, equity) ||
@@ -103,12 +104,13 @@ bool TLRG_Init()
       return false;
    }
 
-   if((int)GlobalVariableGet(tlrgDayKey) != day)
+   if(!hadDayState || (int)GlobalVariableGet(tlrgDayKey) != day)
    {
       GlobalVariableSet(tlrgDayKey, (double)day);
       GlobalVariableSet(tlrgDayStartKey, equity);
       GlobalVariableSet(tlrgDailyHaltKey, 0.0);
       GlobalVariableSet(tlrgReviewLoggedKey, 0.0);
+      GlobalVariableSet(tlrgHaltLoggedKey, 0.0);
    }
 
    GlobalVariablesFlush();
