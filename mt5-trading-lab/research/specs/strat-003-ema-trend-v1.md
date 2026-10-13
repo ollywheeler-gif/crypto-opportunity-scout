@@ -2,7 +2,7 @@
 
 Candidate ID: STRAT-003
 Version: v1
-Status: SPECIFICATION DRAFT — not implemented, compiled, backtested or approved.
+Status: FROZEN SPECIFICATION v1 — deterministic rules accepted for implementation. Not backtested or approved for demo/live.
 
 ## Hypothesis
 A simple, deterministic ema trend baseline rule may capture a repeatable market effect, but it may fail after realistic costs, regime changes and the £100 feasibility constraint. The test must attempt to falsify the idea.
@@ -42,3 +42,10 @@ Compile log with warnings resolved; source/spec/config hashes; exact MT5 build; 
 
 ## Approval status
 Draft v1 research rules only. Agent 0 must freeze the specification after a rule/code consistency review. No candidate is approved for demo or live use by this document.
+
+
+## Agent 0 freeze record
+- Freeze date: 2026-10-13.
+- Rules frozen: H4 EMA(20/100) cross; ATR(20) initial stop at 2.0 ATR; exit on opposite completed-bar cross or stop; no same-bar reversal; no pyramiding.
+- Agent 2 source: `mql5/Experts/STRAT-003_EMATrend.mq5`.
+- Freeze is a specification milestone only. It does not imply compile, broker feasibility, strategy performance or deployment approval.
