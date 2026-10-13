@@ -52,6 +52,14 @@ class CostReconciliationTests(unittest.TestCase):
         finally:
             path.unlink(missing_ok=True)
 
+    def test_empty_ledger_rejected(self):
+        path = write_csv([])
+        try:
+            with self.assertRaisesRegex(ValueError, "no trade rows"):
+                reconcile(path)
+        finally:
+            path.unlink(missing_ok=True)
+
     def test_nan_and_missing_columns_rejected(self):
         path = write_csv([dict(trade_id="T1", gross_profit="nan", commission="0", swap="0", fees="0", net_profit="0")])
         try:
