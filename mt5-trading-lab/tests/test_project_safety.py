@@ -5,6 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 EA = (ROOT / "mql5/Experts/STRAT-002_DonchianBreakout.mq5").read_text(encoding="utf-8")
 EMA_EA = (ROOT / "mql5/Experts/STRAT-003_EMATrend.mq5").read_text(encoding="utf-8")
+CONTRACT_EXPORTER = (ROOT / "mql5/Scripts/TradingLab/ExportSymbolContract.mq5").read_text(encoding="utf-8")
 CONFIG = json.loads((ROOT / "config/project_config.json").read_text(encoding="utf-8"))
 RUNNER = (ROOT / "scripts/run_mt5_candidate.ps1").read_text(encoding="utf-8")
 INSTALLER = (ROOT / "scripts/install_mt5_candidate.ps1").read_text(encoding="utf-8")
@@ -37,6 +38,12 @@ class ProjectSafetyTests(unittest.TestCase):
         self.assertIn("Upload compiler evidence", COMPILE_WORKFLOW)
         self.assertNotIn("Password=", COMPILE_WORKFLOW)
         self.assertNotIn("Login=", COMPILE_WORKFLOW)
+
+    def test_contract_exporter_is_read_only_and_exports_feasibility_fields(self):
+        for field in ("SYMBOL_VOLUME_MIN", "SYMBOL_VOLUME_STEP", "SYMBOL_TRADE_TICK_SIZE", "SYMBOL_TRADE_TICK_VALUE_LOSS", "SYMBOL_TRADE_STOPS_LEVEL", "SYMBOL_TRADE_FREEZE_LEVEL", "SYMBOL_SWAP_LONG", "SYMBOL_SWAP_SHORT", "OrderCalcMargin"):
+            self.assertIn(field, CONTRACT_EXPORTER)
+        for forbidden in ("trade.Buy(", "trade.Sell(", "OrderSend(", "PositionClose("):
+            self.assertNotIn(forbidden, CONTRACT_EXPORTER)
 
     def test_strat003_is_disabled_and_has_core_safety_gates(self):
         self.assertIn("input bool   EnableStrategy = false", EMA_EA)
