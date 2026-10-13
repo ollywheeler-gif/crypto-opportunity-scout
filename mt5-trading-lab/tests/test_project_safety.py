@@ -9,6 +9,7 @@ PULLBACK_EA = (ROOT / "mql5/Experts/STRAT-004_TrendPullback.mq5").read_text(enco
 VOL_EA = (ROOT / "mql5/Experts/STRAT-007_VolatilityContraction.mq5").read_text(encoding="utf-8")
 MR_EA = (ROOT / "mql5/Experts/STRAT-008_RegimeMeanReversion.mq5").read_text(encoding="utf-8")
 RSI_EA = (ROOT / "mql5/Experts/STRAT-009_RsiPullback.mq5").read_text(encoding="utf-8")
+LONDON_EA = (ROOT / "mql5/Experts/STRAT-005_LondonBreakout.mq5").read_text(encoding="utf-8")
 CONTRACT_EXPORTER = (ROOT / "mql5/Scripts/TradingLab/ExportSymbolContract.mq5").read_text(encoding="utf-8")
 CONFIG = json.loads((ROOT / "config/project_config.json").read_text(encoding="utf-8"))
 RUNNER = (ROOT / "scripts/run_mt5_candidate.ps1").read_text(encoding="utf-8")
@@ -65,6 +66,17 @@ class ProjectSafetyTests(unittest.TestCase):
             self.assertIn(field, CONTRACT_EXPORTER)
         for forbidden in ("trade.Buy(", "trade.Sell(", "OrderSend(", "PositionClose("):
             self.assertNotIn(forbidden, CONTRACT_EXPORTER)
+
+    def test_strat005_is_disabled_and_requires_reviewed_session_mapping(self):
+        self.assertIn("input bool   EnableStrategy = false", LONDON_EA)
+        self.assertIn("ConfirmSessionRulesReviewed = false", LONDON_EA)
+        self.assertIn("BrokerUsesEuropeanDST = false", LONDON_EA)
+        self.assertIn("BrokerServerUtcOffsetSummerHours != BrokerServerUtcOffsetWinterHours + 1", LONDON_EA)
+        self.assertIn("lastAttemptLondonDateKey", LONDON_EA)
+        self.assertIn("GlobalVariableSet(attemptDateKeyName", LONDON_EA)
+        self.assertIn("ACCOUNT_TRADE_MODE_REAL", LONDON_EA)
+        self.assertIn("OrderCalcProfit", LONDON_EA)
+        self.assertIn("OrderCalcMargin", LONDON_EA)
 
     def test_strat009_is_disabled_and_has_core_safety_gates(self):
         self.assertIn("input bool   EnableStrategy = false", RSI_EA)
