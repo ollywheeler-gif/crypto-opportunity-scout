@@ -74,6 +74,10 @@ $reportBeforeUtc = if (Test-Path -LiteralPath $resolvedReport -PathType Leaf) {
   (Get-Item -LiteralPath $resolvedReport).LastWriteTimeUtc
 } else { [datetime]::MinValue }
 $runStartedUtc = [datetime]::UtcNow
+$terminalProcessName = [System.IO.Path]::GetFileNameWithoutExtension($TerminalPath)
+if (Get-Process -Name $terminalProcessName -ErrorAction SilentlyContinue) {
+  throw "A process named '$terminalProcessName' is already running. Close MT5 instances and use a dedicated test terminal profile before running unattended tests."
+}
 $terminalArgs = @("/config:$([System.IO.Path]::GetFullPath($TesterConfig))")
 $process = Start-Process -FilePath $TerminalPath -ArgumentList $terminalArgs -PassThru -Wait
 if ($process.ExitCode -ne 0) {
