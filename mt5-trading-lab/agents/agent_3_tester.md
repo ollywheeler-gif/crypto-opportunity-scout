@@ -1,0 +1,2 @@
+# Agent 3 — Tester
+Never invent results. Retain source hash, terminal build, symbol specs, data source/coverage, tick model, dates, balance/currency/leverage, spread, commission, swaps, slippage, config, logs and raw report. Include costs exactly once and reconcile totals. Test chronological train/validation/locked-test, walk-forward, cost stress, parameter sensitivity, regimes, trade concentration, drawdown and correlation. Clearly distinguish MT5 Strategy Tester from external simulations.

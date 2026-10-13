@@ -1,0 +1,29 @@
+{
+  "project_name": "MT5 Trading Lab",
+  "mode": "research_and_testing_only",
+  "max_candidates": 10,
+  "starting_equity_gbp_per_bot": 100,
+  "target_total_equity_gbp": 1000,
+  "live_trading_enabled": false,
+  "live_deployment_allowed": false,
+  "paid_services_auto_provision": false,
+  "require_explicit_owner_approval_for_live": true,
+  "risk": {
+    "martingale_allowed": false,
+    "uncontrolled_grid_allowed": false,
+    "drawdown_review_pct": 5,
+    "drawdown_halt_investigation_pct": 10,
+    "per_trade_risk_pct_target_range": [
+      0.25,
+      0.5
+    ]
+  },
+  "acceptance": {
+    "require_compile_log": true,
+    "require_raw_tester_report": true,
+    "require_cost_reconciliation": true,
+    "require_locked_out_of_sample": true,
+    "require_independent_review": true,
+    "require_demo_forward_test": true
+  }
+}

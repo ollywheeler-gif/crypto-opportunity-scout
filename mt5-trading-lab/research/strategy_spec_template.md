@@ -1,0 +1,17 @@
+# Candidate specification
+- Candidate ID / spec version / status:
+- Strategy family and falsifiable hypothesis:
+- Evidence versus hypothesis:
+- Markets/symbol aliases/timeframe/session:
+- Long entry / short entry:
+- Exit / stop / take-profit / trailing:
+- Position sizing / risk limits / no-trade conditions:
+- Parameters and bounded ranges:
+- Expected trade frequency:
+- Data requirements and quality:
+- Broker contract requirements and costs:
+- £100 feasibility: PASS / FAIL / UNKNOWN with reason:
+- Failure modes and falsification tests:
+- Training / validation / locked-test periods:
+- Credible research references:
+- Independent reviewer questions:

@@ -1,0 +1,24 @@
+name: MT5 Trading Lab quality checks
+on:
+  push:
+    paths:
+      - 'mt5-trading-lab/**'
+      - '.github/workflows/mt5-trading-lab-quality.yml'
+  pull_request:
+    paths:
+      - 'mt5-trading-lab/**'
+      - '.github/workflows/mt5-trading-lab-quality.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python mt5-trading-lab/scripts/validate_project.py
+      - run: python -m unittest discover -s mt5-trading-lab/tests -v
