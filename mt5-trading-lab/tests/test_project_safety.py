@@ -16,6 +16,7 @@ INSTALLER = (ROOT / "scripts/install_mt5_candidate.ps1").read_text(encoding="utf
 PROJECT_DIRECTOR = (ROOT / "agents/agent_0_project_director.md").read_text(encoding="utf-8")
 ORCHESTRATION = (ROOT / "docs/MULTI_AGENT_OPERATING_PROTOCOL.md").read_text(encoding="utf-8")
 CODE_REVIEW = (ROOT / "research/reviews/STRAT-002-code-review-v1.md").read_text(encoding="utf-8")
+ACCEPTANCE_GATES = (ROOT / "docs/ACCEPTANCE_GATES.md").read_text(encoding="utf-8")
 COMPILE_WORKFLOW = (ROOT.parent / ".github/workflows/mt5-mql5-compile.yml").read_text(encoding="utf-8")
 
 class ProjectSafetyTests(unittest.TestCase):
@@ -24,6 +25,11 @@ class ProjectSafetyTests(unittest.TestCase):
         self.assertIn("not a performance approval", CODE_REVIEW.lower())
         self.assertIn("CR-04", CODE_REVIEW)
         self.assertIn("no performance approval", CODE_REVIEW.lower())
+
+    def test_demo_gate_requires_account_level_drawdown_controls(self):
+        self.assertIn("account-level daily-loss stop", ACCEPTANCE_GATES)
+        self.assertIn("peak-to-trough drawdown circuit-breaker", ACCEPTANCE_GATES)
+        self.assertIn("persist correctly across restarts", ACCEPTANCE_GATES)
 
     def test_project_director_and_agent_handoffs_exist(self):
         for required in ("Agent 1", "Agent 2", "Agent 3", "Agent 4", "owner approval", "BLOCKED", "£100"):
