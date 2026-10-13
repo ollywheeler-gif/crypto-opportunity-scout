@@ -2,7 +2,7 @@
 
 Candidate ID: STRAT-004
 Version: v1
-Status: SPECIFICATION DRAFT — not implemented, compiled, backtested or approved.
+Status: FROZEN SPECIFICATION v1 — deterministic rules accepted for implementation. Not backtested or approved for demo/live.
 
 ## Hypothesis
 A simple, deterministic higher-timeframe trend pullback rule may capture a repeatable market effect, but it may fail after realistic costs, regime changes and the £100 feasibility constraint. The test must attempt to falsify the idea.
@@ -42,3 +42,10 @@ Compile log with warnings resolved; source/spec/config hashes; exact MT5 build; 
 
 ## Approval status
 Draft v1 research rules only. Agent 0 must freeze the specification after a rule/code consistency review. No candidate is approved for demo or live use by this document.
+
+
+## Agent 0 freeze record
+- Freeze date: 2026-10-13.
+- Rules frozen: completed H4 EMA(50/200) trend filter; completed H1 RSI(2) extreme plus H1 close relative to completed H4 EMA(50); ATR(14) stop at 2.0 ATR; exit on opposite H4 trend or after 12 completed H1 bars; no averaging or adding.
+- Agent 2 source: `mql5/Experts/STRAT-004_TrendPullback.mq5`.
+- Freeze is not a compile, broker-feasibility, tester or deployment approval.
