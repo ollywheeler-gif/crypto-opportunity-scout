@@ -27,6 +27,17 @@ class ProjectSafetyTests(unittest.TestCase):
         for required in ("Agent 0", "Agent 1", "Agent 2", "Agent 3", "Agent 4", "raw report", "critical path"):
             self.assertIn(required.lower(), ORCHESTRATION.lower())
 
+    def test_bounded_specialist_team_is_defined_and_not_misrepresented(self):
+        for role_file in (
+            "agent_5_broker_feasibility.md",
+            "agent_6_independent_test_analyst.md",
+            "agent_7_build_automation.md",
+        ):
+            self.assertTrue((ROOT / "agents" / role_file).is_file())
+        for required in ("Agent 5", "Agent 6", "Agent 7", "eight roles", "one writer"):
+            self.assertIn(required.lower(), ORCHESTRATION.lower())
+        self.assertIn("not a deployed autonomous agent service", (ROOT / "README.md").read_text(encoding="utf-8").lower())
+
     def test_windows_compile_workflow_is_isolated_and_auditable(self):
         self.assertIn("Get-AuthenticodeSignature", COMPILE_WORKFLOW)
         self.assertIn("metaeditor64.exe", COMPILE_WORKFLOW)
