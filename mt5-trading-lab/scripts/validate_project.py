@@ -19,11 +19,11 @@ required = [
     "research/specs/strat-005-london-breakout-v1.md", "research/specs/strat-006-index-opening-range-v1.md",
     "research/specs/strat-007-volatility-contraction-v1.md", "research/specs/strat-008-regime-mean-reversion-v1.md",
     "research/specs/strat-009-rsi-pullback-v1.md", "research/specs/strat-010-swap-aware-fx-momentum-v1.md",
-    "research/capital_feasibility_template.csv", "research/index_session_schedule_template.csv", "research/swap_history_template.csv", "research/normalized_cost_ledger_template.csv", "research/reviews/STRAT-002-code-review-v1.md",
-    "scripts/analyze_trades.py", "scripts/risk_guard_reference.py", "scripts/contract_export_to_feasibility.py", "scripts/capital_feasibility.py", "scripts/reconcile_costs.py", "scripts/agent_coordinator.py",
+    "research/mt5_tester_smoke_template.ini", "research/capital_feasibility_template.csv", "research/index_session_schedule_template.csv", "research/swap_history_template.csv", "research/normalized_cost_ledger_template.csv", "research/reviews/STRAT-002-code-review-v1.md",
+    "scripts/analyze_trades.py", "scripts/risk_guard_reference.py", "scripts/contract_export_to_feasibility.py", "scripts/capital_feasibility.py", "scripts/reconcile_costs.py", "scripts/agent_coordinator.py", "scripts/validate_tester_config.py",
     "scripts/run_mt5_candidate.ps1", "scripts/install_mt5_candidate.ps1",
     "mql5/Experts/STRAT-001_TimeSeriesMomentum.mq5", "mql5/Experts/STRAT-002_DonchianBreakout.mq5", "mql5/Experts/STRAT-003_EMATrend.mq5", "mql5/Experts/STRAT-004_TrendPullback.mq5", "mql5/Include/TradingLab/RiskGuard.mqh", "mql5/Experts/STRAT-005_LondonBreakout.mq5", "mql5/Experts/STRAT-006_IndexOpeningRange.mq5", "mql5/Experts/STRAT-007_VolatilityContraction.mq5", "mql5/Experts/STRAT-008_RegimeMeanReversion.mq5", "mql5/Experts/STRAT-009_RsiPullback.mq5", "mql5/Scripts/TradingLab/ExportSymbolContract.mq5",
-    "tests/test_project_safety.py", "tests/test_analyze_trades.py", "tests/test_capital_feasibility.py", "tests/test_volatility_setup_reference.py", "tests/test_london_time_reference.py", "tests/test_index_session_schedule.py", "tests/test_agent_coordinator.py",
+    "tests/test_project_safety.py", "tests/test_analyze_trades.py", "tests/test_capital_feasibility.py", "tests/test_volatility_setup_reference.py", "tests/test_london_time_reference.py", "tests/test_index_session_schedule.py", "tests/test_agent_coordinator.py", "tests/test_validate_tester_config.py",
     "tests/test_donchian_reference.py", "tests/test_risk_guard_reference.py", "tests/test_contract_export_to_feasibility.py", "tests/test_reconcile_costs.py",
 ]
 missing = [p for p in required if not (ROOT / p).is_file()]
