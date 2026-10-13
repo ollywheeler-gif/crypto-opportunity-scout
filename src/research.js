@@ -2,12 +2,12 @@ const FEEDS = [
   "https://blog.ethereum.org/en/feed.xml",
   "https://blog.base.dev/feed",
   "https://offchain.medium.com/feed",
-  "https://optimism.mirror.xyz/feed/atom",
+  "https://dev.optimism.io/rss/",
   "https://blog.chain.link/rss/",
-  "https://www.circle.com/blog/rss.xml",
+  "https://blog.celestia.org/rss/",
   "https://solana.com/changelog/rss.xml",
-  "https://www.bnbchain.org/en/blog/rss.xml",
-  "https://trondao.org/blog/feed/"
+  "https://blog.celer.network/feed/",
+  "https://gitcoin.co/blog/feed/"
 ];
 
 // Dedicated campaign directories complement network blogs. They are discovery
