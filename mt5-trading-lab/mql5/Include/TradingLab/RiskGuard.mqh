@@ -59,8 +59,11 @@ void TLRG_DeleteState()
 bool TLRG_Init()
 {
    if(TLRG_DailyLossLimitPct <= 0.0 ||
+      TLRG_DailyLossLimitPct > 1.0 ||
       TLRG_DrawdownReviewPct <= 0.0 ||
-      TLRG_DrawdownHaltPct <= TLRG_DrawdownReviewPct)
+      TLRG_DrawdownReviewPct > 5.0 ||
+      TLRG_DrawdownHaltPct <= TLRG_DrawdownReviewPct ||
+      TLRG_DrawdownHaltPct > 10.0)
    {
       Print("Risk guard configuration invalid; initialization blocked.");
       return false;
