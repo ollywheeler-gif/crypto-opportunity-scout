@@ -1,6 +1,6 @@
 candidate_id,version,gate,owner,status,evidence,blocker,next_action
 PROJECT,1,Repository structure,Agent 0,PASS,Required project docs and validation scripts are in the repository,none,Keep validation gate in CI
-PROJECT,1,Python tests and CI,Agent 0,PASS,GitHub Actions run 38394451134 passed repository validation and Python unit tests,none,Rerun after every code or workflow change
+PROJECT,1,Python tests and CI,Agent 0,PASS,Latest quality run 38400962452 and Test Worker Integration run 38400962536 passed on commit 495f5606,none,Rerun after every code or workflow change
 PROJECT,1,Windows compile pipeline,Agent 7,PASS,Run 38394444863 compiled eight EAs and the symbol exporter with MetaEditor 5.0.0.6257 and zero errors or warnings; artifact 11811545078,Compile is not a Strategy Tester result,Retain new manifests and logs for every source change
 PROJECT,1,Symbol exporter execution,Agent 5,BLOCKED,ExportSymbolContract.mq5 compiled but has not run on a selected broker terminal,No broker-specific symbol metadata,Run exporter only on a chosen demo terminal and independently verify CSV
 PROJECT,1,Pre-registered test protocol,Agent 6,PASS,docs/PRE_REGISTERED_TEST_PROTOCOL.md,Actual broker data coverage and dates must be confirmed before testing,Freeze any date adjustments before results are inspected
@@ -46,5 +46,5 @@ PROJECT,1,Chronological and robustness testing,Agent 3,BLOCKED,No raw tester rep
 PROJECT,1,Independent review,Agent 4,BLOCKED,Only source review and compile evidence exist,No runtime or broker evidence,Repeat full independent review after tester artifacts exist
 PROJECT,1,Demo forward test,Agent 0,BLOCKED,Earlier gates not passed,No demo acceptance,Only propose after all prior gates pass
 PROJECT,1,Paid services,Owner,NOT_AUTHORIZED,No paid resources provisioned,No approval granted,Keep all work no-cost unless owner explicitly approves
-PROJECT,1,Risk guard wiring static contract,Agent 7,PASS,tests/test_risk_guard_wiring.py passed in run 38400235089,Static source checks are not a runtime threshold/restart/close-retry test,Retain as regression check and perform mechanics-only tester verification before any demo proposal
+PROJECT,1,Risk guard wiring static contract,Agent 7,PASS,tests/test_risk_guard_wiring.py extended with initialization/persistence contract checks; quality run 38400664598 passed on commit 839f913c,Static source checks are not a runtime threshold/restart/close-retry test,Retain as regression check and perform mechanics-only tester verification before any demo proposal
 PROJECT,1,Account-wide risk aggregation,Agent 0,BLOCKED,Shared RiskGuard state is keyed by account plus strategy magic and symbol,Current thresholds are not a verified portfolio-wide circuit breaker and close enforcement requires ticks,Design and verify centralized account-wide persistence/close behavior in a mechanics-only test before demo approval
