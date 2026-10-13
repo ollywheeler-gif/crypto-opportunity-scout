@@ -1,0 +1,115 @@
+name: MT5 EA compile (Windows)
+
+on:
+  push:
+    paths:
+      - 'mt5-trading-lab/mql5/Experts/**/*.mq5'
+      - '.github/workflows/mt5-mql5-compile.yml'
+  pull_request:
+    paths:
+      - 'mt5-trading-lab/mql5/Experts/**/*.mq5'
+      - '.github/workflows/mt5-mql5-compile.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Download and verify official MT5 installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installer = Join-Path $env:RUNNER_TEMP 'mt5setup.exe'
+          Invoke-WebRequest -Uri 'https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe' -OutFile $installer
+          $signature = Get-AuthenticodeSignature -FilePath $installer
+          if ($signature.Status -ne 'Valid') {
+            throw "MT5 installer Authenticode signature is not valid: $($signature.Status)"
+          }
+          if ($signature.SignerCertificate.Subject -notmatch 'MetaQuotes') {
+            throw "Unexpected MT5 installer signer: $($signature.SignerCertificate.Subject)"
+          }
+          Write-Host "Verified installer signer: $($signature.SignerCertificate.Subject)"
+
+      - name: Install MT5 without account setup
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installer = Join-Path $env:RUNNER_TEMP 'mt5setup.exe'
+          $installDir = 'C:\MT5Compile'
+          $process = Start-Process -FilePath $installer -ArgumentList @('/auto', "/path:$installDir") -Wait -PassThru
+          if ($process.ExitCode -ne 0) {
+            throw "MT5 installer failed with exit code $($process.ExitCode)"
+          }
+          $metaEditor = Join-Path $installDir 'metaeditor64.exe'
+          $terminal = Join-Path $installDir 'terminal64.exe'
+          if (-not (Test-Path $metaEditor -PathType Leaf) -or -not (Test-Path $terminal -PathType Leaf)) {
+            throw "Expected MT5/MetaEditor files were not found under $installDir"
+          }
+          "MT5_INSTALL_DIR=$installDir" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Initialize isolated MQL5 include directory
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $terminal = Join-Path $env:MT5_INSTALL_DIR 'terminal64.exe'
+          $portableMql5 = Join-Path $env:MT5_INSTALL_DIR 'MQL5'
+          $tradeInclude = Join-Path $portableMql5 'Include\Trade\Trade.mqh'
+          if (-not (Test-Path $tradeInclude -PathType Leaf)) {
+            $terminalProcess = Start-Process -FilePath $terminal -ArgumentList '/portable' -PassThru
+            $deadline = (Get-Date).AddSeconds(60)
+            while ((Get-Date) -lt $deadline -and -not (Test-Path $tradeInclude -PathType Leaf)) {
+              Start-Sleep -Seconds 2
+            }
+            if (-not $terminalProcess.HasExited) {
+              Stop-Process -Id $terminalProcess.Id -Force
+            }
+          }
+          if (-not (Test-Path $tradeInclude -PathType Leaf)) {
+            throw 'Could not initialize a local MQL5 standard include directory; compile was not attempted.'
+          }
+          "MQL5_ROOT=$portableMql5" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Compile STRAT-002 and retain logs
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $source = Join-Path $env:MQL5_ROOT 'Experts\TradingLab\STRAT-002_DonchianBreakout.mq5'
+          $sourceDir = Split-Path $source -Parent
+          New-Item -ItemType Directory -Force -Path $sourceDir | Out-Null
+          Copy-Item 'mt5-trading-lab/mql5/Experts/STRAT-002_DonchianBreakout.mq5' $source -Force
+          $ex5 = [System.IO.Path]::ChangeExtension($source, '.ex5')
+          $log = [System.IO.Path]::ChangeExtension($source, '.log')
+          Remove-Item $ex5,$log -Force -ErrorAction SilentlyContinue
+          $metaEditor = Join-Path $env:MT5_INSTALL_DIR 'metaeditor64.exe'
+          & $metaEditor "/compile:$source" "/include:$env:MQL5_ROOT" '/log'
+          $exitCode = $LASTEXITCODE
+          if (-not (Test-Path $log -PathType Leaf)) {
+            throw "MetaEditor produced no compiler log (exit code $exitCode)."
+          }
+          Get-Content $log
+          $logText = Get-Content $log -Raw
+          if ($exitCode -ne 0 -or $logText -match '(?im)\b[1-9]\d*\s+errors?\b' -or -not (Test-Path $ex5 -PathType Leaf)) {
+            throw 'STRAT-002 compile failed or produced no fresh EX5.'
+          }
+          if ($logText -match '(?im)\b[1-9]\d*\s+warnings?\b') {
+            throw 'STRAT-002 compile produced warnings; review and resolve them before acceptance.'
+          }
+          Get-FileHash $source,$ex5,$log -Algorithm SHA256 | Format-Table -AutoSize
+
+      - name: Upload compiler evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mt5-compile-evidence
+          path: |
+            ${{ runner.temp }}/**/STRAT-002_DonchianBreakout.log
+            ${{ runner.temp }}/**/STRAT-002_DonchianBreakout.ex5
+          if-no-files-found: warn
+          retention-days: 30
