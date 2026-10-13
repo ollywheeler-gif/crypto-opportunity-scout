@@ -7,13 +7,15 @@ from pathlib import Path
 
 REQUIRED = {
     "broker", "symbol", "account_equity_gbp", "minimum_volume", "tick_size",
-    "tick_value_account_ccy", "stop_distance_price", "spread_cost_account_ccy",
-    "commission_round_turn_account_ccy", "slippage_allowance_account_ccy",
-    "gap_allowance_account_ccy", "swap_expected_account_ccy",
+    "tick_value_account_ccy", "stop_distance_price", "spread_cost_at_minimum_volume_account_ccy",
+    "commission_round_turn_at_minimum_volume_account_ccy", "slippage_allowance_at_minimum_volume_account_ccy",
+    "gap_allowance_at_minimum_volume_account_ccy", "swap_expected_at_minimum_volume_account_ccy",
     "fx_conversion_rate",
 }
 
 def evaluate(row, risk_cap_pct=0.5):
+    if not math.isfinite(risk_cap_pct) or risk_cap_pct <= 0:
+        raise ValueError("risk_cap_pct must be finite and positive")
     missing = sorted(k for k in REQUIRED if not str(row.get(k, "")).strip())
     if missing:
         raise ValueError("Missing required broker inputs: " + ", ".join(missing))
@@ -27,6 +29,11 @@ def evaluate(row, risk_cap_pct=0.5):
         return value
     equity = num("account_equity_gbp")
     volume = num("minimum_volume")
+    volume_step_text = str(row.get("volume_step", "")).strip()
+    if volume_step_text:
+        volume_step = num("volume_step")
+        if volume_step <= 0 or abs(volume / volume_step - round(volume / volume_step)) > 1e-7:
+            raise ValueError("minimum_volume must be a positive multiple of volume_step")
     tick_size = num("tick_size")
     tick_value = num("tick_value_account_ccy")
     stop_distance = num("stop_distance_price")
@@ -34,15 +41,15 @@ def evaluate(row, risk_cap_pct=0.5):
     if equity <= 0 or volume <= 0 or tick_size <= 0 or tick_value <= 0 or stop_distance < 0 or fx <= 0:
         raise ValueError("Equity, volume, tick size/value and FX rate must be positive; stop distance cannot be negative")
     costs = sum(num(k) for k in (
-        "spread_cost_account_ccy", "commission_round_turn_account_ccy",
-        "slippage_allowance_account_ccy", "gap_allowance_account_ccy",
-        "swap_expected_account_ccy",
+        "spread_cost_at_minimum_volume_account_ccy", "commission_round_turn_at_minimum_volume_account_ccy",
+        "slippage_allowance_at_minimum_volume_account_ccy", "gap_allowance_at_minimum_volume_account_ccy",
+        "swap_expected_at_minimum_volume_account_ccy",
     ))
     # Cost inputs are expected as non-negative loss allowances, including any
     # expected financing debit. Negative values would hide risk and are rejected.
-    cost_keys = ("spread_cost_account_ccy", "commission_round_turn_account_ccy",
-                 "slippage_allowance_account_ccy", "gap_allowance_account_ccy",
-                 "swap_expected_account_ccy")
+    cost_keys = ("spread_cost_at_minimum_volume_account_ccy", "commission_round_turn_at_minimum_volume_account_ccy",
+                 "slippage_allowance_at_minimum_volume_account_ccy", "gap_allowance_at_minimum_volume_account_ccy",
+                 "swap_expected_at_minimum_volume_account_ccy")
     if any(num(k) < 0 for k in cost_keys):
         raise ValueError("Cost/risk allowances must be non-negative")
     price_loss = (stop_distance / tick_size) * tick_value * volume
@@ -52,7 +59,10 @@ def evaluate(row, risk_cap_pct=0.5):
     margin_text = str(row.get("margin_per_min_volume_account_ccy", "")).strip()
     margin_gbp = None
     if margin_text:
-        margin = float(margin_text)
+        try:
+            margin = float(margin_text)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("margin_per_min_volume_account_ccy must be numeric") from exc
         if not math.isfinite(margin) or margin < 0:
             raise ValueError("margin_per_min_volume_account_ccy must be finite and non-negative")
         margin_gbp = margin / fx
