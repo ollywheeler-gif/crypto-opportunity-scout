@@ -183,6 +183,8 @@ test("only a fixed per-person reward with no capital or fees and open status pas
   assert.equal(result.investmentAssessment.decision, "Worth investing in");
   assert.match(result.verdict, /Worth investing in/);
   assert.equal(result.reward, "Not confirmed");
+  assert.match(result.investmentAssessment.estimatedNetReturn, /Gross reward: USDC 10.00 per eligible participant before time cost/);
+  assert.match(result.investmentAssessment.rule, /time cost, payout probability and eligibility remain unquantified/);
 });
 
 test("research enrichment fails safely when source page cannot be fetched", async (t) => {
@@ -227,7 +229,7 @@ test("daily collector deduplicates leads and reports transparent quality metrics
   };
   t.after(() => { globalThis.fetch = originalFetch; });
   const report = await collectReport();
-  assert.equal(report.pipelineVersion, "2.2");
+  assert.equal(report.pipelineVersion, "2.3");
   assert.equal(report.items.length, 0, "ambiguous percentage, reward pool and deposit offers must not be promoted as worthwhile");
   assert.equal(report.qualitySummary.feedsChecked, 9);
   assert.equal(report.qualitySummary.campaignDirectoriesChecked, 3);
