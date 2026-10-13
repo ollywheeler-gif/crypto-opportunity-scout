@@ -167,31 +167,38 @@ jobs:
             }
             if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
 
-            # Preserve only filtered terminal log lines useful for diagnosing connection/authentication.
-            # Never upload raw terminal logs, config, account identifiers, or credential-bearing text.
+            # Capture enough journal context to identify why the broker session is offline.
+            # Remove exact secrets/server/login before general redaction; never upload raw logs.
             $safeLogPath = Join-Path $outDir 'terminal-connection-log-sanitized.txt'
             $logRoots = @((Join-Path $root 'logs'), (Join-Path $root 'MQL5\Logs'))
             $safeLines = [System.Collections.Generic.List[string]]::new()
+            $logInventory = [System.Collections.Generic.List[string]]::new()
             foreach ($logRoot in $logRoots) {
               if (Test-Path $logRoot) {
-                Get-ChildItem -LiteralPath $logRoot -Filter '*.log' -File -ErrorAction SilentlyContinue |
-                  Where-Object { $_.LastWriteTime -ge $launchStarted.AddMinutes(-1) } |
-                  Sort-Object LastWriteTime -Descending | Select-Object -First 6 | ForEach-Object {
-                    Get-Content -LiteralPath $_.FullName -ErrorAction SilentlyContinue |
-                      Where-Object { $_ -match '(?i)\b(connect|connected|authorization|authorized|login|network|server|timeout|failed|error|disconnected|invalid account)\b' -and $_ -notmatch '\t(Compile|Tester)\t' } |
-                      ForEach-Object {
-                        $line = [string]$_
-                        $line = $line -replace '(?i)(password|passwd|login|account|user)\s*[:=]\s*[^\s,;]+','$1=[REDACTED]'
-                        $line = $line -replace '\b\d{5,}\b','[NUMBER_REDACTED]'
-                        $line = $line -replace '(?i)(server\s*[:=]\s*)[^\s,;]+','$1[REDACTED]'
-                        $line = $line -replace ('(?i)' + [regex]::Escape($requestedSymbol)), '[SYMBOL]'
-                        if ($line.Length -gt 500) { $line = $line.Substring(0,500) }
-                        $safeLines.Add($line)
+                $logFiles = @(Get-ChildItem -LiteralPath $logRoot -Filter '*.log' -File -ErrorAction SilentlyContinue |
+                  Sort-Object LastWriteTime -Descending | Select-Object -First 4)
+                $logInventory.Add(($logRoot + ': ' + $logFiles.Count + ' log files'))
+                foreach ($file in $logFiles) {
+                  $logInventory.Add(($file.Name + ' bytes=' + $file.Length + ' modified=' + $file.LastWriteTime.ToString('s')))
+                  Get-Content -LiteralPath $file.FullName -Tail 120 -ErrorAction SilentlyContinue | ForEach-Object {
+                    $line = [string]$_
+                    if ($line -match '(?i)terminal|network|connect|authoriz|login|server|timeout|failed|error|disconnected|resolve|socket|certificate|trade') {
+                      foreach ($secret in @($password,$login,$server)) {
+                        if (-not [string]::IsNullOrEmpty($secret)) { $line = $line.Replace($secret,'[REDACTED]') }
                       }
+                      $line = $line -replace '(?i)(password|passwd|login|account|user)\s*[:=]\s*[^\s,;]+','$1=[REDACTED]'
+                      $line = $line -replace '\b\d{5,}\b','[NUMBER_REDACTED]'
+                      $line = $line -replace '(?i)(server\s*[:=]\s*)[^\s,;]+','$1[REDACTED]'
+                      $line = $line -replace ('(?i)' + [regex]::Escape($requestedSymbol)), '[SYMBOL]'
+                      if ($line.Length -gt 500) { $line = $line.Substring(0,500) }
+                      $safeLines.Add($line)
+                    }
                   }
-              }
+                }
+              } else { $logInventory.Add(($logRoot + ': directory missing')) }
             }
-            if ($safeLines.Count -eq 0) { $safeLines.Add('No matching terminal connection log lines were found in expected log folders.') }
+            $logInventory | Set-Content -LiteralPath (Join-Path $outDir 'terminal-log-inventory.txt') -Encoding UTF8
+            if ($safeLines.Count -eq 0) { $safeLines.Add('No matching lines found in the most recent platform/Experts logs; inspect inventory for actual log locations.') }
             $safeLines | Set-Content -LiteralPath $safeLogPath -Encoding UTF8
 
             $verified = $contractPresent -and $connected -and $loggedIn -and -not [string]::IsNullOrWhiteSpace($accountCurrency) -and $tickValue -gt 0
