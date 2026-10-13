@@ -102,7 +102,7 @@ jobs:
           MT5_DEMO_LOGIN: ${{ secrets.MT5_DEMO_LOGIN }}
           MT5_DEMO_PASSWORD: ${{ secrets.MT5_DEMO_PASSWORD }}
           MT5_DEMO_SERVER: ${{ secrets.MT5_DEMO_SERVER }}
-          REQUESTED_SYMBOL: ${{ inputs.symbol }}
+          REQUESTED_SYMBOL: ${{ inputs.symbol || 'EURUSD' }}
         run: |
           $ErrorActionPreference = 'Stop'
           $root = $env:MT5_INSTALL_DIR
@@ -126,7 +126,8 @@ jobs:
             '[StartUp]',
             'Script=TradingLab\ExportSymbolContract',
             ('Symbol=' + $env:REQUESTED_SYMBOL),
-            'Period=D1'
+            'Period=D1',
+            'ShutdownTerminal=1'
           ) -join "`r`n"
           [IO.File]::WriteAllText($config,$ini,[Text.Encoding]::Unicode)
           Remove-Item Env:MT5_DEMO_PASSWORD -ErrorAction SilentlyContinue
