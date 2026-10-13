@@ -1,3 +1,4 @@
+import { collectReport } from "./research.js";
 const FEEDS = [
   "https://blog.ethereum.org/en/feed.xml",
   "https://blog.base.dev/feed",
@@ -133,68 +134,6 @@ async function readLatest(env) {
     disclaimer: "Storage is not configured yet. The site is online, but its report store needs to be connected."
   };
 }
-async function collectReport() {
-  const all = [];
-  const sources = [];
-  for (const feedUrl of FEEDS) {
-    const source = new URL(feedUrl).hostname;
-    try {
-      const response = await fetch(feedUrl, {
-        headers: { "User-Agent": "CryptoOpportunityScout/1.0", "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*" },
-        signal: AbortSignal.timeout(10000)
-      });
-      if (!response.ok) {
-        sources.push({ source, ok: false, status: response.status, entriesFound: 0, itemsAccepted: 0, issue: "Feed returned a non-success HTTP status." });
-        continue;
-      }
-      const xml = await response.text();
-      const blocks = [...xml.matchAll(/<(item|entry)\b[\s\S]*?<\/\1>/gi)].map(m => m[0]).slice(0, 30);
-      let accepted = 0;
-      for (const block of blocks) {
-        const title = cleanXml(getTag(block, "title"));
-        const linkTag = getTag(block, "link");
-        const href = (block.match(/<link[^>]+href=["']([^"']+)/i) || [])[1] || cleanXml(linkTag);
-        const date = cleanXml(getTag(block, "pubDate") || getTag(block, "updated") || getTag(block, "published"));
-        const summary = cleanXml(getTag(block, "description") || getTag(block, "summary") || getTag(block, "content"));
-        if (!title || !/^https:\/\/[^/]/i.test(href)) continue;
-        // Keep the digest fresh: old or undated announcements are not useful as current opportunity leads.
-        const publishedAt = Date.parse(date);
-        const ageMs = Date.now() - publishedAt;
-        if (!Number.isFinite(publishedAt) || ageMs < -24 * 60 * 60 * 1000 || ageMs > 45 * 24 * 60 * 60 * 1000) continue;
-        const text = title + " " + summary;
-        const lower = text.toLowerCase();
-        const rewardSignal = /\bairdrop\b|\bclaim (your|rewards?|tokens?)\b|\breward (program|campaign|pool)\b|\bincentive (program|campaign|pool)\b|\bquest campaign\b|\bpoints campaign\b|\bretroactive rewards?\b/i.test(text);
-        let category = rewardSignal ? "Possible reward — manual verification required" : classify(text, false);
-        let relevance = 20;
-        if (rewardSignal || /\btestnet\b|\bdevnet\b/i.test(lower)) relevance += 35;
-        if (/eligibility|snapshot|deadline|registration|official campaign/i.test(lower)) relevance += 15;
-        if (/security|exploit|phishing|governance|upgrade|research paper/i.test(lower)) relevance -= 10;
-        if (source.includes("ethereum.org") || source.includes("base.dev")) relevance += 5;
-        const item = {
-          title: title.slice(0, 200), url: href, source, date, summary: summary.slice(0, 280),
-          category, relevance, reward: "Unverified", cost: "Not established",
-          evidenceStatus: rewardSignal ? "Possible reward signal in source wording — not confirmed" : "No specific reward identified",
-          nextStep: /testnet|devnet/i.test(text) ? "Check the official project page for live testnet instructions. Participation does not guarantee a reward." : /airdrop|reward|incentive|claim|points campaign|retroactive/i.test(text) ? "Check the official source for eligibility, dates and claim instructions before acting." : /security|exploit|phishing/i.test(text) ? "Review the official security notice for any recommended action." : "Review the official announcement to see whether it contains a concrete action relevant to you.",
-          assessment: relevance >= 65 ? "Higher keyword relevance; manual verification needed" : relevance >= 40 ? "Worth a quick review" : "General ecosystem information",
-          verification: "Research lead only. Eligibility, fees, deadlines and withdrawal conditions are not independently verified. Never share a seed phrase or sign a transaction solely because of this listing."
-        };
-        all.push(item);
-        accepted++;
-      }
-      sources.push({ source, ok: true, status: response.status, entriesFound: blocks.length, itemsAccepted: accepted, issue: blocks.length ? (accepted ? null : "Entries were found, but none passed link, date and 45-day freshness checks.") : "No RSS or Atom entries matched the expected format." });
-    } catch (error) {
-      sources.push({ source, ok: false, status: null, entriesFound: 0, itemsAccepted: 0, issue: error?.name === "TimeoutError" ? "Feed request timed out." : "Feed could not be fetched or parsed." });
-    }
-  }
-  const unique = [...new Map(all.map(x => [x.url, x])).values()];
-  const items = unique.sort((a,b) => b.relevance - a.relevance || (Date.parse(b.date)||0)-(Date.parse(a.date)||0)).slice(0, 15);
-  return {
-    date: new Date().toISOString().slice(0,10), generatedAt: new Date().toISOString(), items, sources,
-    disclaimer: items.length
-      ? "Ranked public-source research leads, not verified airdrops or guaranteed income. Scores indicate keyword relevance only, not likelihood of reward. Never deposit funds, reveal a seed phrase, or sign a transaction solely because of a listing."
-      : "No usable leads were collected. Source diagnostics are available to help identify whether a feed was unavailable or its format changed."
-  };
-}
 function classify(s, rewardSignal = false) {
   if (rewardSignal) return "Possible reward — manual verification required";
   if (/security|scam|exploit|phishing/i.test(s)) return "Security update";
@@ -222,4 +161,34 @@ async function verifySignature(raw, header, secret) {
 function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
 function html(body){return new Response(body,{headers:{"Content-Type":"text/html; charset=utf-8","X-Content-Type-Options":"nosniff","Referrer-Policy":"no-referrer","Content-Security-Policy":"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'"}});}
 function homePage(){return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Crypto Opportunity Scout</title><style>body{font:16px system-ui;max-width:800px;margin:32px auto;padding:0 16px;color:#172033;line-height:1.5}.item{border:1px solid #d9deea;border-radius:12px;padding:16px;margin:14px 0}.muted{color:#596579}</style></head><body><h1>Crypto Opportunity Scout</h1><p class="muted">Daily public-source crypto research. Leads are not verified rewards or financial advice.</p><main id="items">Loading…</main><script>const root=document.getElementById('items');function show(d){root.textContent='';const p=document.createElement('p');p.textContent='Report date: '+(d.date||'not available');root.append(p);for(const i of d.items||[]){const box=document.createElement('article');box.className='item';const h=document.createElement('h3');h.textContent=i.title;const meta=document.createElement('p');meta.className='muted';meta.textContent=(i.category||'Research lead')+(Number.isFinite(i.relevance)?' · Relevance score '+i.relevance+'/100':'');const s=document.createElement('p');s.textContent=i.summary||'Open the source for details.';const ev=document.createElement('p');ev.textContent='Reward status: '+(i.evidenceStatus||'Not verified');const assessment=document.createElement('p');assessment.textContent='Priority: '+(i.assessment||'Manual review needed');const action=document.createElement('p');action.textContent='Suggested next step: '+(i.nextStep||'Review the official source before acting.');const warning=document.createElement('p');warning.className='muted';warning.textContent=i.verification||'Verify claims before acting.';const a=document.createElement('a');a.href=i.url;a.rel='noopener noreferrer';a.textContent='Open official source';const buy=document.createElement('button');buy.textContent='Get detailed report — $1 USDC on Base (test mode)';buy.style='display:block;margin-top:14px;padding:12px 16px;border-radius:8px;border:1px solid #aaa;background:white;font:inherit';buy.onclick=async()=>{buy.disabled=true;buy.textContent='Preparing test checkout…';try{const cr=await fetch('/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product:'daily_report',itemUrl:i.url})});const data=await cr.json();if(!cr.ok)throw new Error(data.error||'Checkout unavailable');const go=document.createElement('a');go.href=data.checkout_url;go.textContent='Continue to Shieldz test checkout';go.style='display:block;margin-top:10px';buy.replaceWith(go);const reportLink=document.createElement('a');reportLink.href=data.report_url;reportLink.textContent='Report access link (available after test payment)';reportLink.style='display:block;margin-top:8px';box.append(reportLink)}catch(e){buy.disabled=false;buy.textContent='Test checkout unavailable';const msg=document.createElement('p');msg.textContent=e.message;box.append(msg)}};box.append(h,meta,s,ev,assessment,action,warning,a,buy);root.append(box)}const n=document.createElement('p');n.className='muted';n.textContent=d.disclaimer||d.note||'';root.append(n);for(const source of d.sources||[]){const detail=document.createElement('p');detail.className='muted';detail.textContent=source.source+': '+(source.ok?'HTTP '+source.status+', '+source.entriesFound+' entries, '+source.itemsAccepted+' usable':'unavailable')+(source.issue?' — '+source.issue:'');root.append(detail)}if(!(d.items||[]).length){const b=document.createElement('button');b.textContent='Collect latest public research';b.style='padding:12px 16px;border-radius:8px;border:1px solid #aaa;background:white;font:inherit';b.onclick=async()=>{b.disabled=true;b.textContent='Collecting…';try{const r=await fetch('/api/refresh',{method:'POST'});const x=await r.json();if(!r.ok&&r.status!==429)throw new Error(x.error||'Refresh failed');show(x)}catch(e){b.disabled=false;b.textContent='Try collecting again';const m=document.createElement('p');m.textContent=e.message;root.append(m)}};root.append(b)}}async function loadDigest(){root.textContent='Loading digest…';try{const r=await fetch('/api/daily',{cache:'no-store'});if(!r.ok)throw new Error('The report API returned HTTP '+r.status+'.');let d=await r.json();if(!(d.items||[]).length){try{const rr=await fetch('/api/refresh',{method:'POST',cache:'no-store'});const x=await rr.json().catch(()=>({}));if(rr.ok||rr.status===429){d=x}else{d.disclaimer=x.error||d.disclaimer}}catch(e){d.disclaimer=(d.disclaimer||'No digest is available yet.')+' Collection request failed: '+(e.message||'network error')+'.'}}show(d)}catch(e){root.textContent='';const p=document.createElement('p');p.textContent='The digest could not load. '+(e.message||'The report service may be temporarily unavailable.');root.append(p);const b=document.createElement('button');b.textContent='Retry';b.style='padding:12px 16px;border-radius:8px;border:1px solid #aaa;background:white;font:inherit';b.onclick=loadDigest;root.append(b)}}loadDigest()</script></body></html>`;}
-function reportPage(report){const cards=(report.items||[]).map(i=>`<article style="border:1px solid #ddd;border-radius:10px;padding:14px;margin:12px 0"><h3>${esc(i.title)}</h3><p>${esc(i.category)}</p><p>${esc(i.summary)}</p><p><a href="${esc(i.url)}" rel="noopener noreferrer">Read original official source</a></p><h4>What the Scout can establish</h4><p><b>Reward status:</b> ${esc(i.evidenceStatus||"Not verified")}</p><p><b>Current cost:</b> ${esc(i.cost||"Not established")}</p><p><b>Priority:</b> ${esc(i.assessment||"Manual review needed")}</p><p><b>Suggested next step:</b> ${esc(i.nextStep||"Review the official source before acting.")}</p><h4>Before you act, verify</h4><ul><li>Is there an official campaign page, and is it linked from the project's genuine website?</li><li>Are eligibility rules, dates and any reward explicitly published?</li><li>What transaction fees, deposits or approvals are required?</li><li>Can you participate without sharing a seed phrase or granting unnecessary wallet permissions?</li></ul><p>${esc(i.verification||"This is a research lead, not a verified reward.")}</p></article>`).join("");return `<!doctype html><meta name="viewport" content="width=device-width"><title>Scout Report</title><main style="font:16px system-ui;max-width:800px;margin:32px auto;padding:0 16px"><h1>Your detailed Scout report</h1><p>Date: ${esc(report.date)}</p><p>This report organizes public-source leads into next steps and verification checks. It does not independently confirm rewards or guarantee eligibility.</p>${cards||"<p>No items available today.</p>"}<p>${esc(report.disclaimer)}</p></main>`;}
+function reportPage(report) {
+  const cards = (report.items || []).map(i => {
+    const risks = (i.risks || ["Eligibility and reward details have not been independently confirmed."])
+      .map(risk => "<li>" + esc(risk) + "</li>").join("");
+    return '<article style="border:1px solid #d9deea;border-radius:14px;padding:18px;margin:16px 0">' +
+      '<p style="color:#526173;font-size:13px">SOURCE: ' + esc(i.source || "Unknown") + ' · PUBLISHED: ' + esc(i.date || "Date unavailable") + '</p>' +
+      '<h2 style="margin:8px 0">' + esc(i.title) + '</h2>' +
+      '<p><b>Scout verdict:</b> ' + esc(i.verdict || "Investigate — verify the source first") + '</p>' +
+      '<p><b>Source check:</b> ' + esc(i.verificationStatus || "Not independently verified") + '</p>' +
+      '<p><b>Research completeness:</b> ' + esc(i.assessment || "Not assessed") + '</p>' +
+      (i.summary ? '<p>' + esc(i.summary) + '</p>' : '') +
+      (i.sourcePageDescription ? '<p><b>Page description:</b> ' + esc(i.sourcePageDescription) + '</p>' : '') +
+      '<p><a href="' + esc(i.url) + '" rel="noopener noreferrer">Open original source and terms</a></p>' +
+      '<h3>What the automated checks found</h3>' +
+      '<p><b>Reward evidence:</b> ' + esc(i.evidenceStatus || "Not confirmed") + '</p>' +
+      '<p><b>Deadline:</b> ' + esc(i.deadline || "Not extracted — check original terms") + '</p>' +
+      '<p><b>Eligibility:</b> ' + esc(i.eligibility || "Not established — check original terms") + '</p>' +
+      '<p><b>Costs and requirements:</b> ' + esc(i.costsAndRequirements || i.cost || "Not established — check original terms") + '</p>' +
+      '<h3>Risks and unknowns</h3><ul>' + risks + '</ul>' +
+      '<h3>Recommended next step</h3><p>' + esc(i.nextStep || "Read the original terms before acting.") + '</p>' +
+      '<p style="font-size:13px;color:#526173">' + esc(i.verification || "Automated research only; important terms may be missed.") + '</p>' +
+      '</article>';
+  }).join("");
+  return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Crypto Opportunity Scout — Detailed Report</title><style>body{font:16px system-ui;line-height:1.55;max-width:820px;margin:28px auto;padding:0 16px;color:#172033}a{overflow-wrap:anywhere}h1{line-height:1.2}.muted{color:#526173}.notice{background:#f3f6fa;border-radius:12px;padding:14px}</style></head><body>' +
+    '<p class="muted">CRYPTO OPPORTUNITY SCOUT · DETAILED REPORT</p><h1>Your opportunity research report</h1>' +
+    '<p class="muted">Generated: ' + esc(report.generatedAt || report.date || "Date unavailable") + '</p>' +
+    '<div class="notice"><b>How to read this report</b><p>Automated source checks help organise research, but they do not prove that a reward is genuine, still open, available in your country or payable. The system does not label rewards as confirmed. Verify the original terms before spending money or connecting a wallet.</p></div>' +
+    (cards || "<p>No research item is available for this order.</p>") +
+    '<p class="muted">' + esc(report.disclaimer || "Automated public-source research; not financial advice.") + '</p>' +
+    '<p class="muted">Never share a seed phrase or private key. Never spend money solely because an item appears in this report.</p></body></html>';
+}
