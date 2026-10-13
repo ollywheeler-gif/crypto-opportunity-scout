@@ -27,7 +27,7 @@ jobs:
       - name: Run config-validator unit tests
         shell: pwsh
         run: |
-          python -m unittest mt5-trading-lab/tests/test_validate_tester_config.py -v
+          python -m unittest discover -s mt5-trading-lab/tests -p test_validate_tester_config.py -v
 
       - name: Validate credential-free tester template
         shell: pwsh
