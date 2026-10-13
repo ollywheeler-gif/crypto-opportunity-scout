@@ -39,3 +39,9 @@ The code finds the first matching position and returns after exit handling. It i
 
 ## Final disposition
 BLOCKED. No claim of profitability or readiness for live trading is supported.
+
+
+## Follow-up after initial review
+- CR-04 partial mitigation committed: the EA now rounds protective-stop prices to `SYMBOL_TRADE_TICK_SIZE` and requires a broker-reviewed `MaxSpreadPoints` ceiling before strategy enablement. This reduces known price-alignment/spread risks but is **not resolved** until compiled and exercised against real broker contract data; freeze-level and filling-mode behavior still require tester evidence.
+- The local and CI compile runners now wait for the MetaEditor process and reject compiler warnings before tester execution. Automated compile is currently being retried after the first observed run revealed the process had been launched asynchronously.
+- Remaining CR-01, CR-02, CR-03, CR-05, CR-06 and CR-07 remain open. No performance approval is possible at this stage.
