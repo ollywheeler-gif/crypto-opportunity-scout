@@ -26,6 +26,9 @@ class Tests(unittest.TestCase):
             self.assertEqual(r["trade_count"], 3)
             self.assertEqual(r["net_profit"], 4)
             self.assertAlmostEqual(r["max_closed_trade_equity_drawdown_pct"], 2.8571, places=3)
+            self.assertAlmostEqual(r["expectancy_per_trade"], 4 / 3)
+            self.assertEqual(r["max_consecutive_losses"], 1)
+            self.assertEqual(r["monthly_net_profit"], {"2025-01": 4.0})
 
     def test_bad_schema(self):
         with tempfile.TemporaryDirectory() as d:
