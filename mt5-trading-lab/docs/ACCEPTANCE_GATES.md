@@ -4,8 +4,8 @@ A candidate is a research hypothesis until it passes every gate below. A positiv
 
 ## Gate 0 — Feasibility before coding
 - Identify broker, exact symbol, contract size, tick size/value, volume step/minimum, margin requirement, trading hours, spread, commission, swaps/financing, and account currency.
-- For £100 starting equity, calculate worst-case loss at minimum permitted volume using realistic stop distance plus spread, commission, slippage and gap allowance.
-- Reject the market/strategy combination if minimum volume breaches the predeclared per-trade risk ceiling or a stop cannot be placed legally. Never inflate the deposit, silently understate risk, or remove the stop to make a candidate pass.
+- For £200 starting equity, calculate worst-case loss at minimum permitted volume using realistic stop distance plus spread, commission, slippage and gap allowance.
+- For the £200 reference account, use 0.25% (£0.50) as the target per-trade risk and 0.50% (£1.00) as the hard modeled-loss ceiling. Reject the market/strategy combination if minimum volume breaches that ceiling or a stop cannot be placed legally. Never inflate the deposit, silently understate risk, or remove the stop to make a candidate pass.
 - Confirm whether the broker's symbol is a CFD, spot FX, future, or another instrument. Do not assume identical economics across brokers.
 - The per-trade risk cap is not a maximum-loss guarantee. Define and test an account-level daily-loss stop and peak-to-trough drawdown circuit-breaker before any demo proposal; document how state persists across terminal restarts and what action is taken after a breach.
 
