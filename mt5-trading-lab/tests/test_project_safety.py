@@ -6,6 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EA = (ROOT / "mql5/Experts/STRAT-002_DonchianBreakout.mq5").read_text(encoding="utf-8")
 CONFIG = json.loads((ROOT / "config/project_config.json").read_text(encoding="utf-8"))
 RUNNER = (ROOT / "scripts/run_mt5_candidate.ps1").read_text(encoding="utf-8")
+INSTALLER = (ROOT / "scripts/install_mt5_candidate.ps1").read_text(encoding="utf-8")
 
 class ProjectSafetyTests(unittest.TestCase):
     def test_live_and_paid_provisioning_disabled(self):
@@ -35,6 +36,11 @@ class ProjectSafetyTests(unittest.TestCase):
         self.assertIn("ReportPath argument must exactly match", RUNNER)
         self.assertIn("Report was not freshly updated", RUNNER)
         self.assertIn("Compile failed or produced no EX5", RUNNER)
+
+    def test_installer_only_copies_and_verifies_source(self):
+        self.assertIn("Get-FileHash", INSTALLER)
+        self.assertIn("Installed source hash does not match", INSTALLER)
+        self.assertIn("No compile, terminal launch, account login or trading action was performed.", INSTALLER)
 
     def test_minimum_lot_risk_gate_exists(self):
         self.assertIn("if(minLoss == DBL_MAX || minLoss > hardLimit)", EA)
