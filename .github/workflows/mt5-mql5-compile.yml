@@ -99,10 +99,13 @@ jobs:
           if (Test-Path $ex5 -PathType Leaf) { Copy-Item $ex5 -Destination $env:MT5_COMPILE_ARTIFACTS -Force }
           Get-Content $log
           $logText = Get-Content $log -Raw
-          if ($exitCode -ne 0 -or $logText -match '(?im)\b[1-9]\d*\s+errors?\b' -or -not (Test-Path $ex5 -PathType Leaf)) {
-            throw 'STRAT-002 compile failed or produced no fresh EX5.'
+          # MetaEditor may return a non-zero process exit code despite a successful compile.
+          # Trust the fresh compiler summary and fresh EX5 together; retain the exit code for diagnosis.
+          $summary = [regex]::Match($logText, '(?im)^\s*Result:\s*(\d+)\s+errors?,\s*(\d+)\s+warnings?')
+          if (-not $summary.Success -or [int]$summary.Groups[1].Value -ne 0 -or -not (Test-Path $ex5 -PathType Leaf)) {
+            throw "STRAT-002 compile failed or produced no fresh EX5 (MetaEditor exit code $exitCode)."
           }
-          if ($logText -match '(?im)\b[1-9]\d*\s+warnings?\b') {
+          if ([int]$summary.Groups[2].Value -ne 0) {
             throw 'STRAT-002 compile produced warnings; review and resolve them before acceptance.'
           }
           Get-FileHash $source,$ex5,$log -Algorithm SHA256 | Format-Table -AutoSize
