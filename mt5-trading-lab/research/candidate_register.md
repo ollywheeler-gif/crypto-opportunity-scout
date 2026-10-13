@@ -1,6 +1,6 @@
 # Candidate register — research hypotheses, not results
 
-**Status:** Initial hypotheses only. None is approved, compiled, or backtested yet. Ranking prioritizes testability, lower turnover, and falsifiability—not expected profit.
+**Status:** Ten initial hypotheses. DON-02 has a written v1 specification and initial MQL5 source (`STRAT-002_DonchianBreakout.mq5`), but it is still research-only: not compiled, not backtested, and not approved for demo/live use. The other nine remain hypotheses. Ranking prioritizes testability, lower turnover, and falsifiability—not expected profit.
 
 ## Evidence informing the shortlist
 - Time-series momentum has been documented across liquid futures in currencies, equity indices, commodities, and bonds over long historical samples; this is research evidence, not proof that a retail CFD implementation remains profitable after costs: https://doi.org/10.1016/j.jfineco.2011.11.003
@@ -23,7 +23,7 @@
 | RSI-PB-09 | Short-term RSI pullback entry only in a higher-timeframe trend; no averaging down | FX majors; H1 | Indicator parameter mining, trend reversals, crowded exits |
 | CARRY-FX-10 | Slow FX trend/momentum combined with documented broker swap/financing filter; no naked carry assumption | Major FX; D1 | Missing historic swaps, swap changes, weekend/holiday financing, rate regime changes |
 
-## Order of evaluation
+## Current implementation status\n- DON-02 / STRAT-002: written deterministic H1 v1 specification and guarded EA source exist. The first compile, broker-feasibility check, and tester smoke test are still pending. No performance claim is made.\n- Other candidates: no implementation until the end-to-end compile/test pipeline is demonstrated and capital feasibility is assessed.\n\n## Order of evaluation
 1. TS-MOM-01 and DON-02: low-turnover hypotheses with clear rules and substantial published background.
 2. EMA-TREND-03 and PULLBACK-04: simple baselines that can expose whether added complexity helps.
 3. LONDON-05, INDEX-ORB-06, and VOL-COMP-07: session/intraday candidates, requiring better cost and execution assumptions.
