@@ -220,6 +220,7 @@ export async function collectReport() {
       candidatePagesChecked: researchedItems.filter(item => item.pageCheckedAt).length,
       possibleRewardSignals: researchedItems.filter(item => item.rewardSignal).length,
       actionableLeadsPublished: items.length,
+      economicallyQualifiedLeads: qualifiedItems.length,
       rejectedAsInsufficientEvidence: researchedItems.length - items.length,
       rejectionBreakdown: {
         sourcePageUnavailable: researchedItems.filter(item => item.rejectionReason === "Source page unavailable").length,
@@ -231,8 +232,8 @@ export async function collectReport() {
       fullyVerifiedRewards: 0
     },
     disclaimer: items.length
-      ? "Only leads with a fetched source page, an explicit fixed per-person fiat/stablecoin reward, no required capital, fees absent/covered and current open-status evidence pass the conservative preliminary economics screen. Passing is not a risk-adjusted expected-return calculation. This does not guarantee rewards or legitimacy. Check campaign status, eligibility, deadlines, costs and official terms before acting."
-      : "No demonstrably worthwhile opportunities met the conservative evidence threshold today. The filter does not estimate reward probability or time cost. This is preferable to presenting generic announcements as opportunities. Source diagnostics show feed health; rejected candidates lacked sufficient evidence of a concrete reward and action."
+      ? "These are research leads with reward-related wording, a concrete action signal and a reachable source page. They are not verified rewards. The separate economic qualification screen is stricter; verify official terms, eligibility, deadlines, fees and costs before acting."
+      : "No current, actionable reward leads passed discovery checks today. This does not prove no opportunities exist; source coverage and automated extraction are limited. Check diagnostics and revisit official campaign pages."
   };
 }
 
