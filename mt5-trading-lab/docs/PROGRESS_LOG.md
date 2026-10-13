@@ -131,3 +131,10 @@ The successful Windows run [38392508850](https://github.com/ollywheeler-gif/cryp
 | STRAT-009 | `F7238D3DE10E19A9FA1A65BCD0E7CB4FD70FFD0F0A69B331C94971EFF0A2F306` | `C9A30C157E117332316A4AF20F2F21BA1FEA25CD1B788302D0BD8B90D54C2C87` |
 
 These hashes apply only to the exact source revision in that run. Any source change requires a new compile and new hashes. Compilation does not imply Strategy Tester validity or profitability.
+
+
+### Persistent account-level risk guard — 2026-10-13
+- Added shared `mql5/Include/TradingLab/RiskGuard.mqh` and integrated it into every current EA (STRAT-001 through STRAT-005, plus STRAT-007 through STRAT-009). It uses terminal global variables keyed by account, symbol and magic number to preserve the daily-loss and peak-equity state across terminal/EA restarts.
+- Provisional defaults: 1% daily equity-loss halt, 5% drawdown review log, 10% persistent peak-drawdown halt. The daily halt resets at the next broker-server day; the peak-drawdown halt requires deliberate reset after investigation. On a halt, the EA blocks new signals and attempts to close only positions matching its symbol/magic.
+- The first compile after integration exposed one MetaEditor warning in the guard's boolean condition. The condition has been corrected to compare the integer status values explicitly. All earlier EA compile statuses are marked STALE until the current source/include compile rerun finishes; prior EX5 hashes must not be reused for the updated source.
+- These are fail-safe defaults, not guarantees against gap losses. The guard still requires actual Strategy Tester threshold tests, terminal-restart persistence tests, and a review of reset behavior before any demo proposal. No live-account behavior is enabled; the EAs refuse real accounts.
