@@ -34,7 +34,7 @@ No paid cloud resource, subscription, funded account or live trading is authoriz
 4. Test one frozen strategy and one instrument first, with a short smoke period to verify report generation and shutdown.
 5. Run a pre-registered chronological period with real ticks when the broker has them; otherwise label the modelling mode and coverage precisely.
 6. Retain source hash, build/compiler log, test INI with secrets excluded, symbol contract CSV, terminal/tester journals, raw report, normalized trades, cost reconciliation and SHA-256 manifest.
-7. Run the £100 feasibility gate before expanding to more symbols/strategies.
+7. Run the £200 feasibility gate before expanding to more symbols/strategies.
 8. Independently audit data, costs, leakage, drawdown and robustness before reporting a result.
 9. Cross-check a small subset against Dukascopy where a valid comparable instrument and period exist.
 
@@ -55,5 +55,5 @@ The next engineering deliverable is the dedicated Windows Strategy Tester workfl
 
 The owner does not need to upload GitHub login details. If a broker demo login is eventually required for unattended broker-specific testing, the owner should enter it directly as a narrowly scoped GitHub Actions secret after we have verified the exact secret names and workflow permissions. Do not request or accept credentials in ChatGPT.
 
-First backtest should use one frozen candidate and one instrument, selected only after the £100 feasibility check. The test's raw report, tester journal, source/build hashes, symbol metadata, cost ledger and report reconciliation are mandatory. Only after this passes should the team expand to additional candidates or symbols.
+First backtest should use one frozen candidate and one instrument, selected only after the £200 feasibility check. The test's raw report, tester journal, source/build hashes, symbol metadata, cost ledger and report reconciliation are mandatory. Only after this passes should the team expand to additional candidates or symbols.
 
