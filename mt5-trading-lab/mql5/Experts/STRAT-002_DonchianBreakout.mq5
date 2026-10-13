@@ -16,6 +16,7 @@ input double HardMaxRiskPct = 0.50;
 input double EstimatedSpreadCostPerLot = 0.0; // Account currency per lot; estimate round-trip spread cost for sizing
 input double EstimatedRoundTurnCostPerLot = 0.0; // Account currency per lot: commission/financing reserve for sizing
 input double EstimatedSlippageCostPerLot = 0.0;  // Account currency per lot; also configure realistic MT5 tester costs
+input double EstimatedGapCostPerLot = 0.0;       // Account currency per lot; reserve for stop gaps beyond modeled slippage
 input int    MaxDeviationPoints = 20;
 
 CTrade trade;
@@ -112,7 +113,7 @@ double LossForVolume(const ENUM_ORDER_TYPE orderType, const double volume,
    if(!OrderCalcProfit(orderType, _Symbol, volume, entry, stop, profit))
       return DBL_MAX;
    double priceLoss = MathMax(0.0, -profit);
-   return priceLoss + (EstimatedSpreadCostPerLot + EstimatedRoundTurnCostPerLot + EstimatedSlippageCostPerLot) * volume;
+   return priceLoss + (EstimatedSpreadCostPerLot + EstimatedRoundTurnCostPerLot + EstimatedSlippageCostPerLot + EstimatedGapCostPerLot) * volume;
 }
 
 double CalculateVolume(const ENUM_ORDER_TYPE orderType, const double entry, const double stop)
@@ -164,10 +165,10 @@ bool HasEnoughMargin(const ENUM_ORDER_TYPE orderType, const double volume, const
 
 int OnInit()
 {
-   if((EnableStrategy && (!ConfirmBrokerCostsReviewed || EstimatedSpreadCostPerLot <= 0 || EstimatedSlippageCostPerLot <= 0)) ||
+   if((EnableStrategy && (!ConfirmBrokerCostsReviewed || EstimatedSpreadCostPerLot <= 0 || EstimatedSlippageCostPerLot <= 0 || EstimatedGapCostPerLot <= 0)) ||
       EntryChannelBars < 2 || ExitChannelBars < 2 || AtrPeriod < 2 ||
       AtrStopMultiplier <= 0 || TargetRiskPct <= 0 || HardMaxRiskPct < TargetRiskPct ||
-      EstimatedSpreadCostPerLot < 0 || EstimatedRoundTurnCostPerLot < 0 || EstimatedSlippageCostPerLot < 0 || MaxDeviationPoints < 0)
+      EstimatedSpreadCostPerLot < 0 || EstimatedRoundTurnCostPerLot < 0 || EstimatedSlippageCostPerLot < 0 || EstimatedGapCostPerLot < 0 || MaxDeviationPoints < 0)
       return INIT_PARAMETERS_INCORRECT;
 
    // Hard safety guard: this research EA must not trade on a real account.
