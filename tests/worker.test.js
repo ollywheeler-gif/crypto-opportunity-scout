@@ -1,0 +1,133 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import worker from "../src/worker.js";
+
+const webhookSecret = "unit-test-webhook-secret";
+const settlementAddress = "0x1111111111111111111111111111111111111111";
+const item = {
+  title: "Example testnet announcement",
+  url: "https://example.org/announcement",
+  source: "example.org",
+  date: "2026-10-13",
+  summary: "Example item for integration tests.",
+  category: "Testnet/developer update",
+  relevance: 55,
+  evidenceStatus: "No specific reward identified",
+  assessment: "Worth a quick review",
+  nextStep: "Review the official source.",
+  verification: "Test fixture only."
+};
+
+class MemoryKV {
+  constructor() { this.data = new Map(); }
+  async get(key, type) {
+    const value = this.data.get(key);
+    if (value === undefined) return null;
+    return type === "json" ? JSON.parse(value) : value;
+  }
+  async put(key, value) { this.data.set(key, String(value)); }
+  async delete(key) { this.data.delete(key); }
+}
+
+async function sign(raw, timestamp) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(webhookSecret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const bytes = new Uint8Array(await crypto.subtle.sign(
+    "HMAC", key, new TextEncoder().encode(`${timestamp}.${raw}`)
+  ));
+  const hex = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+  return `t=${timestamp},v1=${hex}`;
+}
+
+test("test checkout -> signed webhook -> protected report access", async (t) => {
+  const kv = new MemoryKV();
+  await kv.put("report:latest", JSON.stringify({ date: "2026-10-13", items: [item] }));
+  const env = {
+    SCOUT_KV: kv,
+    SHIELDZ_API_KEY: "sk_test_unit_test",
+    SHIELDZ_WEBHOOK_SECRET: webhookSecret,
+    SCOUT_SETTLEMENT_ADDRESS: settlementAddress
+  };
+
+  const originalFetch = globalThis.fetch;
+  let invoiceRequest;
+  globalThis.fetch = async (input, init = {}) => {
+    assert.equal(String(input), "https://shieldz.cash/api/v1/invoices");
+    invoiceRequest = JSON.parse(init.body);
+    return Response.json({
+      id: "inv_test_123",
+      pay_url: "https://shieldz.cash/test-checkout/inv_test_123",
+      amount_usd_cents: 100,
+      mode: "test",
+      settlement: { chain: "BASE", asset: "USDC", address: settlementAddress }
+    });
+  };
+  t.after(() => { globalThis.fetch = originalFetch; });
+
+  const checkoutResponse = await worker.fetch(new Request("https://scout.example/checkout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ product: "daily_report", itemUrl: item.url })
+  }), env, {});
+  assert.equal(checkoutResponse.status, 200);
+  const checkout = await checkoutResponse.json();
+  assert.equal(checkout.checkout_url, "https://shieldz.cash/test-checkout/inv_test_123");
+  assert.match(checkout.report_url, /^https:\/\/scout\.example\/report\?/);
+  assert.equal(invoiceRequest.amount_usd_cents, 100);
+  assert.equal(invoiceRequest.settlement.chain, "BASE");
+  assert.equal(invoiceRequest.settlement.asset, "USDC");
+  assert.equal(invoiceRequest.metadata.product, "daily_report");
+
+  const reportUrl = new URL(checkout.report_url);
+  const orderId = reportUrl.searchParams.get("order");
+  const accessToken = reportUrl.searchParams.get("token");
+  const event = {
+    type: "invoice.paid",
+    data: { invoice: {
+      id: "inv_test_123",
+      status: "paid",
+      mode: "test",
+      amount_usd_cents: 100,
+      paid_after_expiry: false,
+      settlement: { chain: "BASE", asset: "USDC", address: settlementAddress },
+      metadata: { order_id: orderId, product: "daily_report" }
+    } }
+  };
+  const raw = JSON.stringify(event);
+  const timestamp = Math.floor(Date.now() / 1000);
+  const signature = await sign(raw, timestamp);
+
+  const badResponse = await worker.fetch(new Request("https://scout.example/webhooks/shieldz", {
+    method: "POST",
+    headers: { "X-Shieldz-Signature": "t=" + timestamp + ",v1=bad" },
+    body: raw
+  }), env, {});
+  assert.equal(badResponse.status, 401);
+
+  const beforePayment = await worker.fetch(new Request(checkout.report_url), env, {});
+  assert.equal(beforePayment.status, 402);
+
+  const webhookResponse = await worker.fetch(new Request("https://scout.example/webhooks/shieldz", {
+    method: "POST",
+    headers: { "X-Shieldz-Signature": signature, "X-Shieldz-Delivery": "delivery_test_1" },
+    body: raw
+  }), env, {});
+  assert.equal(webhookResponse.status, 200);
+
+  const reportResponse = await worker.fetch(new Request(checkout.report_url), env, {});
+  assert.equal(reportResponse.status, 200);
+  const html = await reportResponse.text();
+  assert.match(html, /Example testnet announcement/);
+  assert.equal((await kv.get(`order:${orderId}`, "json")).status, "paid");
+
+  const deniedResponse = await worker.fetch(new Request(
+    `https://scout.example/report?order=${encodeURIComponent(orderId)}&token=wrong-token`
+  ), env, {});
+  assert.equal(deniedResponse.status, 403);
+  assert.ok(accessToken);
+});
