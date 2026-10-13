@@ -7,6 +7,7 @@ A candidate is a research hypothesis until it passes every gate below. A positiv
 - For £100 starting equity, calculate worst-case loss at minimum permitted volume using realistic stop distance plus spread, commission, slippage and gap allowance.
 - Reject the market/strategy combination if minimum volume breaches the predeclared per-trade risk ceiling or a stop cannot be placed legally. Never inflate the deposit, silently understate risk, or remove the stop to make a candidate pass.
 - Confirm whether the broker's symbol is a CFD, spot FX, future, or another instrument. Do not assume identical economics across brokers.
+- The per-trade risk cap is not a maximum-loss guarantee. Define and test an account-level daily-loss stop and peak-to-trough drawdown circuit-breaker before any demo proposal; document how state persists across terminal restarts and what action is taken after a breach.
 
 ## Gate 1 — Written hypothesis
 - State market mechanism, expected holding period, entry/exit rules, stop/target logic, trade frequency, allowed sessions, and failure conditions.
@@ -38,6 +39,7 @@ A candidate is a research hypothesis until it passes every gate below. A positiv
 
 ## Gate 6 — Demo forward test
 - Use a demo account only, with fixed version and logged expected-vs-actual fills, spreads, slippage, rejects, swaps and outages.
+- Verify the daily-loss and peak-drawdown circuit-breakers trigger at their registered thresholds, persist correctly across restarts, and require deliberate review/reset after a breach. Do not assume stop-loss orders cap gap losses.
 - Predeclare a minimum duration/trade count appropriate to the strategy; do not stop early because results look good.
 - No automatic transition to a live account. Live use requires separate, explicit owner approval after reviewing evidence and risks.
 
