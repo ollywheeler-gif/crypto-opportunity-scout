@@ -217,7 +217,5 @@ test("daily collector deduplicates leads and reports transparent quality metrics
   assert.equal(report.qualitySummary.rejectedAsInsufficientEvidence, 3);
   assert.match(report.disclaimer, /No demonstrably worthwhile opportunities/);
   assert.equal(report.qualitySummary.fullyVerifiedRewards, 0);
-  assert.match(report.items[0].verificationStatus, /claims remain unverified/);
-  assert.equal(report.items[0].reward, "Not confirmed");
   assert.equal(report.items.length, 0, "no candidate is promoted without sufficient evidence of positive economics");
 });
