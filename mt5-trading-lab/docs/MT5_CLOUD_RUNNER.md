@@ -14,3 +14,11 @@ Get-Content $log
 if ($exitCode -ne 0) { throw "MetaEditor compile returned $exitCode" }
 ```
 Confirm the compiler log and a fresh EX5; exit code alone is insufficient. For Strategy Tester preserve INI/config, terminal/tester logs, raw report, normalized CSV and reconciliation notes. Never use live credentials in unattended jobs. Do not enable live trading in test jobs.
+
+
+## Important setup notes before using the runner
+- Put the EA source in the selected MT5 terminal's own data-folder `MQL5/Experts/TradingLab/` directory before compiling. The Strategy Tester must use the resulting EX5 from that same terminal's data folder. The repository copy is the source of record; compare its SHA-256 with the installed copy.
+- Set `Expert=` in the tester INI to the expert name/path relative to `MQL5/Experts` (for example, `TradingLab\\STRAT-002_DonchianBreakout`, without the `.ex5` suffix). Verify the exact syntax accepted by the installed MT5 build.
+- Use a fresh, dedicated demo/test terminal profile. The runner rejects account credential fields in the supplied INI, but it cannot inspect or guarantee the account already logged into an existing terminal. Do not point it at a terminal logged into a real account.
+- Configure spread and commission realistically in the tester. The EA's `EstimatedSpreadCostPerLot`, `EstimatedRoundTurnCostPerLot` and `EstimatedSlippageCostPerLot` are sizing allowances, not substitutes for tester cost settings. The EA refuses to run when enabled if spread or slippage allowances are zero.
+- The runner is a guarded starter, not yet proven against the user's MT5 build. Validate first on a disposable test installation and inspect all logs. It cannot certify that a report is a complete Strategy Tester report; manual reconciliation remains mandatory.
