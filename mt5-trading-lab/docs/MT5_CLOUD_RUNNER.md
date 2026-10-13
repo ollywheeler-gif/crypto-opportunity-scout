@@ -62,3 +62,14 @@ The repository includes `mql5/Scripts/TradingLab/ExportSymbolContract.mq5`. It i
 6. Enter the account equity and GBP conversion rate privately in the feasibility worksheet; neither is exported by the script. Never put login IDs or credentials in the repository.
 
 The script's CSV is evidence to review, not automatic approval. Minimum-volume loss, current margin, historical financing and cost stress still need independent checks.
+
+
+## Persistent risk circuit-breakers
+
+All current EAs include `mql5/Include/TradingLab/RiskGuard.mqh`. The provisional defaults are a **1% daily equity-loss halt**, a review log at **5% peak-to-trough drawdown**, and a **persistent halt at 10% drawdown**. These are safety defaults, not a guarantee against losses; gaps, market closures and rejected closes can still produce larger losses. They must be exercised in the Strategy Tester and reviewed before any demo proposal.
+
+- The guard runs on every tick even when the strategy's entry switch is disabled, and attempts to close positions matching that EA's symbol and magic number after a halt.
+- Daily loss state resets at the next broker-server day. The 10% peak-drawdown halt persists across EA/terminal restarts until deliberately reset after investigation.
+- State is stored in MT5 terminal global variables. On initialization, the Experts log prints the `TLRG_...` state prefix. For a deliberate reset, first investigate and preserve logs; then use MT5's Global Variables dialog (F3) to delete **all** variables with that exact prefix. Do not delete only the halt flag, because the stored peak equity may immediately trigger the halt again.
+- Strategy Tester/optimization runs start with a clean guard state. Demo runs preserve state across restarts. Do not copy tester state into a demo terminal.
+- Never test these reset procedures on a real account; the EAs refuse real-account initialization.
