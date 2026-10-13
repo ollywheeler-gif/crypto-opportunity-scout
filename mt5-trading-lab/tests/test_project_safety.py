@@ -5,6 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 EA = (ROOT / "mql5/Experts/STRAT-002_DonchianBreakout.mq5").read_text(encoding="utf-8")
 CONFIG = json.loads((ROOT / "config/project_config.json").read_text(encoding="utf-8"))
+RUNNER = (ROOT / "scripts/run_mt5_candidate.ps1").read_text(encoding="utf-8")
 
 class ProjectSafetyTests(unittest.TestCase):
     def test_live_and_paid_provisioning_disabled(self):
@@ -27,6 +28,13 @@ class ProjectSafetyTests(unittest.TestCase):
         self.assertNotIn("POSITION_TYPE_BUY) volume * 2", EA)
         self.assertNotIn("martingale", EA.lower())
         self.assertNotIn("grid", EA.lower())
+
+    def test_windows_runner_has_fail_closed_guards(self):
+        self.assertIn("[Tester]", RUNNER)
+        self.assertIn("Login|Password|Server", RUNNER)
+        self.assertIn("ReportPath argument must exactly match", RUNNER)
+        self.assertIn("Report was not freshly updated", RUNNER)
+        self.assertIn("Compile failed or produced no EX5", RUNNER)
 
     def test_minimum_lot_risk_gate_exists(self):
         self.assertIn("if(minLoss == DBL_MAX || minLoss > hardLimit)", EA)
