@@ -19,7 +19,7 @@ This is project scaffolding, not a deployed autonomous agent service. No Windows
 - [Capital feasibility worksheet](research/capital_feasibility_template.csv) and [calculator](scripts/capital_feasibility.py) — require real broker inputs; estimates only.
 - [Artifact and data conventions](docs/ARTIFACTS_AND_DATA.md).
 - Static tests check safety invariants in the EA source; these do not replace MetaEditor compilation.
-- [Windows MT5 runner](scripts/run_mt5_candidate.ps1) and [runbook](docs/MT5_CLOUD_RUNNER.md) — not yet executed against an installed MT5 environment.
+- [MT5 source installer](scripts/install_mt5_candidate.ps1), [Windows MT5 runner](scripts/run_mt5_candidate.ps1) and [runbook](docs/MT5_CLOUD_RUNNER.md) — not yet executed against an installed MT5 environment.
 - [Current plan and external dependencies](docs/NEXT_STEPS.md).
 
 ## Local checks
