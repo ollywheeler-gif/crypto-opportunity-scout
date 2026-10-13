@@ -14,6 +14,7 @@ This is project scaffolding, not a deployed autonomous agent service. No Windows
 
 ## Research and controls
 - [Ten initial strategy hypotheses](research/candidate_register.md) — hypotheses, not performance claims.
+- [First deterministic test specification](research/specs/STRAT-002-donchian-breakout-v1.md) — not yet coded, compiled or tested.
 - [Acceptance gates](docs/ACCEPTANCE_GATES.md) — feasibility, costs, chronological testing, review and demo gates.
 - [Capital feasibility worksheet](research/capital_feasibility_template.csv) and [calculator](scripts/capital_feasibility.py) — require real broker inputs; estimates only.
 - [Artifact and data conventions](docs/ARTIFACTS_AND_DATA.md).
