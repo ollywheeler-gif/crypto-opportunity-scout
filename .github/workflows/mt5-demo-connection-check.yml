@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: mt5-demo-connection-check
+  group: mt5-demo-connection-check-v2
   cancel-in-progress: false
 
 jobs:
