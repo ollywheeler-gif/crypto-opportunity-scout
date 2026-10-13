@@ -43,7 +43,7 @@ BLOCKED. No claim of profitability or readiness for live trading is supported.
 
 ## Follow-up after initial review
 - CR-04 partial mitigation committed: the EA now rounds protective-stop prices to `SYMBOL_TRADE_TICK_SIZE` and requires a broker-reviewed `MaxSpreadPoints` ceiling before strategy enablement. This reduces known price-alignment/spread risks but is **not resolved** until compiled and exercised against real broker contract data; freeze-level and filling-mode behavior still require tester evidence.
-- The local and CI compile runners now wait for the MetaEditor process and reject compiler warnings before tester execution. Automated compile is currently being retried after the first observed run revealed the process had been launched asynchronously.
+- The local and CI compile runners now wait for the MetaEditor process and reject compiler warnings before tester execution. Automated Windows compilation is now verified for the current source set; runtime mechanics and broker-specific behavior remain untested.
 - Remaining CR-01, CR-02, CR-03, CR-05, CR-06 and CR-07 remain open. No performance approval is possible at this stage.
 
 
@@ -56,3 +56,9 @@ BLOCKED. No claim of profitability or readiness for live trading is supported.
 
 ## Latest compile status
 Both STRAT-002 and STRAT-003 were compiled on Windows run [38390955133](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38390955133) using MetaEditor 5.0.0.6257 with zero errors and zero warnings. Combined artifact: [11807953266](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38390955133/artifacts/11807953266). This resolves compilation for that source revision only; no Strategy Tester or broker feasibility evidence exists. Review disposition remains BLOCKED.
+
+
+## Latest verified compile — 2026-10-13
+- Windows run [38393677219](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38393677219) compiled STRAT-001/002/003/004/005/007/008/009 plus the no-order symbol contract exporter on MetaEditor 5.0.0.6257 with zero errors and zero warnings.
+- Combined artifact [11811217733](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38393677219/artifacts/11811217733) contains the compiler logs, EX5 binaries and manifests. Current STRAT-002 source SHA-256: `FB878706B50D6A6265020C95B8E665CAE4EEE96418E4A9F3343A51892953B298`; EX5 SHA-256: `777159AFD7BEBC8DA07548DE12420AC8F36D14DA04C23DE43395EBB7957DADBA`.
+- Compilation is resolved for that exact source revision. CR-01, CR-02, CR-03, CR-05, CR-06 and CR-07 remain open; the overall disposition remains **BLOCKED** pending tester mechanics, broker feasibility, cost reconciliation and runtime lifecycle evidence.
