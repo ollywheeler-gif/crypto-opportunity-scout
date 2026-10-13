@@ -11,6 +11,7 @@ VOL_EA = (ROOT / "mql5/Experts/STRAT-007_VolatilityContraction.mq5").read_text(e
 MR_EA = (ROOT / "mql5/Experts/STRAT-008_RegimeMeanReversion.mq5").read_text(encoding="utf-8")
 RSI_EA = (ROOT / "mql5/Experts/STRAT-009_RsiPullback.mq5").read_text(encoding="utf-8")
 LONDON_EA = (ROOT / "mql5/Experts/STRAT-005_LondonBreakout.mq5").read_text(encoding="utf-8")
+INDEX_EA = (ROOT / "mql5/Experts/STRAT-006_IndexOpeningRange.mq5").read_text(encoding="utf-8")
 CONTRACT_EXPORTER = (ROOT / "mql5/Scripts/TradingLab/ExportSymbolContract.mq5").read_text(encoding="utf-8")
 CONFIG = json.loads((ROOT / "config/project_config.json").read_text(encoding="utf-8"))
 RUNNER = (ROOT / "scripts/run_mt5_candidate.ps1").read_text(encoding="utf-8")
@@ -79,6 +80,17 @@ class ProjectSafetyTests(unittest.TestCase):
             self.assertIn(field, CONTRACT_EXPORTER)
         for forbidden in ("trade.Buy(", "trade.Sell(", "OrderSend(", "PositionClose("):
             self.assertNotIn(forbidden, CONTRACT_EXPORTER)
+
+    def test_strat006_is_disabled_and_requires_session_schedule(self):
+        self.assertIn("input bool   EnableStrategy = false", INDEX_EA)
+        self.assertIn("ConfirmSessionRulesReviewed = false", INDEX_EA)
+        self.assertIn("SessionScheduleFile = \"index_session_schedule.csv\"", INDEX_EA)
+        self.assertIn("FILE_COMMON", INDEX_EA)
+        self.assertIn("lastAttemptSessionDateKey", INDEX_EA)
+        self.assertIn("TargetRMultiple = 2.0", INDEX_EA)
+        self.assertIn("ACCOUNT_TRADE_MODE_REAL", INDEX_EA)
+        self.assertIn("OrderCalcProfit", INDEX_EA)
+        self.assertIn("OrderCalcMargin", INDEX_EA)
 
     def test_strat005_is_disabled_and_requires_reviewed_session_mapping(self):
         self.assertIn("input bool   EnableStrategy = false", LONDON_EA)
