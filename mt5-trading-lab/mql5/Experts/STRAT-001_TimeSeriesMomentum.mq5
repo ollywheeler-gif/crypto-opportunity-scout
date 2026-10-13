@@ -20,6 +20,7 @@ input int    MaxDeviationPoints = 20;
 input int    MaxSpreadPoints = 0;
 
 CTrade trade;
+#include <TradingLab/RiskGuard.mqh>
 int atrHandle = INVALID_HANDLE;
 datetime lastBarTime = 0;
 
@@ -178,6 +179,7 @@ int OnInit()
       return INIT_FAILED;
    }
 
+   if(!TLRG_Init()) return INIT_FAILED;
    atrHandle = iATR(_Symbol, PERIOD_D1, AtrPeriod);
    if(atrHandle == INVALID_HANDLE)
    {
@@ -206,8 +208,9 @@ void OnDeinit(const int reason)
 
 void OnTick()
 {
-   if(!EnableStrategy) return;
    if((ENUM_ACCOUNT_TRADE_MODE)AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL) return;
+   if(TLRG_CheckAndEnforce()) return;
+   if(!EnableStrategy) return;
    if(!IsNewBar()) return;
 
    double atr[];
