@@ -10,6 +10,29 @@ string BoolText(const bool value) { return value ? "true" : "false"; }
 
 void OnStart()
 {
+   // A startup script can execute before the terminal has finished connecting.
+   // Wait briefly for an authenticated, connected session; never export cached/offline metadata as verified.
+   datetime deadline = TimeLocal() + 90;
+   while(TimeLocal() < deadline)
+   {
+      bool connected = (bool)TerminalInfoInteger(TERMINAL_CONNECTED);
+      bool loggedIn = (AccountInfoInteger(ACCOUNT_LOGIN) > 0);
+      string currency = AccountInfoString(ACCOUNT_CURRENCY);
+      if(connected && loggedIn && currency != "")
+         break;
+      Sleep(1000);
+   }
+   bool connectedNow = (bool)TerminalInfoInteger(TERMINAL_CONNECTED);
+   bool loggedInNow = (AccountInfoInteger(ACCOUNT_LOGIN) > 0);
+   string currencyNow = AccountInfoString(ACCOUNT_CURRENCY);
+   if(!connectedNow || !loggedInNow || currencyNow == "")
+   {
+      Print("CONTRACT_EXPORT_FAILED broker session not verified connected=", BoolText(connectedNow),
+            " logged_in=", BoolText(loggedInNow),
+            " currency_present=", BoolText(currencyNow != ""));
+      return;
+   }
+
    string symbol = ContractSymbolInput;
    if(symbol == "")
       symbol = _Symbol;
