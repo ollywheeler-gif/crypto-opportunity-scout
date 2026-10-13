@@ -11,7 +11,7 @@ required = [
     "agents/agent_0_project_director.md", "agents/agent_1_researcher.md", "agents/agent_2_developer.md",
     "agents/agent_3_tester.md", "agents/agent_4_reviewer.md",
     "research/strategy_spec_template.md", "research/candidate_register.md",
-    "research/specs/STRAT-001-timeseries-momentum-v1.md",
+    "research/specs/strat-001-timeseries-momentum-v1.md",
     "research/specs/STRAT-002-donchian-breakout-v1.md",
     "research/specs/strat-003-ema-trend-v1.md", "research/specs/strat-004-trend-pullback-v1.md",
     "research/specs/strat-005-london-breakout-v1.md", "research/specs/strat-006-index-opening-range-v1.md",
