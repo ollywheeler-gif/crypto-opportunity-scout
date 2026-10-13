@@ -2,7 +2,7 @@
 
 Candidate ID: STRAT-003
 Version: v1
-Status: FROZEN SPECIFICATION v1 — deterministic rules accepted for implementation. Not backtested or approved for demo/live.
+Status: FROZEN SPECIFICATION v1 — EA compiled with zero errors and zero warnings. Not Strategy Tester tested, not broker-feasibility validated, and not approved for demo/live.
 
 ## Hypothesis
 A simple, deterministic ema trend baseline rule may capture a repeatable market effect, but it may fail after realistic costs, regime changes and the £100 feasibility constraint. The test must attempt to falsify the idea.
@@ -49,3 +49,12 @@ Draft v1 research rules only. Agent 0 must freeze the specification after a rule
 - Rules frozen: H4 EMA(20/100) cross; ATR(20) initial stop at 2.0 ATR; exit on opposite completed-bar cross or stop; no same-bar reversal; no pyramiding.
 - Agent 2 source: `mql5/Experts/STRAT-003_EMATrend.mq5`.
 - Freeze is a specification milestone only. It does not imply compile, broker feasibility, strategy performance or deployment approval.
+
+
+## Implementation evidence status
+- Windows MetaEditor 5.0.0.6257 compile run: [38391736678](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38391736678), source revision `0676e9066aaf98f12aa22c5a5b3da769cd144a4a`.
+- Compiler summary: `Result: 0 errors, 0 warnings`.
+- Source SHA-256: `955C5F25C05FE8B5BCEF6ED951EC97401B97B70F7FB07462477956234707701B`.
+- EX5 SHA-256: `B0B51DA50FB242619D3D0D0C9D6BBBD22F5007164F696A14182732CC03570CFB`.
+- Retained compile artifact: [11809281108](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38391736678/artifacts/11809281108).
+- Compile evidence does not establish runtime behavior or strategy performance.
