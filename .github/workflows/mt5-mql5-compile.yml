@@ -9,6 +9,7 @@ on:
   pull_request:
     paths:
       - 'mt5-trading-lab/mql5/Experts/**/*.mq5'
+      - 'mt5-trading-lab/mql5/Scripts/**/*.mq5'
       - '.github/workflows/mt5-mql5-compile.yml'
   workflow_dispatch:
 
