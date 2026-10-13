@@ -59,7 +59,17 @@ export default {
         if (!orderId || !invoice?.id) return new Response("Missing invoice details", { status: 400 });
         const order = await env.SCOUT_KV.get(`order:${orderId}`, "json");
         if (!order || order.invoiceId !== invoice.id) return new Response("Order/invoice mismatch", { status: 404 });
-        // Validate amount/currency/network here against provider's documented paid-event schema before live launch.
+        // Fail closed until Shieldz's exact paid-event fields are mapped and verified.
+        // This prevents a signed but incomplete/misconfigured event from unlocking a paid report.
+        const paidAmount = Number(invoice.amount_usd_cents);
+        const paidCurrency = String(invoice.currency || "").toUpperCase();
+        const paidNetwork = String(invoice.network || "").toLowerCase();
+        const paidAsset = String(invoice.asset || invoice.token || "").toUpperCase();
+        const paidStatus = String(invoice.status || "").toLowerCase();
+        if (paidAmount !== PRODUCT.amountUsdCents || paidCurrency !== "USD" ||
+            paidNetwork !== "base" || paidAsset !== "USDC" || paidStatus !== "paid") {
+          return new Response("Paid event does not match the required order terms; provider schema mapping required", { status: 400 });
+        }
         if (order.status !== "paid") {
           order.status = "paid";
           order.paidAt = new Date().toISOString();
@@ -136,11 +146,12 @@ function classify(s) {
   return "Ecosystem announcement";
 }
 function getTag(s, tag) {
-  const re = new RegExp("<"+tag+"(?:\\\\s[^>]*)?>([\\\\s\\\\S]*?)</"+tag+">", "i");
-  const m = s.match(re); return m ? m[1].replace(/<!\\[CDATA\\[|\\]\\]>/g, "") : "";
+  const re = new RegExp("<"+tag+"(?:\\s[^>]*)?>([\\s\\S]*?)</"+tag+">", "i");
+  const m = s.match(re);
+  return m ? m[1].replace(/<!\[CDATA\[|\]\]>/g, "") : "";
 }
 function cleanXml(s) {
-  return String(s||"").replace(/<[^>]*>/g," ").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/\\s+/g," ").trim();
+  return String(s||"").replace(/<[^>]*>/g," ").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/\s+/g," ").trim();
 }
 function randomToken() { return [...crypto.getRandomValues(new Uint8Array(32))].map(b=>b.toString(16).padStart(2,"0")).join(""); }
 function constantTimeEqual(a,b) { if(typeof a!=="string"||typeof b!=="string"||a.length!==b.length)return false;let d=0;for(let i=0;i<a.length;i++)d|=a.charCodeAt(i)^b.charCodeAt(i);return d===0; }
