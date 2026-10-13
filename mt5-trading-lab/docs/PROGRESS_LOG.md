@@ -40,3 +40,11 @@ Research/testing only. No paid provisioning, broker credential collection in cha
 - Linked both documents from the README and added project validation/unit-test checks for the new governance files.
 - Added a machine-readable gate register so the current state and real blockers are explicit rather than implied.
 - Current external blockers remain: no Windows MetaEditor/MT5 environment for compile and Strategy Tester evidence; broker-specific minimum volume, costs and margin remain unverified; latest push-triggered CI result is not observable through the currently available GitHub connector methods. No paid resources or live trading have been enabled.
+
+
+### Additional validation hardening — 2026-10-13
+- Added Agent 0 and an explicit five-role handoff protocol; the project director cannot override independent review or owner-controlled live-trading decisions.
+- Added a machine-readable gate register and included it in project-file validation.
+- Clarified that capital-feasibility cost allowances are totals for the minimum-volume trade, preventing confusion with the EA's separate per-lot sizing inputs.
+- Hardened the capital-feasibility calculator against invalid risk caps, malformed optional margin input and inconsistent minimum-volume/volume-step values; added unit coverage and a template-schema consistency test.
+- CI status remains UNVERIFIED because the connected GitHub methods return no push-triggered workflow runs/statuses. This is not evidence of either success or failure.
