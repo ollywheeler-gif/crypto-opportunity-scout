@@ -210,7 +210,7 @@ test("daily collector deduplicates leads and reports transparent quality metrics
   assert.equal(report.qualitySummary.feedsChecked, 9);
   assert.equal(report.qualitySummary.campaignDirectoriesChecked, 3);
   assert.equal(report.qualitySummary.campaignDirectoryLinksFound, 2);
-  assert.equal(report.qualitySummary.candidatePagesChecked, 2);
+  assert.equal(report.qualitySummary.candidatePagesChecked, 3);
   assert.ok(report.items.some((candidate) => candidate.source === "Galxe Quest"));
   assert.ok(report.items.some((candidate) => candidate.source === "Questira Campaigns"));
   assert.equal(report.qualitySummary.fullyVerifiedRewards, 0);
