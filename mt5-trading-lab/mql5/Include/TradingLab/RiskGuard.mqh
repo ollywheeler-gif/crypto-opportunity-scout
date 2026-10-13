@@ -39,7 +39,7 @@ bool TLRG_SetIfMissing(const string key, const double value)
 {
    if(GlobalVariableCheck(key))
       return true;
-   return GlobalVariableSet(key, value);
+   return GlobalVariableSet(key, value) != 0;
 }
 
 void TLRG_DeleteState()
