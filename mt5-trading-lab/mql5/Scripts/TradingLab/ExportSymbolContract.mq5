@@ -3,14 +3,14 @@
 #property version "1.00"
 #property description "Exports symbol contract metadata for capital-feasibility review; sends no orders."
 
-input string SymbolName = "";
+input string ContractSymbolInput = "";
 input string OutputFileName = "TradingLab_symbol_contract.csv";
 
 string BoolText(const bool value) { return value ? "true" : "false"; }
 
 void OnStart()
 {
-   string symbol = SymbolName;
+   string symbol = ContractSymbolInput;
    if(symbol == "")
       symbol = _Symbol;
 
