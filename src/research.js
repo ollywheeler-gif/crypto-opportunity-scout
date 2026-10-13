@@ -200,7 +200,7 @@ export async function collectReport() {
   return {
     date: new Date().toISOString().slice(0, 10),
     generatedAt: new Date().toISOString(),
-    pipelineVersion: "2.5",
+    pipelineVersion: "2.6",
     items,
     sources: [...sources, ...directoryDiagnostics],
     qualitySummary: {
