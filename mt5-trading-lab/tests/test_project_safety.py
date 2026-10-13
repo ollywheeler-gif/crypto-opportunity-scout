@@ -196,7 +196,9 @@ class ProjectSafetyTests(unittest.TestCase):
 
     def test_installer_only_copies_and_verifies_source(self):
         self.assertIn("Get-FileHash", INSTALLER)
-        self.assertIn("Installed source hash does not match", INSTALLER)
+        self.assertIn("Installed EA source hash does not match", INSTALLER)
+        self.assertIn("Installed RiskGuard include hash does not match", INSTALLER)
+        self.assertIn("RiskGuard.mqh", INSTALLER)
         self.assertIn("No compile, terminal launch, account login or trading action was performed.", INSTALLER)
 
     def test_duplicate_instance_lock_exists(self):
