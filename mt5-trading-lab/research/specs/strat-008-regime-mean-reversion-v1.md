@@ -2,7 +2,7 @@
 
 Candidate ID: STRAT-008
 Version: v1
-Status: FROZEN SPECIFICATION v1 — deterministic rules accepted for implementation. Not backtested or approved for demo/live.
+Status: FROZEN SPECIFICATION v1 — EA compiled with zero errors and zero warnings. Not Strategy Tester tested, not broker-feasibility validated, and not approved for demo/live.
 
 ## Hypothesis
 A simple, deterministic range-bound mean reversion rule may capture a repeatable market effect, but it may fail after realistic costs, regime changes and the £100 feasibility constraint. The test must attempt to falsify the idea.
@@ -49,3 +49,12 @@ Frozen v1 research rules only. The freeze record above fixes the initial experim
 - Rules frozen: H1 ADX(14) below 18; Bollinger(20, 2σ) close excursion plus RSI(2) below 10/above 90; 2.0 × ATR(20) stop; exit at middle band or after 8 completed H1 bars; no averaging.
 - Agent 2 source: `mql5/Experts/STRAT-008_RegimeMeanReversion.mq5`.
 - Freeze is not compile, broker-feasibility, tester or deployment approval.
+
+
+## Implementation evidence status
+- Windows MetaEditor 5.0.0.6257 compile run: [38392508850](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38392508850), source revision `63c88464af602353902e45a894a108ef9b1f385c`.
+- Compiler summary: `Result: 0 errors, 0 warnings`.
+- Source SHA-256: `0A53F9F05F7D186D9E17702987B45F17F6D0ED2700DABEF6B3C3FD729590B833`.
+- EX5 SHA-256: `963A8399CDD53E3420C8DAD14FCA7DD79D8AC1B58EE5F4ACB5035F9B75D9392B`.
+- Retained compile artifact: [11810845970](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38392508850/artifacts/11810845970).
+- Compile evidence does not establish runtime behavior or strategy performance.
