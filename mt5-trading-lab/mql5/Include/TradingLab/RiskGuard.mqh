@@ -15,6 +15,7 @@ string tlrgDailyHaltKey = "";
 string tlrgPeakHaltKey = "";
 string tlrgReviewLoggedKey = "";
 string tlrgHaltLoggedKey = "";
+string tlrgCloseFailLogKey = "";
 bool tlrgReady = false;
 
 bool TLRG_TradeRequestAccepted()
@@ -52,6 +53,7 @@ void TLRG_DeleteState()
    GlobalVariableDel(tlrgPeakHaltKey);
    GlobalVariableDel(tlrgReviewLoggedKey);
    GlobalVariableDel(tlrgHaltLoggedKey);
+   GlobalVariableDel(tlrgCloseFailLogKey);
 }
 
 bool TLRG_Init()
@@ -77,6 +79,7 @@ bool TLRG_Init()
    tlrgPeakHaltKey = tlrgPrefix + "_PH";
    tlrgReviewLoggedKey = tlrgPrefix + "_R";
    tlrgHaltLoggedKey = tlrgPrefix + "_HL";
+   tlrgCloseFailLogKey = tlrgPrefix + "_CF";
 
    // Every isolated Strategy Tester run starts with a clean guard state.
    // Demo/terminal runs deliberately preserve state across EA and terminal restarts.
@@ -98,7 +101,8 @@ bool TLRG_Init()
       !TLRG_SetIfMissing(tlrgDailyHaltKey, 0.0) ||
       !TLRG_SetIfMissing(tlrgPeakHaltKey, 0.0) ||
       !TLRG_SetIfMissing(tlrgReviewLoggedKey, 0.0) ||
-      !TLRG_SetIfMissing(tlrgHaltLoggedKey, 0.0))
+      !TLRG_SetIfMissing(tlrgHaltLoggedKey, 0.0) ||
+      !TLRG_SetIfMissing(tlrgCloseFailLogKey, 0.0))
    {
       Print("Risk guard could not persist state; initialization blocked. Error=", GetLastError());
       return false;
@@ -138,9 +142,17 @@ bool TLRG_CloseStrategyPositions()
       if(!trade.PositionClose(ticket) || !TLRG_TradeRequestAccepted())
       {
          allClosed = false;
-         Print("Risk guard close failed. Ticket=", ticket,
-               " retcode=", trade.ResultRetcode(),
-               " ", trade.ResultRetcodeDescription());
+         datetime now = TimeCurrent();
+         double lastLog = GlobalVariableGet(tlrgCloseFailLogKey);
+         if(lastLog <= 0.0 || (double)now - lastLog >= 60.0)
+         {
+            GlobalVariableSet(tlrgCloseFailLogKey, (double)now);
+            GlobalVariablesFlush();
+            Print("Risk guard close failed. Ticket=", ticket,
+                  " retcode=", trade.ResultRetcode(),
+                  " ", trade.ResultRetcodeDescription(),
+                  ". Close will be retried; failure logs are throttled to once per minute.");
+         }
       }
    }
    return allClosed;
@@ -153,7 +165,8 @@ bool TLRG_CheckAndEnforce()
 {
    if(!tlrgReady)
    {
-      Print("Risk guard is not initialized; fail-closed.");
+      Print("Risk guard is not initialized; fail-closed and attempting position close.");
+      TLRG_CloseStrategyPositions();
       return true;
    }
 
@@ -161,7 +174,8 @@ bool TLRG_CheckAndEnforce()
    int day = TLRG_ServerDay();
    if(equity <= 0.0 || day <= 0)
    {
-      Print("Risk guard cannot read equity/server date; trading blocked.");
+      Print("Risk guard cannot read equity/server date; fail-closed and attempting position close.");
+      TLRG_CloseStrategyPositions();
       return true;
    }
 
@@ -179,7 +193,8 @@ bool TLRG_CheckAndEnforce()
    double peak = GlobalVariableGet(tlrgPeakKey);
    if(peak <= 0.0)
    {
-      Print("Risk guard peak-equity state invalid; trading blocked.");
+      Print("Risk guard peak-equity state invalid; fail-closed and attempting position close.");
+      TLRG_CloseStrategyPositions();
       return true;
    }
    if(equity > peak)
@@ -192,7 +207,8 @@ bool TLRG_CheckAndEnforce()
    double dayStart = GlobalVariableGet(tlrgDayStartKey);
    if(dayStart <= 0.0)
    {
-      Print("Risk guard daily reference invalid; trading blocked.");
+      Print("Risk guard daily reference invalid; fail-closed and attempting position close.");
+      TLRG_CloseStrategyPositions();
       return true;
    }
 
