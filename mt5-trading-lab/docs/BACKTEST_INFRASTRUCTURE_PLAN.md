@@ -47,3 +47,13 @@ No paid cloud resource, subscription, funded account or live trading is authoriz
 
 ## Critical caution
 Do not optimize parameters on the final evaluation period. Freeze hypotheses and settings before chronological out-of-sample and walk-forward tests. Real-tick mode is preferred where available, but it is only as good as the underlying broker history. A clean compile, a synthetic test, or a Python proxy must never be described as a completed MT5 backtest.
+
+## ChatGPT-led delivery clarification (2026-10-13)
+Keep the work inside this ChatGPT conversation wherever possible: use ChatGPT for research, code changes, source review, test interpretation and decision-making; use GitHub as the auditable workspace and GitHub Actions for deterministic automation. Do not create or outsource to a separate multi-agent service as a prerequisite for backtesting.
+
+The next engineering deliverable is the dedicated Windows Strategy Tester workflow, first in a no-credential validation mode that proves configuration validation, clean compilation, test launch safeguards, fresh-report detection, artifact packaging and failure reporting. This dry run must not be described as a completed backtest. Then add broker-demo history access only if the chosen MT5 testing route genuinely requires authentication.
+
+The owner does not need to upload GitHub login details. If a broker demo login is eventually required for unattended broker-specific testing, the owner should enter it directly as a narrowly scoped GitHub Actions secret after we have verified the exact secret names and workflow permissions. Do not request or accept credentials in ChatGPT.
+
+First backtest should use one frozen candidate and one instrument, selected only after the £100 feasibility check. The test's raw report, tester journal, source/build hashes, symbol metadata, cost ledger and report reconciliation are mandatory. Only after this passes should the team expand to additional candidates or symbols.
+
