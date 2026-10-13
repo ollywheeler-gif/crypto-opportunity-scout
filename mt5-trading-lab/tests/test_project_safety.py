@@ -7,6 +7,7 @@ EA = (ROOT / "mql5/Experts/STRAT-002_DonchianBreakout.mq5").read_text(encoding="
 EMA_EA = (ROOT / "mql5/Experts/STRAT-003_EMATrend.mq5").read_text(encoding="utf-8")
 PULLBACK_EA = (ROOT / "mql5/Experts/STRAT-004_TrendPullback.mq5").read_text(encoding="utf-8")
 VOL_EA = (ROOT / "mql5/Experts/STRAT-007_VolatilityContraction.mq5").read_text(encoding="utf-8")
+MR_EA = (ROOT / "mql5/Experts/STRAT-008_RegimeMeanReversion.mq5").read_text(encoding="utf-8")
 CONTRACT_EXPORTER = (ROOT / "mql5/Scripts/TradingLab/ExportSymbolContract.mq5").read_text(encoding="utf-8")
 CONFIG = json.loads((ROOT / "config/project_config.json").read_text(encoding="utf-8"))
 RUNNER = (ROOT / "scripts/run_mt5_candidate.ps1").read_text(encoding="utf-8")
@@ -57,6 +58,18 @@ class ProjectSafetyTests(unittest.TestCase):
             self.assertIn(field, CONTRACT_EXPORTER)
         for forbidden in ("trade.Buy(", "trade.Sell(", "OrderSend(", "PositionClose("):
             self.assertNotIn(forbidden, CONTRACT_EXPORTER)
+
+    def test_strat008_is_disabled_and_has_core_safety_gates(self):
+        self.assertIn("input bool   EnableStrategy = false", MR_EA)
+        self.assertIn("ACCOUNT_TRADE_MODE_REAL", MR_EA)
+        self.assertIn("AdxPeriod = 14", MR_EA)
+        self.assertIn("BandDeviation = 2.0", MR_EA)
+        self.assertIn("MaxHoldingBars = 8", MR_EA)
+        self.assertIn("EstimatedGapCostPerLot <= 0", MR_EA)
+        self.assertIn("MaxSpreadPoints <= 0", MR_EA)
+        self.assertIn("OrderCalcProfit", MR_EA)
+        self.assertIn("OrderCalcMargin", MR_EA)
+        self.assertIn("Another instance with the same symbol/magic is active", MR_EA)
 
     def test_strat007_is_disabled_and_has_core_safety_gates(self):
         self.assertIn("input bool   EnableStrategy = false", VOL_EA)
