@@ -42,8 +42,9 @@ if (Test-Path -LiteralPath $expertEx5) {
 
 # Compile and inspect the log; exit code alone is not sufficient.
 if (Test-Path -LiteralPath $compileLogSource) { Remove-Item -LiteralPath $compileLogSource -Force }
-& $MetaEditorPath "/compile:$resolvedSource" "/log"
-$compileExit = $LASTEXITCODE
+$compileArgs = @("/compile:`"$resolvedSource`"", '/log')
+$compileProcess = Start-Process -FilePath $MetaEditorPath -ArgumentList $compileArgs -Wait -PassThru
+$compileExit = $compileProcess.ExitCode
 if (Test-Path -LiteralPath $compileLogSource) {
   Copy-Item -LiteralPath $compileLogSource -Destination $compileLog -Force
 }
