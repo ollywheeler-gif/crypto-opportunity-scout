@@ -107,6 +107,7 @@ bool TLRG_Init()
       GlobalVariableSet(tlrgReviewLoggedKey, 0.0);
    }
 
+   GlobalVariablesFlush();
    tlrgReady = true;
    Print("Risk guard initialized. Daily loss halt=", TLRG_DailyLossLimitPct,
          "%; drawdown review=", TLRG_DrawdownReviewPct,
@@ -164,6 +165,7 @@ bool TLRG_CheckAndEnforce()
       GlobalVariableSet(tlrgDayStartKey, equity);
       GlobalVariableSet(tlrgDailyHaltKey, 0.0);
       GlobalVariableSet(tlrgReviewLoggedKey, 0.0);
+      GlobalVariablesFlush();
       Print("Risk guard daily reference reset at server-day boundary.");
    }
 
@@ -177,6 +179,7 @@ bool TLRG_CheckAndEnforce()
    {
       peak = equity;
       GlobalVariableSet(tlrgPeakKey, peak);
+      GlobalVariablesFlush();
    }
 
    double dayStart = GlobalVariableGet(tlrgDayStartKey);
@@ -193,13 +196,20 @@ bool TLRG_CheckAndEnforce()
       GlobalVariableGet(tlrgReviewLoggedKey) < 0.5)
    {
       GlobalVariableSet(tlrgReviewLoggedKey, 1.0);
+      GlobalVariablesFlush();
       Print("RISK REVIEW: peak-to-trough equity drawdown reached ",
             DoubleToString(drawdownPct, 2), "%.");
    }
-   if(drawdownPct >= TLRG_DrawdownHaltPct)
+   if(drawdownPct >= TLRG_DrawdownHaltPct && GlobalVariableGet(tlrgPeakHaltKey) < 0.5)
+   {
       GlobalVariableSet(tlrgPeakHaltKey, 1.0);
-   if(dailyLossPct >= TLRG_DailyLossLimitPct)
+      GlobalVariablesFlush();
+   }
+   if(dailyLossPct >= TLRG_DailyLossLimitPct && GlobalVariableGet(tlrgDailyHaltKey) < 0.5)
+   {
       GlobalVariableSet(tlrgDailyHaltKey, 1.0);
+      GlobalVariablesFlush();
+   }
 
    bool halted = (GlobalVariableGet(tlrgDailyHaltKey) >= 0.5 ||
                   GlobalVariableGet(tlrgPeakHaltKey) >= 0.5);
