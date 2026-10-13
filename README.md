@@ -1,34 +1,43 @@
-# Crypto Opportunity Scout MVP — cloud-only starter
+# Crypto Opportunity Scout
 
-## What's included
-- Public digest page and JSON endpoint.
-- Scheduled RSS/Atom collection from example public ecosystem feeds.
-- Simple keyword categorization; it is not an LLM and does not verify rewards.
-- Hosted invoice creation placeholder using the previously discussed Shieldz endpoint.
-- Signed-webhook validation pattern, timestamp tolerance, invoice/order matching, delivery deduplication, and paid-report gate.
-- Admin collection endpoint protected by a secret.
+A cloud-hosted public-source crypto opportunity research prototype. It collects ecosystem feeds and campaign-directory links, checks source pages for reward and cost evidence, and publishes only leads that pass its current strict economics gate.
 
-## Critical before live use
-This is not deployed, audited, or provider-verified. The payment request intentionally does not guess a provider-specific Base/USDC settlement payload. Configure the accepted asset/network in the merchant dashboard if supported and confirm the API schema. Before production, validate the paid event's amount, asset, network, invoice status and confirmations against the provider's current docs. Verify signature header/algorithm exactly against the provider's docs. Do not accept real payments until end-to-end tests pass.
+## Current status
 
-The product is priced at USD $1.00 (100 cents), not GBP £1. The current paid report is the latest feed digest, not independently verified earning opportunities. Don't advertise rewards as guaranteed.
+- Hosted on Cloudflare Workers, with report storage in Workers KV.
+- Scheduled collection is configured for 08:15 UTC daily.
+- The homepage loads the stored report; it does not automatically launch a new collection on every visit.
+- The collector checks public RSS/Atom feeds and campaign directories. Sources may be unavailable, block automated requests, change format, or publish irrelevant items.
+- The current publication rule is deliberately strict. An empty report means no candidate passed the current evidence threshold; it does not prove that no worthwhile opportunities exist.
+- The assessment is a research filter, not financial advice, a guarantee of reward, or a statistically validated expected-return model. Payout probability, eligibility uncertainty and time cost may remain unquantified.
+- The $1 detailed-report checkout remains locked to test mode and must not be switched to live payments without explicit approval and end-to-end verification.
 
-## Deploy from Cloudflare dashboard
-1. Create Worker and paste `src/worker.js` in its editor, then deploy.
-2. Create KV namespace `SCOUT_KV` under Storage & databases > KV and bind it to this Worker as `SCOUT_KV`.
-3. Add Worker secrets `SHIELDZ_API_KEY` (test key first), `SHIELDZ_WEBHOOK_SECRET`, and `SCOUT_ADMIN_TOKEN` (long random token).
-4. Add a daily Cron Trigger, e.g. `15 8 * * *` UTC.
-5. Configure Shieldz test checkout and webhook URL `https://YOUR-WORKER.workers.dev/webhooks/shieldz`.
-6. Test signature rejection, stale timestamps, duplicate delivery, mismatched invoice, unpaid report access and successful test payment.
-7. Only switch live after confirming provider details, privacy notice, support/refund policy and applicable legal/tax requirements.
+## Safety and evidence policy
+
+A campaign-directory listing is not proof that a campaign is open, legitimate, or pays a reward. A candidate should only be labelled worthwhile when its official source supports a fixed per-person fiat or stablecoin reward, open status, no required capital, and no uncovered fees. Reward claims remain unconfirmed until independently verified. Never share a seed phrase or private key, and never sign a transaction solely because this service lists a lead.
 
 ## Routes
-GET / public digest
-GET /api/daily digest JSON
-POST /checkout creates invoice
-POST /webhooks/shieldz payment webhook
-GET /report?order=...&token=... paid report
-POST /admin/collect manually refreshes digest
 
-## Free limits
-Cloudflare free quotas apply. No paid AI API is used; categorization is rule-based. Source feeds can change or contain irrelevant items. The app has no email delivery yet; the checkout response returns a report URL. For a small MVP KV is used, not a transactional database.
+- `GET /` — public digest page
+- `GET /api/daily` — latest stored digest as JSON
+- `GET /api/refresh` or `POST /api/refresh` — manually run collection; rate-limited by a five-minute lock
+- `POST /admin/collect` — manual collection protected by `SCOUT_ADMIN_TOKEN`
+- `POST /checkout` — test-only detailed-report checkout
+- `POST /webhooks/shieldz` — signed payment webhook
+- `GET /report?order=...&token=...` — access-controlled report after a matching paid event
+
+## Development and tests
+
+Requires Node.js 22 or later.
+
+```sh
+npm test
+```
+
+GitHub Actions runs the test suite on pushes and pull requests. The deployment workflow publishes changes to `src/**`, `wrangler.toml`, and its own workflow file to Cloudflare Workers.
+
+## Deployment notes
+
+The deployment workflow finds or creates the `SCOUT_KV` namespace and binds it to the Worker. It requires a GitHub Actions secret named `CLOUDFLARE_API_TOKEN` with the required Cloudflare account and Workers/KV permissions.
+
+The checkout is intentionally guarded: use only a Shieldz `sk_test_` key, a test webhook secret, and the intended Base/USDC test settlement address. Do not enable real payments until provider requirements, webhook semantics, privacy, refunds/support and applicable legal/tax obligations have been reviewed. The paid report currently packages one selected public-source lead; it is not an independently guaranteed earning opportunity.
