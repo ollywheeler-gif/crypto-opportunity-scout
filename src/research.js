@@ -164,7 +164,7 @@ export async function collectReport() {
   return {
     date: new Date().toISOString().slice(0, 10),
     generatedAt: new Date().toISOString(),
-    pipelineVersion: "2.2",
+    pipelineVersion: "2.3",
     items,
     sources: [...sources, ...directoryDiagnostics],
     qualitySummary: {
@@ -180,8 +180,8 @@ export async function collectReport() {
       fullyVerifiedRewards: 0
     },
     disclaimer: items.length
-      ? "Only leads with a fetched source page, an action signal, a fixed per-person monetary reward, no required capital, fees absent/covered and explicit open-status evidence pass the conservative preliminary worthwhile-economics filter. This does not guarantee rewards or legitimacy. Check campaign status, eligibility, deadlines, costs and official terms before acting."
-      : "No demonstrably worthwhile opportunities met the conservative evidence threshold today. This is preferable to presenting generic announcements as opportunities. Source diagnostics show feed health; rejected candidates lacked sufficient evidence of a concrete reward and action."
+      ? "Only leads with a fetched source page, an explicit fixed per-person fiat/stablecoin reward, no required capital, fees absent/covered and current open-status evidence pass the conservative preliminary economics screen. Passing is not a risk-adjusted expected-return calculation. This does not guarantee rewards or legitimacy. Check campaign status, eligibility, deadlines, costs and official terms before acting."
+      : "No demonstrably worthwhile opportunities met the conservative evidence threshold today. The filter does not estimate reward probability or time cost. This is preferable to presenting generic announcements as opportunities. Source diagnostics show feed health; rejected candidates lacked sufficient evidence of a concrete reward and action."
   };
 }
 
@@ -211,22 +211,28 @@ export async function enrichResearchItem(item) {
       ? "Medium / uncertain"
       : "Lower direct-capital risk";
   const economicEvidence = Boolean(percentReturnMatch || numericValueContext || /\b(?:token allocation|token distribution|published points conversion|points worth|prize pool of)\b/i.test(compact));
-  // Conservative publication gate. Risk alone does not disqualify a candidate;
-  // unsupported economics do. At this stage the automated system can only pass
-  // a clearly stated fixed per-person monetary reward with no required capital,
-  // explicitly covered/absent fees, and explicit evidence the campaign is open.
-  // It does not estimate reward probability or invent token prices.
+  // Evidence-first economics screen. We only publish when the source explicitly
+  // states a fixed per-person stablecoin/fiat reward, a no-capital route, fees
+  // absent/covered, and current availability. This gives a gross reward estimate;
+  // time cost and reward probability remain unquantified, so those limits are shown.
+  const perPersonWording = /\b(?:per user|each user|per participant|each participant|you will receive|you receive|fixed reward)\b/i;
+  const stablecoinOrFiat = /\b(?:USDC|USDT|USD)\b/i;
+  const rewardAmountMatch = numericValueContext.match(/(?:\$\s?([\d,]+(?:\.\d{1,2})?)|(?:USD\s*)?([\d,]+(?:\.\d{1,2})?)\s*(USDC|USDT|USD))/i);
+  const grossRewardValue = rewardAmountMatch
+    ? Number((rewardAmountMatch[1] || rewardAmountMatch[2] || "").replace(/,/g, ""))
+    : null;
+  const rewardCurrencyMatch = numericValueContext.match(/\b(USDC|USDT|USD)\b/i);
+  const rewardCurrency = rewardCurrencyMatch ? rewardCurrencyMatch[1].toUpperCase() : (/\$/.test(numericValueContext) ? "USD" : null);
   const fixedPerPersonReward = Boolean(
-    numericValueContext &&
-    /\b(?:per user|each user|per participant|each participant|you will receive|you receive|fixed reward)\b/i.test(compact) &&
-    /\b(?:USDC|USDT|USD|\$)\b/i.test(numericValueContext)
+    numericValueContext && perPersonWording.test(numericValueContext) &&
+    stablecoinOrFiat.test(numericValueContext) && Number.isFinite(grossRewardValue) && grossRewardValue > 0
   );
   const feesExplicitlyAbsent = /\b(?:no fees|no fee|no transaction fees|no gas fees|gas fees covered|gas sponsored|gas-free|all fees covered)\b/i.test(compact);
   const prizeDraw = /\b(?:prize draw|prize pool|lottery|random winner|draw chances?)\b/i.test(compact);
   const currentStatusEvidence = /\b(?:live now|now live|campaign is live|campaign is active|registration open|claim is live|currently open|open for registration|ongoing campaign)\b/i.test(compact);
   const noCapitalRequired = explicitNoCapital && !capitalRisk;
   const worthwhileEvidence = Boolean(
-    actionable && economicEvidence && fixedPerPersonReward && noCapitalRequired &&
+    actionable && fixedPerPersonReward && noCapitalRequired &&
     feesExplicitlyAbsent && currentStatusEvidence && !prizeDraw
   );
   const investmentDecision = worthwhileEvidence
@@ -234,16 +240,15 @@ export async function enrichResearchItem(item) {
     : "Not recommended — insufficient evidence of worthwhile economics";
   const investmentReasons = [];
   if (percentReturnMatch) investmentReasons.push("Promotional percentage detected: " + percentReturnMatch[1] + "%; this alone does not establish the calculation basis or net return.");
-  if (numericValueMatch) investmentReasons.push("A numeric monetary amount was detected; confirm currency, whether it is a per-person reward, and all payout conditions.");
-  if (!economicEvidence) investmentReasons.push("No defensible monetary value or published conversion was identified.");
-  if (!fixedPerPersonReward) investmentReasons.push("No clearly stated fixed monetary reward payable to each participant was established; a total pool or headline percentage is insufficient.");
+  if (numericValueMatch) investmentReasons.push("A numeric monetary amount was detected; only an explicitly per-person payout is eligible for the shortlist.");
+  if (!fixedPerPersonReward) investmentReasons.push("No clearly stated fixed per-person fiat/stablecoin reward was established. Token prices, points, total prize pools and promotional percentages are not treated as guaranteed cash value.");
   if (!noCapitalRequired) investmentReasons.push("Required capital is not explicitly ruled out, or the source mentions deposits, trading volume, leverage or other capital exposure.");
   if (!feesExplicitlyAbsent) investmentReasons.push("Participation, transaction and network fees are not explicitly ruled out or covered.");
   if (!currentStatusEvidence) investmentReasons.push("The source does not clearly establish that the campaign is currently open.");
   if (prizeDraw) investmentReasons.push("Prize-draw value cannot be assessed without credible odds and prize-value information.");
-  if (walletRisk) investmentReasons.push("Wallet connection/signing language detected; this is a risk to disclose, not an automatic rejection. Inspect permissions and never sign an unexplained transaction.");
+  if (walletRisk) investmentReasons.push("Wallet connection/signing language detected; this is a material risk to disclose, not an automatic rejection. Inspect permissions and never sign an unexplained transaction.");
   if (highReturn) investmentReasons.push("A return of 5% or more over a short period was detected. This is a risk signal, not proof of worthwhile value.");
-  if (worthwhileEvidence) investmentReasons.push("The source states a fixed per-person monetary reward, no required capital, fees absent/covered and an open campaign. This is a preliminary pass, not a guarantee; verify eligibility, legitimacy, payout and time required before acting.");
+  if (worthwhileEvidence) investmentReasons.push("A fixed per-person monetary reward, no required capital, fees absent/covered and open status are stated. The reward is gross value before time cost; payout probability and eligibility still require verification.");
   const eligibilityMatch = findContext(compact, /\b(?:eligible|eligibility|available in|excluding|excluded|residents of|restricted in|region|country|countries|KYC|identity verification)\b/i);
   const costMatch = findContext(compact, /\b(?:fee|fees|deposit|minimum purchase|minimum balance|trading volume|gas cost|transaction cost|purchase at least|spend at least|no purchase necessary|free to participate)\b/i);
   const deadlineMatch = findContext(compact, /\b(?:deadline|ends? on|ending on|expires? on|until|by \w+day|before \w+ \d{1,2}|ongoing|open until)\b/i);
@@ -276,8 +281,8 @@ export async function enrichResearchItem(item) {
     riskLevel,
     economicEvidenceFound: economicEvidence,
     reasons: investmentReasons,
-    estimatedNetReturn: "Not estimated — reward probability, fees, price impact and eligibility are not reliably established automatically",
-    rule: "A candidate passing this filter is a shortlist candidate, not an instruction to invest. Risk alone does not disqualify it; unsupported economics do."
+    estimatedNetReturn: worthwhileEvidence ? `Gross reward: ${rewardCurrency} ${grossRewardValue.toFixed(2)} per eligible participant before time cost; not a risk-adjusted expected return.` : "Not estimated — reward probability, costs and eligibility are not reliably established automatically",
+    rule: "A candidate passing this filter is a shortlist candidate, not an instruction to invest. Gross reward is not risk-adjusted expected value; time cost, payout probability and eligibility remain unquantified."
   };
   enriched.reward = "Not confirmed";
   enriched.rewardDetails = rewardDetails || "No specific reward amount/type extracted";
