@@ -1,5 +1,6 @@
-import csv, tempfile, unittest
+import csv, tempfile, unittest, sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.analyze_trades import analyze
 class Tests(unittest.TestCase):
     def test_net_profit_and_drawdown(self):
