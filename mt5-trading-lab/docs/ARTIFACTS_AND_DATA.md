@@ -22,7 +22,9 @@ Keep all test inputs and outputs immutable by candidate version and run ID. Neve
 - Analyst/agent role, result status, exceptions and reconciliation decision.
 
 ## CSV normalization
-The trade analyzer expects a close_time column and net_profit column. net_profit must be trade-level P/L after commission, swap and other costs exactly once. Preserve original raw exports; never silently rename gross profit as net profit. Include a stable trade identifier if available.
+The trade analyzer expects a close_time column and net_profit column. net_profit must be trade-level P/L after commission, swap and other costs exactly once.
+
+Before analyzing strategy performance, normalize a separate ledger with `trade_id,gross_profit,commission,swap,fees,net_profit` and run `python mt5-trading-lab/scripts/reconcile_costs.py normalized_costs.csv --out reconciliation.json`. A pass proves arithmetic consistency only; document the exact mapping from the preserved raw tester/broker export. A mismatch blocks performance analysis until explained. Never infer whether a report already includes costs. Preserve original raw exports; never silently rename gross profit as net profit. Include a stable trade identifier if available.
 
 ## Security and retention
 - Never commit broker passwords, investor passwords, API keys, account numbers or private keys.
