@@ -40,7 +40,7 @@ Check the complete log for errors and warnings, and verify that a fresh EX5 exis
 - The INI must include a `[Tester]` section and explicit `Expert`, `Symbol`, `Period`, `FromDate`, `ToDate`, `Model`, `Deposit`, `Currency`, `Leverage`, and `Report` settings.
 - Set `Expert=` to the expert path relative to `MQL5\Experts` (for example `TradingLab\STRAT-002_DonchianBreakout`, without `.ex5`). Verify the exact syntax accepted by the installed MT5 build.
 - The report path in the INI must match the runner's `ReportPath` argument. The runner refuses to archive a report that was not updated by the current run.
-- Set the EA inputs explicitly: enable the strategy only in the tester/demo environment, set `ConfirmBrokerCostsReviewed=true` only after review, and enter positive spread and slippage sizing allowances. These allowances do not replace the tester's actual cost settings.
+- Set the EA inputs explicitly: enable the strategy only in the tester/demo environment, set `ConfirmBrokerCostsReviewed=true` only after review, and enter positive spread, slippage and gap-loss sizing allowances. These allowances do not replace the tester's actual cost settings.
 - Preserve the INI, compiler log, terminal/tester logs, raw report, normalized trade CSV and reconciliation notes.
 
 The runner is a guarded starter, not yet proven against the user's installed MT5 build. A report file existing is not proof of a valid completed backtest. Reconcile symbol, dates, modelling mode, deposit/currency/leverage, costs, trades, P/L and logs before using any metrics.
