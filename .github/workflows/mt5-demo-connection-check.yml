@@ -56,6 +56,19 @@ jobs:
           if (-not (Test-Path $terminal) -or -not (Test-Path $editor)) { throw "MT5 installation did not produce expected executables (installer exit $($p.ExitCode))." }
           "MT5_INSTALL_DIR=$installDir" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
+      - name: Initialize isolated MT5 files without account login
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = $env:MT5_INSTALL_DIR
+          $terminal = Join-Path $root 'terminal64.exe'
+          $include = Join-Path $root 'MQL5\Include\Trade\Trade.mqh'
+          $p = Start-Process -FilePath $terminal -ArgumentList '/portable' -PassThru
+          $deadline = (Get-Date).AddSeconds(60)
+          while ((Get-Date) -lt $deadline -and -not (Test-Path $include)) { Start-Sleep -Seconds 2 }
+          if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
+          if (-not (Test-Path $include)) { throw 'MT5 standard MQL5 files were not initialized; cannot compile exporter.' }
+
       - name: Compile read-only symbol contract exporter
         shell: pwsh
         run: |
@@ -63,9 +76,7 @@ jobs:
           $root = $env:MT5_INSTALL_DIR
           $mql = Join-Path $root 'MQL5'
           $include = Join-Path $mql 'Include\Trade\Trade.mqh'
-          $deadline = (Get-Date).AddSeconds(60)
-          while ((Get-Date) -lt $deadline -and -not (Test-Path $include)) { Start-Sleep -Seconds 2 }
-          if (-not (Test-Path $include)) { throw 'MT5 standard MQL5 files were not initialized by installer; cannot compile exporter.' }
+          if (-not (Test-Path $include)) { throw 'MT5 standard include directory missing; cannot compile exporter.' }
           $src = Join-Path $mql 'Scripts\TradingLab\ExportSymbolContract.mq5'
           New-Item -ItemType Directory -Force -Path (Split-Path $src -Parent) | Out-Null
           Copy-Item 'mt5-trading-lab/mql5/Scripts/TradingLab/ExportSymbolContract.mq5' $src -Force
