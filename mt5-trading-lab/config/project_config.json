@@ -16,7 +16,12 @@
     "per_trade_risk_pct_target_range": [
       0.25,
       0.5
-    ]
+    ],
+    "daily_loss_halt_pct": 1,
+    "drawdown_halt_pct": 10,
+    "drawdown_state_persists_across_restarts": true,
+    "daily_halt_resets_on_server_day": true,
+    "peak_drawdown_halt_requires_deliberate_reset": true
   },
   "acceptance": {
     "require_compile_log": true,
