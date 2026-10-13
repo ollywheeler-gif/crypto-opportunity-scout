@@ -1,6 +1,6 @@
 # STRAT-002 — Donchian breakout with ATR risk control (v1)
 
-Status: RESEARCH SPECIFICATION ONLY — not compiled, tested, or approved for demo/live use.
+Status: FROZEN RESEARCH SPECIFICATION v1 — EA compiled with zero errors and zero warnings; not Strategy Tester tested, not broker-feasibility validated, and not approved for demo/live use.
 
 ## Hypothesis
 A close beyond a prior-period price channel may capture persistent directional moves in liquid instruments. The effect may disappear after costs, be regime-dependent, or be too expensive to trade at £100. The experiment is designed to falsify the hypothesis, not assume profitability.
@@ -55,3 +55,12 @@ At the close of each completed H1 bar:
 
 ## Required evidence before changing status
 Source and commit hash; compiler/build details; compile log; exact tester configuration; raw tester report; tester/terminal logs; normalized trades; cost reconciliation; train/validation/OOS definitions; stress/walk-forward outputs; independent review. Until then, status remains RESEARCH.
+
+
+## Implementation evidence status
+- Windows MetaEditor 5.0.0.6257 compile run: [38391736678](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38391736678), source revision `0676e9066aaf98f12aa22c5a5b3da769cd144a4a`.
+- Compiler summary: `Result: 0 errors, 0 warnings`.
+- Source SHA-256: `2B1E3E48BBD7EDCE5B1C80EC25B98F1764468464BCD30B7351271F6269810CFB`.
+- EX5 SHA-256: `17506A9D1AC08FDD8624039EF6A348081CDB70E402738E4A9E6B0326F8E401E6`.
+- Retained compile artifact: [11809281108](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38391736678/artifacts/11809281108).
+- This evidence proves compilation only. It does not prove correct order behavior, feasible minimum size, realistic costs or positive expectancy.
