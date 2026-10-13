@@ -32,6 +32,18 @@ const RISK_TERMS = [
   ["Time limit or expiry may apply", /\bdeadline\b|\bexpires?\b|\bends? on\b|\buntil \w+ \d{1,2}\b/i]
 ];
 
+// Keep feed-entry rejection reasons explicit and deterministic for automated tests.
+export function classifyFeedEntry({ title, url, date }, now = Date.now(), maxAgeDays = MAX_AGE_DAYS) {
+  if (!title) return { ok: false, reason: "missingTitle" };
+  if (!url) return { ok: false, reason: "missingLink" };
+  const publishedMs = Date.parse(date || "");
+  if (!Number.isFinite(publishedMs)) return { ok: false, reason: "invalidDate" };
+  const ageMs = now - publishedMs;
+  if (ageMs < -24 * 60 * 60 * 1000) return { ok: false, reason: "futureDate" };
+  if (ageMs > maxAgeDays * 24 * 60 * 60 * 1000) return { ok: false, reason: "staleDate" };
+  return { ok: true, publishedMs };
+}
+
 export async function collectReport() {
   const all = [];
   const sources = [];
@@ -56,13 +68,9 @@ export async function collectReport() {
         const date = cleanXml(getTag(block, "pubDate") || getTag(block, "updated") || getTag(block, "published") || getTag(block, "date"));
         const summary = cleanXml(getTag(block, "description") || getTag(block, "summary") || getTag(block, "content"));
         const url = normalizeArticleUrl(href);
-        if (!title) { skipped.missingTitle++; continue; }
-        if (!url) { skipped.missingLink++; continue; }
-        const publishedMs = Date.parse(date);
-        if (!Number.isFinite(publishedMs)) { skipped.invalidDate++; continue; }
-        const ageMs = Date.now() - publishedMs;
-        if (ageMs < -24 * 60 * 60 * 1000) { skipped.futureDate++; continue; }
-        if (ageMs > MAX_AGE_DAYS * 24 * 60 * 60 * 1000) { skipped.staleDate++; continue; }
+        const eligibility = classifyFeedEntry({ title, url, date });
+        if (!eligibility.ok) { skipped[eligibility.reason]++; continue; }
+        const publishedMs = eligibility.publishedMs;
         const text = title + " " + summary;
         const rewardSignal = REWARD_TERMS.test(text);
         const lower = text.toLowerCase();
