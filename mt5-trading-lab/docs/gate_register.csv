@@ -1,6 +1,6 @@
 candidate_id,version,gate,owner,status,evidence,blocker,next_action
 PROJECT,1,Repository structure,Agent 0,PASS,Required project docs and validation scripts are in the repository,none,Keep validation gate in CI
-PROJECT,1,Python tests and CI,Agent 0,PASS,GitHub Actions run 38393950912 passed repository validation and Python unit tests,none,Rerun after every code or workflow change
+PROJECT,1,Python tests and CI,Agent 0,PASS,GitHub Actions run 38394273171 passed repository validation and Python unit tests,none,Rerun after every code or workflow change
 PROJECT,1,Windows compile pipeline,Agent 7,PASS,Run 38393677219 compiled eight EAs and the symbol exporter with MetaEditor 5.0.0.6257 and zero errors or warnings; artifact 11811217733,Compile is not a Strategy Tester result,Retain new manifests and logs for every source change
 PROJECT,1,Symbol exporter execution,Agent 5,BLOCKED,ExportSymbolContract.mq5 compiled but has not run on a selected broker terminal,No broker-specific symbol metadata,Run exporter only on a chosen demo terminal and independently verify CSV
 PROJECT,1,Pre-registered test protocol,Agent 6,PASS,docs/PRE_REGISTERED_TEST_PROTOCOL.md,Actual broker data coverage and dates must be confirmed before testing,Freeze any date adjustments before results are inspected
