@@ -5,6 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 EA = (ROOT / "mql5/Experts/STRAT-002_DonchianBreakout.mq5").read_text(encoding="utf-8")
 EMA_EA = (ROOT / "mql5/Experts/STRAT-003_EMATrend.mq5").read_text(encoding="utf-8")
+PULLBACK_EA = (ROOT / "mql5/Experts/STRAT-004_TrendPullback.mq5").read_text(encoding="utf-8")
 CONTRACT_EXPORTER = (ROOT / "mql5/Scripts/TradingLab/ExportSymbolContract.mq5").read_text(encoding="utf-8")
 CONFIG = json.loads((ROOT / "config/project_config.json").read_text(encoding="utf-8"))
 RUNNER = (ROOT / "scripts/run_mt5_candidate.ps1").read_text(encoding="utf-8")
@@ -55,6 +56,16 @@ class ProjectSafetyTests(unittest.TestCase):
             self.assertIn(field, CONTRACT_EXPORTER)
         for forbidden in ("trade.Buy(", "trade.Sell(", "OrderSend(", "PositionClose("):
             self.assertNotIn(forbidden, CONTRACT_EXPORTER)
+
+    def test_strat004_is_disabled_and_has_core_safety_gates(self):
+        self.assertIn("input bool   EnableStrategy = false", PULLBACK_EA)
+        self.assertIn("ACCOUNT_TRADE_MODE_REAL", PULLBACK_EA)
+        self.assertIn("MaxHoldingBars = 12", PULLBACK_EA)
+        self.assertIn("EstimatedGapCostPerLot <= 0", PULLBACK_EA)
+        self.assertIn("MaxSpreadPoints <= 0", PULLBACK_EA)
+        self.assertIn("OrderCalcProfit", PULLBACK_EA)
+        self.assertIn("OrderCalcMargin", PULLBACK_EA)
+        self.assertIn("Another instance with the same symbol/magic is active", PULLBACK_EA)
 
     def test_strat003_is_disabled_and_has_core_safety_gates(self):
         self.assertIn("input bool   EnableStrategy = false", EMA_EA)
