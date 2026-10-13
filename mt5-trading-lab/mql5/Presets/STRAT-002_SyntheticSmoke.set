@@ -1,0 +1,15 @@
+EnableStrategy=true||false||0||true||N
+ConfirmBrokerCostsReviewed=true||false||0||true||N
+MagicNumber=26091502||26091502||1||26091502||N
+EntryChannelBars=20||20||1||20||N
+ExitChannelBars=10||10||1||10||N
+AtrPeriod=20||20||1||20||N
+AtrStopMultiplier=2.0||2.0||0.2||2.0||N
+TargetRiskPct=0.25||0.25||0.05||0.25||N
+HardMaxRiskPct=0.50||0.50||0.05||0.50||N
+EstimatedSpreadCostPerLot=1.0||1.0||0.1||1.0||N
+EstimatedRoundTurnCostPerLot=1.0||1.0||0.1||1.0||N
+EstimatedSlippageCostPerLot=1.0||1.0||0.1||1.0||N
+EstimatedGapCostPerLot=1.0||1.0||0.1||1.0||N
+MaxDeviationPoints=20||20||1||20||N
+MaxSpreadPoints=100||100||1||100||N
