@@ -22,7 +22,7 @@ Research can explore several hypotheses in parallel. Implementation starts only 
 Every run must be written to a unique timestamped directory. Never overwrite the only copy of a raw report or failed run. Hash source, config and raw artifacts; preserve tester logs and record the exact terminal build. Derived CSVs must be reproducible from raw evidence and costs must be included exactly once.
 
 ## Current execution boundary
-The repository currently contains agent instructions and starter automation. It does not by itself execute four persistent agents, provide Windows/MetaEditor, or create valid MT5 backtests. GitHub Actions can run repository and Python checks only. Do not infer an MT5 pass from CI success.
+The repository currently contains agent instructions and starter automation. It does not by itself execute four persistent agents, provide Windows/MetaEditor, or create valid MT5 backtests. GitHub Actions can run repository/Python checks and attempt a no-account MetaEditor compile. It does not run the MT5 Strategy Tester or establish market performance. Do not infer a backtest pass from CI success.
 
 ## Critical path
 1. Validate repository files and tests in CI.
