@@ -13,7 +13,7 @@ A simple, deterministic volatility contraction breakout rule may capture a repea
 - No multi-symbol portfolio in v1. Signals use completed bars only. Entries execute on the next available quote after signal close.
 
 ## Deterministic rules
-On completed H1 bars compute ATR(10) and ATR(50). A contraction setup exists when ATR(10) / ATR(50) < 0.70 on the signal bar. Enter long if the same completed bar closes above the high of the preceding 20 bars (excluding the signal bar), short if below the low. Enter at next quote. Stop at 2.0 × ATR(20). Exit on opposite 10-bar Donchian close or stop. If no qualifying breakout occurs within the next 12 bars after contraction first appears, the setup expires.
+On completed H1 bars compute ATR(10) and ATR(50). Arm a setup only when the ratio crosses from at/above 0.70 to below 0.70. The contraction bar itself cannot trigger an entry. For each of the next 12 completed H1 bars, enter long if the close is above the high of the preceding 20 bars (excluding the signal bar), or short if the close is below the low. Enter at the next quote. Stop at 2.0 × ATR(20). Exit on an opposite 10-bar Donchian close or stop. If no breakout occurs within those 12 eligible bars, expire the setup. Do not arm another setup until the ratio has returned to at/above 0.70 and crosses below again.
 
 ## Frozen v1 parameters
 ATR10/ATR50 ratio <0.70; entry channel 20; exit 10; stop 2 ATR20; setup expires after 12 bars.
