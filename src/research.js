@@ -19,7 +19,7 @@ const CAMPAIGN_DIRECTORIES = [
 ];
 
 const MAX_AGE_DAYS = 45;
-const MAX_ITEMS = 12;
+const MAX_ITEMS = 24;
 const PAGE_TIMEOUT_MS = 6000;
 
 const REWARD_TERMS = /\bairdrop\b|\bclaim (?:your|rewards?|tokens?)\b|\breward (?:program|programme|campaign|pool)\b|\bincentive (?:program|programme|campaign|pool)\b|\bquest campaign\b|\bpoints campaign\b|\bretroactive rewards?\b|\bearn rewards?\b|\btoken rewards?\b|\b(?:earn|get|win|claim)\s+(?:up to )?[\d,.]+\s+(?:points?|tokens?|USDT|USDC|ETH|BTC)\b|\b(?:token reward|cash reward|prize pool|reward pool)\b/i;
@@ -154,7 +154,20 @@ export async function collectReport() {
 
   const deduped = [...new Map(all.map(item => [item.url, item])).values()];
   deduped.sort((a, b) => Number(b.rewardSignal) - Number(a.rewardSignal) || b.relevance - a.relevance || Date.parse(b.publishedAt) - Date.parse(a.publishedAt));
-  const candidates = deduped.slice(0, MAX_ITEMS);
+
+  // Keep high-signal candidates first, but prevent one campaign directory or
+  // publisher from consuming the whole page-check budget. More source diversity
+  // gives the strict economics filter a fairer chance to find real opportunities.
+  const candidates = [];
+  const selectedPerSource = new Map();
+  const MAX_CANDIDATES_PER_SOURCE = 4;
+  for (const candidate of deduped) {
+    const sourceCount = selectedPerSource.get(candidate.source) || 0;
+    if (sourceCount >= MAX_CANDIDATES_PER_SOURCE) continue;
+    candidates.push(candidate);
+    selectedPerSource.set(candidate.source, sourceCount + 1);
+    if (candidates.length >= MAX_ITEMS) break;
+  }
   const researchedItems = await Promise.all(candidates.map(item => enrichResearchItem(item)));
   // A reachable page is not an opportunity. Publish only leads with page evidence,
   // explicit reward wording and a concrete participation/action signal.
@@ -164,7 +177,7 @@ export async function collectReport() {
   return {
     date: new Date().toISOString().slice(0, 10),
     generatedAt: new Date().toISOString(),
-    pipelineVersion: "2.3",
+    pipelineVersion: "2.4",
     items,
     sources: [...sources, ...directoryDiagnostics],
     qualitySummary: {
