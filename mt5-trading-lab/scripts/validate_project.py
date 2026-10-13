@@ -11,6 +11,7 @@ required = [
     "agents/agent_1_researcher.md", "agents/agent_2_developer.md",
     "agents/agent_3_tester.md", "agents/agent_4_reviewer.md",
     "research/strategy_spec_template.md", "research/candidate_register.md",
+    "research/specs/STRAT-002-donchian-breakout-v1.md",
     "research/capital_feasibility_template.csv",
     "scripts/analyze_trades.py", "scripts/capital_feasibility.py",
     "scripts/run_mt5_candidate.ps1",
