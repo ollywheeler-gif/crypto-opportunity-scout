@@ -342,7 +342,7 @@ void OnTick()
    if(!EnableStrategy) return;
    if((ENUM_ACCOUNT_TRADE_MODE)AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL) return;
    if(!IsNewBar()) return;
-   if(!TLRG_CheckAndEnforce()) return;
+   if(TLRG_CheckAndEnforce()) return;
 
    MqlRates rates[];
    ArraySetAsSeries(rates, true);
