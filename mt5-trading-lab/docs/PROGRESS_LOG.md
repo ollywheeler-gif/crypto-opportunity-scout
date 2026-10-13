@@ -138,3 +138,23 @@ These hashes apply only to the exact source revision in that run. Any source cha
 - Provisional defaults: 1% daily equity-loss halt, 5% drawdown review log, 10% persistent peak-drawdown halt. The daily halt resets at the next broker-server day; the peak-drawdown halt requires deliberate reset after investigation. On a halt, the EA blocks new signals and attempts to close only positions matching its symbol/magic.
 - The first compile after integration exposed one MetaEditor warning in the guard's boolean condition. The condition has been corrected to compare the integer status values explicitly. All earlier EA compile statuses are marked STALE until the current source/include compile rerun finishes; prior EX5 hashes must not be reused for the updated source.
 - These are fail-safe defaults, not guarantees against gap losses. The guard still requires actual Strategy Tester threshold tests, terminal-restart persistence tests, and a review of reset behavior before any demo proposal. No live-account behavior is enabled; the EAs refuse real accounts.
+
+
+### Eight-EA verified compile milestone — 2026-10-13
+- Windows compile run [38393677219](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38393677219) succeeded using MetaEditor 5.0.0.6257. Eight EAs (STRAT-001/002/003/004/005/007/008/009) and the no-order symbol contract exporter compiled with **zero errors and zero warnings**. Artifact [11811217733](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38393677219/artifacts/11811217733) contains EX5 files, compiler logs and manifests.
+
+| Candidate | Source SHA-256 | EX5 SHA-256 |
+|---|---|---|
+| STRAT-001 | `31BC557AF73166118A2D1D36014C12EC99FA259ABB0D4798C9FE166719CE54A6` | `C5693652DF8A20196F361E3D3A38549940C90EAD10CF81D958DFBF6CE42A875F` |
+| STRAT-002 | `FB878706B50D6A6265020C95B8E665CAE4EEE96418E4A9F3343A51892953B298` | `777159AFD7BEBC8DA07548DE12420AC8F36D14DA04C23DE43395EBB7957DADBA` |
+| STRAT-003 | `2D422AEABC88372739706E98A0C74E387F36F7A6CF80EDEF7CBE1F17A1D84764` | `61C9CAADFFD37AB81950B4EEA3A61F628D18F4C8F22C0BB3D9FAF6BF74BBC74B` |
+| STRAT-004 | `C4D11D81DC7F902D3C54AED6E23DCAA44E74CEF9DCA02B90173E431C7EEB60D6` | `18A68A6111DF14344F9E857105EC1C4EA17F7A1FFB01E6831AE72E45F5113E8D` |
+| STRAT-005 | `594D9093C79059BED4B1F2ACD046A578F8584E5D32A690DC8C6184D154A96903` | `877987634F8B981082F43721861954CEBE6839FBAF46628D9F3A84D829F2BCC7` |
+| STRAT-007 | `3646642BF44998F871F94BAD5B26BF106290BECCAFB82FB339566A4578F2EE40` | `474F0918A1A0873BFEDB6BB39164F5C24C922605108ABC1469C9254904EB8119` |
+| STRAT-008 | `8BB56685474EC882F8CEDD55C51E3EDD846E6E5F62D41C038642A5E7F14807BA` | `E4263027145A010294ED1B87E77CACF049A0C34F3BC90C111424F22773893822` |
+| STRAT-009 | `CA12B19BD1580147B26D2D6FA8C22568DC5BF1353F0B152D9C577E2F7B49C6E7` | `D8F3D9B2B1D59497EA3BEF7FB02A8C28D2228712605EA2563936BC20E79F2961` |
+| ExportSymbolContract | `43747C4C240C70A5E4D426B757780B5473321F89A65D02B7965C8DCCF6CE1FE0` | `6921990FED4996395539A1E95670C8370E8C36E3B855400C98ADE1211A43F84A` |
+
+- Shared `RiskGuard.mqh` was corrected to remove a compiler warning and now participates in the same zero-warning compile gate. It adds daily-loss and peak-drawdown circuit-breakers; threshold persistence and restart behavior still require tests.
+- STRAT-005's source compiles but must remain disabled until the selected broker's server timezone and European-DST mapping are verified.
+- This remains a compile milestone only. No EA has a verified Strategy Tester report, no broker-specific minimum-volume feasibility has passed, and no performance conclusion is justified.
