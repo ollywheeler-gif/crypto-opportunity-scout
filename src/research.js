@@ -6,8 +6,8 @@ const FEEDS = [
   "https://blog.uniswap.org/rss.xml",
   "https://blog.celestia.org/rss/",
   "https://solana.com/changelog/rss.xml",
-  "https://blog.celer.network/feed/",
-  "https://gitcoin.co/blog/feed/"
+  "https://www.circle.com/blog/rss.xml",
+  "https://filecoin.io/blog/feed/index.xml"
 ];
 
 // Dedicated campaign directories complement network blogs. They are discovery
@@ -177,7 +177,7 @@ export async function collectReport() {
   return {
     date: new Date().toISOString().slice(0, 10),
     generatedAt: new Date().toISOString(),
-    pipelineVersion: "2.4",
+    pipelineVersion: "2.5",
     items,
     sources: [...sources, ...directoryDiagnostics],
     qualitySummary: {
