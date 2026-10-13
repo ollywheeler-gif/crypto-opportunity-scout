@@ -21,7 +21,7 @@ class ProjectSafetyTests(unittest.TestCase):
     def test_ea_defaults_to_disabled_and_cost_review_required(self):
         self.assertIn("input bool   EnableStrategy = false", EA)
         self.assertIn("input bool   ConfirmBrokerCostsReviewed = false", EA)
-        self.assertIn("(EnableStrategy && !ConfirmBrokerCostsReviewed)", EA)
+        self.assertIn("EnableStrategy && (!ConfirmBrokerCostsReviewed || EstimatedSpreadCostPerLot <= 0 || EstimatedSlippageCostPerLot <= 0)", EA)
 
     def test_no_averaging_or_martingale_logic(self):
         self.assertNotIn("POSITION_TYPE_BUY) volume * 2", EA)
