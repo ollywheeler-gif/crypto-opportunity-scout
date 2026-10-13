@@ -49,7 +49,7 @@ class TesterConfigValidationTests(unittest.TestCase):
 
     def test_rejects_missing_required_field(self):
         with self.assertRaisesRegex(ValueError, "Missing required"):
-            self.run_validation(BASE.replace("Leverage=30\\n", ""))
+            self.run_validation("\\n".join(line for line in BASE.splitlines() if not line.startswith("Leverage=")))
 
     def test_rejects_bad_date_range_and_model(self):
         with self.assertRaisesRegex(ValueError, "earlier"):
