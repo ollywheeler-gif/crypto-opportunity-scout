@@ -21,6 +21,7 @@ input int    MaxDeviationPoints = 20;
 input int    MaxSpreadPoints = 0; // Must be set to a broker-reviewed maximum before enabling
 
 CTrade trade;
+#include <TradingLab/RiskGuard.mqh>
 bool TradeRequestAccepted()
 {
    uint code = trade.ResultRetcode();
@@ -214,6 +215,7 @@ int OnInit()
       return INIT_FAILED;
    }
 
+   if(!TLRG_Init()) return INIT_FAILED;
    atrHandle = iATR(_Symbol, PERIOD_H1, AtrPeriod);
    if(atrHandle == INVALID_HANDLE)
    {
@@ -243,9 +245,10 @@ void OnDeinit(const int reason)
 
 void OnTick()
 {
-   if(!EnableStrategy)
-      return;
    if((ENUM_ACCOUNT_TRADE_MODE)AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL)
+      return;
+   if(TLRG_CheckAndEnforce()) return;
+   if(!EnableStrategy)
       return;
    if(!IsNewBar())
       return;
