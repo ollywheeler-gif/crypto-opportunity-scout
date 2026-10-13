@@ -239,12 +239,12 @@ export async function enrichResearchItem(item) {
   enriched.verificationStatus = page
     ? (page.sameHostAsFeed ? "Source page fetched on the same host as the monitored feed; claims remain unverified" : "Linked page fetched; publisher ownership and claims remain unverified")
     : "Source page could not be checked automatically";
-  const payoutMatch = compact.match(/\\b(?:paid|pays?|distributed|receive|received|rewarded|denominated|settled|claim(?:ed)? in)\\s+(?:in\\s+)?(USDC|USDT|USD|ETH|BTC|SOL|BNB|ARB|OP|points?|tokens?|NFTs?)\\b/i)
-    || compact.match(/\\b(USDC|USDT|ETH|BTC|SOL|BNB|ARB|OP|points?|tokens?|NFTs?)\\s+(?:reward|payout|allocation|distribution)\\b/i);
+  const payoutMatch = compact.match(/\b(?:paid|pays?|distributed|receive|received|rewarded|denominated|settled|claim(?:ed)? in)\s+(?:in\s+)?(USDC|USDT|USD|ETH|BTC|SOL|BNB|ARB|OP|points?|tokens?|NFTs?)\b/i)
+    || compact.match(/\b(USDC|USDT|ETH|BTC|SOL|BNB|ARB|OP|points?|tokens?|NFTs?)\s+(?:reward|payout|allocation|distribution)\b/i);
   const payoutAsset = payoutMatch ? payoutMatch.slice(1).find(Boolean) : "";
   const payoutLabel = payoutAsset
     ? (/^points?$/i.test(payoutAsset) ? "Points (monetary value not established)" : (/^NFTs?$/i.test(payoutAsset) ? "NFT (resale value not established)" : (/^(USDC|USDT|USD)$/i.test(payoutAsset) ? payoutAsset.toUpperCase() + " stablecoin/fiat-denominated (issuer and redemption risk still apply)" : payoutAsset.toUpperCase() + " crypto token (market price can fluctuate)")))
-    : ( /\\bpoints?\\b/i.test(compact) ? "Points mentioned — conversion/redemption not established" : (/\\bNFTs?\\b/i.test(compact) ? "NFT mentioned — resale value not established" : (/\\bairdrop\\b/i.test(compact) ? "Token/airdrop mentioned — payout asset not identified" : "Not established from the source text")));
+    : ( /\bpoints?\b/i.test(compact) ? "Points mentioned — conversion/redemption not established" : (/\bNFTs?\b/i.test(compact) ? "NFT mentioned — resale value not established" : (/\bairdrop\b/i.test(compact) ? "Token/airdrop mentioned — payout asset not identified" : "Not established from the source text")));
   const rewardBasis = percentReturnMatch
     ? "Advertised percentage " + percentReturnMatch[1] + "%; calculation basis and payout conditions need confirmation"
     : (numericValueContext ? "Numeric reward amount may be present; confirm whether per-user or total pool" : "Not established");
