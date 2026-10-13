@@ -1,6 +1,6 @@
 # Candidate register — research hypotheses, not results
 
-**Status:** Ten initial hypotheses. STRAT-001, STRAT-002 and STRAT-003 now have separate EA sources; all three compiled with zero errors and zero warnings in the Windows compile pipeline. STRAT-001 and STRAT-003 have frozen v1 specifications. STRAT-002 remains research-only with its deterministic v1 specification. None has a verified MT5 Strategy Tester report or broker-feasibility pass, and none is approved for demo/live use. Six other candidates remain specification drafts. Ranking prioritizes testability, lower turnover, and falsifiability—not expected profit.
+**Status:** Ten initial hypotheses. STRAT-001 through STRAT-004 now have separate EA sources; all four compiled with zero errors and zero warnings in the Windows compile pipeline. STRAT-001 and STRAT-003 have frozen v1 specifications. STRAT-002 and STRAT-004 remain research-only with deterministic v1 specifications. None has a verified MT5 Strategy Tester report or broker-feasibility pass, and none is approved for demo/live use. Six other candidates remain specification drafts. Ranking prioritizes testability, lower turnover, and falsifiability—not expected profit.
 
 ## Evidence informing the shortlist
 - Time-series momentum has been documented across liquid futures in currencies, equity indices, commodities, and bonds over long historical samples; this is research evidence, not proof that a retail CFD implementation remains profitable after costs: https://doi.org/10.1016/j.jfineco.2011.11.003
