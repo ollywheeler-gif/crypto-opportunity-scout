@@ -50,6 +50,9 @@ def reconcile(path, tolerance=0.01):
                 **{k: round(values[k], 8) for k in ("gross_profit", "commission", "swap", "fees")},
             })
 
+    if not rows:
+        raise ValueError("CSV contains no trade rows; an empty ledger cannot be reconciled")
+
     failures = [row for row in rows if not row["within_tolerance"]]
     totals = {
         key: round(sum(row[key] for row in rows), 8)
