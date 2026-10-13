@@ -63,7 +63,7 @@ def validate(path: Path) -> dict:
         raise ValueError("Symbol contains unsupported characters")
     if float(values["deposit"]) <= 0 or float(values["leverage"]) <= 0:
         raise ValueError("Deposit and leverage must be positive")
-    if values.get("shutdow nterminal", values.get("shutdow nterminal", values.get("shutdownterminal", "0"))) != "1":
+    if values.get("shutdownterminal", "0") != "1":
         raise ValueError("ShutdownTerminal=1 is required for unattended execution")
     if values.get("visual", "0") != "0":
         raise ValueError("Visual=0 is required for unattended execution")
