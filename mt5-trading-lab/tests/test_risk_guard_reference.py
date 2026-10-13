@@ -24,7 +24,7 @@ class RiskGuardReferenceTests(unittest.TestCase):
         self.assertTrue(state.peak_halt)
         self.assertTrue(result["halted"])
         self.assertEqual(state.day_start_equity, 96.0)
-        self.assertFalse(state.halt_logged)  # New day can log the persistent halt once again.
+        self.assertTrue(state.halt_logged)  # Persistent peak halt is re-logged once on the new day.
 
     def test_peak_drawdown_halt_survives_serialized_restart(self):
         state = GuardState(server_day=20261013, day_start_equity=100.0, peak_equity=100.0)
