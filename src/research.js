@@ -158,7 +158,7 @@ export async function collectReport() {
   const researchedItems = await Promise.all(candidates.map(item => enrichResearchItem(item)));
   // A reachable page is not an opportunity. Publish only leads with page evidence,
   // explicit reward wording and a concrete participation/action signal.
-  const items = researchedItems.filter(item => item.actionable === true && item.investmentAssessment?.decision === "Worth pursuing");
+  const items = researchedItems.filter(item => item.actionable === true && item.investmentAssessment?.decision === "Worth investing in");
   items.sort((a, b) => b.relevance - a.relevance || Date.parse(b.publishedAt) - Date.parse(a.publishedAt));
 
   return {
