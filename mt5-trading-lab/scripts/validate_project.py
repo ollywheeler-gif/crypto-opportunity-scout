@@ -17,7 +17,7 @@ required = [
     "research/specs/strat-005-london-breakout-v1.md", "research/specs/strat-006-index-opening-range-v1.md",
     "research/specs/strat-007-volatility-contraction-v1.md", "research/specs/strat-008-regime-mean-reversion-v1.md",
     "research/specs/strat-009-rsi-pullback-v1.md", "research/specs/strat-010-swap-aware-fx-momentum-v1.md",
-    "research/capital_feasibility_template.csv",
+    "research/capital_feasibility_template.csv", "research/reviews/STRAT-002-code-review-v1.md",
     "scripts/analyze_trades.py", "scripts/capital_feasibility.py",
     "scripts/run_mt5_candidate.ps1", "scripts/install_mt5_candidate.ps1",
     "mql5/Experts/STRAT-002_DonchianBreakout.mq5",
