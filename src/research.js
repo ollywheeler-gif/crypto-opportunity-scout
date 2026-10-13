@@ -35,7 +35,7 @@ const RISK_TERMS = [
 export async function collectReport() {
   const all = [];
   const sources = [];
-  for (const feedUrl of FEEDS) {
+  await Promise.all(FEEDS.map(async (feedUrl) => {
     const feedHost = new URL(feedUrl).hostname;
     try {
       const response = await fetch(feedUrl, {
@@ -44,7 +44,7 @@ export async function collectReport() {
       });
       if (!response.ok) {
         sources.push({ source: feedHost, ok: false, status: response.status, entriesFound: 0, itemsAccepted: 0, issue: "Feed returned a non-success HTTP status." });
-        continue;
+        return;
       }
       const xml = (await response.text()).slice(0, 1500000);
       const blocks = [...xml.matchAll(/<(item|entry)\b[\s\S]*?<\/\1>/gi)].map(m => m[0]).slice(0, 30);
@@ -94,10 +94,10 @@ export async function collectReport() {
     } catch (error) {
       sources.push({ source: feedHost, ok: false, status: null, entriesFound: 0, itemsAccepted: 0, issue: error?.name === "TimeoutError" ? "Feed request timed out." : "Feed could not be fetched or parsed." });
     }
-  }
+  }));
 
   const directoryDiagnostics = [];
-  for (const directory of CAMPAIGN_DIRECTORIES) {
+  await Promise.all(CAMPAIGN_DIRECTORIES.map(async (directory) => {
     try {
       const response = await fetch(directory.url, {
         headers: { "User-Agent": "CryptoOpportunityScout/2.1", "Accept": "text/html,application/xhtml+xml;q=0.9,*/*;q=0.5" },
@@ -105,7 +105,7 @@ export async function collectReport() {
       });
       if (!response.ok) {
         directoryDiagnostics.push({ source: directory.name, kind: "campaign-directory", ok: false, status: response.status, entriesFound: 0, itemsAccepted: 0, issue: "Directory returned a non-success HTTP status." });
-        continue;
+        return;
       }
       const html = (await response.text()).slice(0, 1000000);
       const links = extractCampaignLinks(html, directory);
@@ -150,7 +150,7 @@ export async function collectReport() {
         issue: error?.name === "TimeoutError" ? "Directory request timed out." : "Directory could not be fetched or parsed."
       });
     }
-  }
+  }));
 
   const deduped = [...new Map(all.map(item => [item.url, item])).values()];
   deduped.sort((a, b) => Number(b.rewardSignal) - Number(a.rewardSignal) || b.relevance - a.relevance || Date.parse(b.publishedAt) - Date.parse(a.publishedAt));
@@ -164,7 +164,7 @@ export async function collectReport() {
   return {
     date: new Date().toISOString().slice(0, 10),
     generatedAt: new Date().toISOString(),
-    pipelineVersion: "2.3",
+    pipelineVersion: "2.4",
     items,
     sources: [...sources, ...directoryDiagnostics],
     qualitySummary: {
