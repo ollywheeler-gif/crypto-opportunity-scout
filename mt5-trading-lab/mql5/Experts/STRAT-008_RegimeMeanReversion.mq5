@@ -24,6 +24,7 @@ input int    MaxDeviationPoints = 20;
 input int    MaxSpreadPoints = 0;
 
 CTrade trade;
+#include <TradingLab/RiskGuard.mqh>
 int adxHandle = INVALID_HANDLE;
 int bandsHandle = INVALID_HANDLE;
 int rsiHandle = INVALID_HANDLE;
@@ -185,6 +186,7 @@ int OnInit()
       return INIT_FAILED;
    }
 
+   if(!TLRG_Init()) return INIT_FAILED;
    adxHandle = iADX(_Symbol, PERIOD_H1, AdxPeriod);
    bandsHandle = iBands(_Symbol, PERIOD_H1, BandPeriod, 0, BandDeviation, PRICE_CLOSE);
    rsiHandle = iRSI(_Symbol, PERIOD_H1, RsiPeriod, PRICE_CLOSE);
@@ -223,8 +225,9 @@ void OnDeinit(const int reason)
 
 void OnTick()
 {
-   if(!EnableStrategy) return;
    if((ENUM_ACCOUNT_TRADE_MODE)AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL) return;
+   if(TLRG_CheckAndEnforce()) return;
+   if(!EnableStrategy) return;
    if(!IsNewBar()) return;
 
    double adx[], middle[], upper[], lower[], rsi[], atr[];
