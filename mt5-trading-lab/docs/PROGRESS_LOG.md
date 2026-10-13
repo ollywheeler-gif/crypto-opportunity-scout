@@ -17,9 +17,9 @@
 
 ### Evidence status
 - Source and documentation exist in GitHub.
-- No MetaEditor compilation has been performed in this environment.
+- MetaEditor 5.0.0.6257 has compiled STRAT-002 and STRAT-003 with zero errors and zero warnings in GitHub-hosted Windows runs; see the later dated evidence entries.
 - No MT5 Strategy Tester run or real-market performance result has been produced.
-- The current GitHub integration does not expose a verified status for the most recent push-triggered Actions run, so no claim is made that the latest revision passed CI.
+- GitHub Actions quality checks have passed on recent revisions; the latest verified run is linked in the dated evidence entries. Re-run after every code or workflow change.
 - No Cloudflare connection, Windows runner, broker account or market-data feed is provisioned.
 
 ### Next work
@@ -55,7 +55,7 @@ Research/testing only. No paid provisioning, broker credential collection in cha
 - This is a no-account compile only. It does not run the Strategy Tester, connect a broker, or establish trading performance. The workflow itself and its first run remain unverified until a successful artifact is observed.
 - Added static project checks requiring the Windows compile workflow and checking its signature verification, warning gate, evidence upload and absence of credential fields.
 - Agent 2 code review identified that the EA's initial sizing reserve did not separately represent stop-gap losses. Added a per-lot gap-cost reserve, required it to be positive before enabling the EA, and added a static safety test. This remains uncompiled until the Windows workflow provides evidence.
-- Expanded research coverage with nine deterministic v1 spec drafts for the remaining candidate hypotheses. Agent 0/Agent 1 review and freezing are still required; none is implemented or performance-tested yet.
+- Expanded research coverage with deterministic v1 spec drafts for the remaining hypotheses. STRAT-003 is frozen and has an EA; the other candidates remain drafts or research-only.
 
 
 ### First verified MetaEditor compile — 2026-10-13
@@ -69,5 +69,7 @@ Research/testing only. No paid provisioning, broker credential collection in cha
 - Re-ran the verified Windows compile on commit `0bff4101125e454cf99832263f53f3dd8245218b`: MetaEditor 5.0.0.6257 again reported 0 errors and 0 warnings. Artifact [11809150759](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38390561997/artifacts/11809150759) includes the manifest, EX5 and UTF-16 compiler log. Source SHA-256 remains `858F5A1AE3AF6F77A34F3CBF0D56036CE0B8EB46E33D2912DA6810EB4500F6CE`; current EX5 SHA-256 is `887377FEC79B08C23B33559BF8EF7F1150F575635D4457672A19FA8137AB345F`.
 - Latest repository validation and Python unit-test run [38390649941](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38390649941) passed.
 - A synthetic-history generator and preset have been drafted as a possible future mechanics-test aid, but they have not been executed and do not count as tester evidence. No MT5 Strategy Tester report exists yet.
-- Agent 2 added the first separate EA after STRAT-002: STRAT-003 EMA trend, with disabled default, real-account refusal, tick-aligned ATR stop, broker-reviewed maximum spread, modeled cost reserves, minimum-volume risk cap and margin/retcode checks. The Windows compile workflow now includes a zero-warning compile gate for STRAT-003; actual compile result remains pending.
+- Agent 2 added STRAT-003 EMA trend with disabled default, real-account refusal, tick-aligned ATR stop, broker-reviewed maximum spread, modeled cost reserves, minimum-volume risk cap, margin/retcode checks and a duplicate-instance lock. STRAT-003 was compiled with zero errors/warnings in run 38390955133; Strategy Tester evidence remains pending.
 - Agent 0/Agent 1 froze STRAT-003 EMA trend v1 after checking the completed-bar cross, ATR stop and exit rules against the EA implementation. The specification is frozen for first mechanics testing; no performance or broker-feasibility approval is implied.
+
+- Updated Agent 4's code-only review to reflect implemented tick-size alignment and duplicate-instance guards while retaining the BLOCKED disposition until runtime and broker evidence exists.
