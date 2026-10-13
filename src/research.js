@@ -200,6 +200,7 @@ export async function enrichResearchItem(item) {
     || compact.match(/\b(?:earn|receive|get|up to)\s+(\d{1,3}(?:\.\d+)?)\s*%\b/i);
   const numericValueMatch = compact.match(/\b(?:\$|USD\s*)\s?([\d,]+(?:\.\d{1,2})?)\s*(?:USDC|USDT|reward|prize|pool)?\b/i)
     || compact.match(/\b([\d,]+(?:\.\d+)?)\s*(?:USDC|USDT|USD)\b/i);
+  const numericValueContext = numericValueMatch ? (compact.split(/(?<=[.!?])\s+/).find(sentence => sentence.includes(numericValueMatch[0]) && /\b(?:reward|prize|pool|earn|receive|allocation|bonus|payout|return)\b/i.test(sentence)) || "") : "";
   const explicitNoCapital = /\b(?:free to participate|no purchase necessary|no deposit required|without (?:a )?deposit|no upfront capital)\b/i.test(compact);
   const capitalRisk = /\b(?:deposit|minimum balance|minimum purchase|trading volume|leverage|borrow|collateral|lock(?:ed)? funds|stake at least)\b/i.test(compact);
   const walletRisk = /\b(?:connect (?:your )?wallet|sign (?:a )?(?:message|transaction)|approve (?:the )?token)\b/i.test(compact);
@@ -209,7 +210,7 @@ export async function enrichResearchItem(item) {
     : capitalRisk || walletRisk || !explicitNoCapital
       ? "Medium / uncertain"
       : "Lower direct-capital risk";
-  const economicEvidence = Boolean(percentReturnMatch || numericValueMatch || /\b(?:token allocation|token distribution|published points conversion|points worth|prize pool of)\b/i.test(compact));
+  const economicEvidence = Boolean(percentReturnMatch || numericValueContext || /\b(?:token allocation|token distribution|published points conversion|points worth|prize pool of)\b/i.test(compact));
   const investmentDecision = actionable && economicEvidence
     ? "Worth investigating"
     : "Watchlist — not enough evidence of economic value";
