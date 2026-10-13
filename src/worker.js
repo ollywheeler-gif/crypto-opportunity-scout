@@ -163,7 +163,7 @@ async function collectReport() {
         const text = title + " " + summary;
         const lower = text.toLowerCase();
         const rewardSignal = /\bairdrop\b|\bclaim (your|rewards?|tokens?)\b|\breward (program|campaign|pool)\b|\bincentive (program|campaign|pool)\b|\bquest campaign\b|\bpoints campaign\b|\bretroactive rewards?\b/i.test(text);
-        let category = classify(text, rewardSignal);
+        let category = rewardSignal ? "Possible reward — manual verification required" : classify(text, false);
         let relevance = 20;
         if (rewardSignal || /\btestnet\b|\bdevnet\b/i.test(lower)) relevance += 35;
         if (/eligibility|snapshot|deadline|registration|official campaign/i.test(lower)) relevance += 15;
