@@ -46,6 +46,18 @@ async function sign(raw, timestamp) {
   return `t=${timestamp},v1=${hex}`;
 }
 
+test("homepage exposes research, archive and test-only checkout controls", async () => {
+  const response = await worker.fetch(new Request("https://scout.example/"), {}, {});
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /Crypto Opportunity Scout/);
+  assert.match(html, /Collect latest public research/);
+  assert.match(html, /api\/history/);
+  assert.match(html, /qualifiedItems/);
+  assert.match(html, /Create \$1 test checkout/);
+  assert.match(html, /test mode only/);
+});
+
 test("report history returns archived reports newest first", async () => {
   const kv = new MemoryKV();
   await kv.put("report:archive:2026-10-11", JSON.stringify({ date: "2026-10-11", items: [] }));
