@@ -90,3 +90,12 @@ Research/testing only. No paid provisioning, broker credential collection in cha
 - Updated Agent 0, README and the multi-agent protocol with parallel-work boundaries, single-writer discipline, evidence handoffs, and an eight-role ceiling to prevent management sprawl.
 - Added repository validation requirements and a safety test for the role files and truthful runtime description.
 - These are explicit workstreams and instructions, not proof that eight independent persistent agents are running. No paid services, live accounts or trading permissions were enabled.
+
+
+### Three-EA compile and broker feasibility pass — 2026-10-13
+- STRAT-001 time-series momentum was added with a frozen D1 v1 spec, disabled default, real-account refusal, per-symbol/magic instance lock, ATR stop, spread/cost reserves and minimum-volume/margin gates.
+- Windows compile run [38391338872](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38391338872) compiled STRAT-001, STRAT-002 and STRAT-003 on MetaEditor 5.0.0.6257 with zero errors and zero warnings. Artifact [11809220524](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38391338872/artifacts/11809220524) retains all three EX5 files, compiler logs and manifests.
+- STRAT-001 source/EX5 SHA-256: `A878E0274C9422B5DB5545199AF6A75F9FD3BE72670BA9D2825A576B0ADD4F02` / `507A4D0B22FD2444C376DB2E6895EF2DF76EB10DA911CAF091B04504D6FB496A`.
+- STRAT-002 and STRAT-003 source compile hashes are recorded in the gate register. Compilation is a source-quality gate only, not performance evidence.
+- Added public-source broker feasibility research for Pepperstone and IG UK, without selecting a broker or inferring exact MT5 symbol terms. The next data step is to export symbol contract metadata from a selected demo terminal using the no-order `ExportSymbolContract.mq5` utility.
+- The gate register now shows broker feasibility as BLOCKED for the first three candidates because no exact broker symbol specifications or account-specific margin data are available. No Strategy Tester report or real-market performance conclusion exists.
