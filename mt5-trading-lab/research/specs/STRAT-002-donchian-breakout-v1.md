@@ -3,7 +3,7 @@
 Status: FROZEN RESEARCH SPECIFICATION v1 — EA compiled with zero errors and zero warnings; not Strategy Tester tested, not broker-feasibility validated, and not approved for demo/live use.
 
 ## Hypothesis
-A close beyond a prior-period price channel may capture persistent directional moves in liquid instruments. The effect may disappear after costs, be regime-dependent, or be too expensive to trade at £100. The experiment is designed to falsify the hypothesis, not assume profitability.
+A close beyond a prior-period price channel may capture persistent directional moves in liquid instruments. The effect may disappear after costs, be regime-dependent, or be too expensive to trade at £200. The experiment is designed to falsify the hypothesis, not assume profitability.
 
 ## Initial test scope
 - First instrument: one broker-specific major FX symbol selected only after contract, costs and minimum volume are known.
@@ -23,7 +23,7 @@ At the close of each completed H1 bar:
 7. No fixed profit target in v1. No discretionary/news filter. All decisions use completed bars only.
 
 ## Risk and feasibility
-- Intended account reference is £100, but do not assume a minimum volume can meet the risk budget.
+- Intended account reference is £200, but do not assume a minimum volume can meet the risk budget.
 - Target risk budget for feasibility analysis: 0.25% of equity; hard reject if estimated loss at minimum volume including stop, spread, commission, slippage and gap allowance exceeds 0.5% of equity.
 - Size positions from stop distance and broker tick value only when the calculated volume can be rounded down to a legal volume step and remains at or above the minimum volume. Otherwise skip the trade.
 - If broker-specific loss/margin calculation cannot be verified, do not trade; mark the symbol infeasible/unknown.
