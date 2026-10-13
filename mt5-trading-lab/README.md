@@ -22,6 +22,7 @@ This is project scaffolding, not a deployed autonomous agent service. No Windows
 - [Capital feasibility worksheet](research/capital_feasibility_template.csv) and [calculator](scripts/capital_feasibility.py) — require real broker inputs; estimates only.
 - [Artifact and data conventions](docs/ARTIFACTS_AND_DATA.md).
 - Static tests check safety invariants in the EA source; these do not replace MetaEditor compilation.
+- [Donchian reference model](scripts/donchian_reference.py) and unit tests validate channel indexing and strict signal boundaries only; they do not simulate fills or broker execution.
 - [Windows MetaEditor compile workflow](../.github/workflows/mt5-mql5-compile.yml) attempts a no-account source compile on a temporary GitHub-hosted Windows runner and retains compile evidence; it is not an MT5 backtest.
 - [MT5 source installer](scripts/install_mt5_candidate.ps1), [Windows MT5 runner](scripts/run_mt5_candidate.ps1) and [runbook](docs/MT5_CLOUD_RUNNER.md) — not yet executed against an installed MT5 environment.
 - [Current plan and external dependencies](docs/NEXT_STEPS.md).
