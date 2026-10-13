@@ -18,6 +18,7 @@ input double EstimatedRoundTurnCostPerLot = 0.0; // Account currency per lot: co
 input double EstimatedSlippageCostPerLot = 0.0;  // Account currency per lot; also configure realistic MT5 tester costs
 input double EstimatedGapCostPerLot = 0.0;       // Account currency per lot; reserve for stop gaps beyond modeled slippage
 input int    MaxDeviationPoints = 20;
+input int    MaxSpreadPoints = 0; // Must be set to a broker-reviewed maximum before enabling
 
 CTrade trade;
 bool TradeRequestAccepted()
@@ -29,6 +30,15 @@ bool TradeRequestAccepted()
 }
 int atrHandle = INVALID_HANDLE;
 datetime lastBarTime = 0;
+
+double NormalizePriceToTick(const double price)
+{
+   double tickSize = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
+   if(tickSize <= 0.0 || price <= 0.0)
+      return 0.0;
+   double aligned = MathRound(price / tickSize) * tickSize;
+   return NormalizeDouble(aligned, _Digits);
+}
 
 bool IsNewBar()
 {
@@ -165,10 +175,10 @@ bool HasEnoughMargin(const ENUM_ORDER_TYPE orderType, const double volume, const
 
 int OnInit()
 {
-   if((EnableStrategy && (!ConfirmBrokerCostsReviewed || EstimatedSpreadCostPerLot <= 0 || EstimatedSlippageCostPerLot <= 0 || EstimatedGapCostPerLot <= 0)) ||
+   if((EnableStrategy && (!ConfirmBrokerCostsReviewed || EstimatedSpreadCostPerLot <= 0 || EstimatedSlippageCostPerLot <= 0 || EstimatedGapCostPerLot <= 0 || MaxSpreadPoints <= 0)) ||
       EntryChannelBars < 2 || ExitChannelBars < 2 || AtrPeriod < 2 ||
       AtrStopMultiplier <= 0 || TargetRiskPct <= 0 || HardMaxRiskPct < TargetRiskPct ||
-      EstimatedSpreadCostPerLot < 0 || EstimatedRoundTurnCostPerLot < 0 || EstimatedSlippageCostPerLot < 0 || EstimatedGapCostPerLot < 0 || MaxDeviationPoints < 0)
+      EstimatedSpreadCostPerLot < 0 || EstimatedRoundTurnCostPerLot < 0 || EstimatedSlippageCostPerLot < 0 || EstimatedGapCostPerLot < 0 || MaxDeviationPoints < 0 || MaxSpreadPoints < 0)
       return INIT_PARAMETERS_INCORRECT;
 
    // Hard safety guard: this research EA must not trade on a real account.
@@ -261,13 +271,19 @@ void OnTick()
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    if(ask <= 0 || bid <= 0) return;
 
+   if(((ask - bid) / _Point) > MaxSpreadPoints)
+   {
+      Print("Current spread exceeds reviewed maximum; trade skipped.");
+      return;
+   }
+
    double stopDistance = AtrStopMultiplier * atrBuffer[0];
    if(stopDistance <= 0) return;
 
    if(rates[1].close > entryHigh)
    {
       double entry = ask;
-      double stop = NormalizeDouble(entry - stopDistance, _Digits);
+      double stop = NormalizePriceToTick(entry - stopDistance);
       if(stop <= 0 || (entry - stop) < (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL) * _Point)
          return;
       double volume = CalculateVolume(ORDER_TYPE_BUY, entry, stop);
@@ -284,7 +300,7 @@ void OnTick()
    else if(rates[1].close < entryLow)
    {
       double entry = bid;
-      double stop = NormalizeDouble(entry + stopDistance, _Digits);
+      double stop = NormalizePriceToTick(entry + stopDistance);
       if((stop - entry) < SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL) * _Point)
          return;
       double volume = CalculateVolume(ORDER_TYPE_SELL, entry, stop);
