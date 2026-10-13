@@ -333,6 +333,39 @@ jobs:
             note='Compile evidence only. No Strategy Tester run or performance claim.'
           } | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $env:MT5_COMPILE_ARTIFACTS 'STRAT-009-compile-manifest.json') -Encoding UTF8
 
+      - name: Compile STRAT-005 London breakout EA
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $source = Join-Path $env:MQL5_ROOT 'Experts\TradingLab\STRAT-005_LondonBreakout.mq5'
+          New-Item -ItemType Directory -Force -Path (Split-Path $source -Parent) | Out-Null
+          Copy-Item 'mt5-trading-lab/mql5/Experts/STRAT-005_LondonBreakout.mq5' $source -Force
+          $ex5 = [System.IO.Path]::ChangeExtension($source, '.ex5')
+          $log = [System.IO.Path]::ChangeExtension($source, '.log')
+          Remove-Item $ex5,$log -Force -ErrorAction SilentlyContinue
+          $metaEditor = Join-Path $env:MT5_INSTALL_DIR 'metaeditor64.exe'
+          $compileArgs = @('/compile:"' + $source + '"', '/include:"' + $env:MQL5_ROOT + '"', '/log')
+          $process = Start-Process -FilePath $metaEditor -ArgumentList $compileArgs -Wait -PassThru
+          if (-not (Test-Path $log -PathType Leaf)) { throw "STRAT-005 compiler log missing (exit $($process.ExitCode))." }
+          Copy-Item $log -Destination $env:MT5_COMPILE_ARTIFACTS -Force
+          if (Test-Path $ex5 -PathType Leaf) { Copy-Item $ex5 -Destination $env:MT5_COMPILE_ARTIFACTS -Force }
+          $logText = Get-Content $log -Raw
+          $summary = [regex]::Match($logText, '(?im)^\s*Result:\s*(\d+)\s+errors?,\s*(\d+)\s+warnings?')
+          if (-not $summary.Success -or [int]$summary.Groups[1].Value -ne 0 -or [int]$summary.Groups[2].Value -ne 0 -or -not (Test-Path $ex5 -PathType Leaf)) {
+            throw 'STRAT-005 must compile with zero errors and zero warnings.'
+          }
+          $files = @($source,$ex5,$log) | ForEach-Object {
+            [PSCustomObject]@{ file=[System.IO.Path]::GetFileName($_); bytes=(Get-Item $_).Length; sha256=(Get-FileHash $_ -Algorithm SHA256).Hash }
+          }
+          [PSCustomObject]@{
+            status='COMPILED_ZERO_ERRORS_ZERO_WARNINGS'
+            repository_commit=$env:GITHUB_SHA
+            metaeditor_version=(Get-Item $metaEditor).VersionInfo.ProductVersion
+            compile_summary=$summary.Value.Trim()
+            files=$files
+            note='Compile evidence only. Requires a broker with verified European-DST server time mapping before any tester/demo use.'
+          } | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $env:MT5_COMPILE_ARTIFACTS 'STRAT-005-compile-manifest.json') -Encoding UTF8
+
       - name: Compile non-trading symbol contract exporter
         shell: pwsh
         run: |
