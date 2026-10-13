@@ -47,7 +47,7 @@ export default {
       const body = await request.json().catch(() => ({}));
       if (body.product !== PRODUCT.id || typeof body.itemUrl !== "string") return Response.json({ error: "Choose a specific opportunity to purchase a report for." }, { status: 400 });
       const digest = await readLatest(env);
-      const item = (digest.items || []).find(x => x.url === body.itemUrl);
+      const item = (digest.qualifiedItems || []).find(x => x.url === body.itemUrl);
       if (!item) return Response.json({ error: "That opportunity is no longer in the latest digest. Refresh and choose it again." }, { status: 400 });
       const orderId = crypto.randomUUID();
       const accessToken = randomToken();
