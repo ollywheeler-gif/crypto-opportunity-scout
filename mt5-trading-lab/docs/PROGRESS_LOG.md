@@ -115,3 +115,19 @@ Research/testing only. No paid provisioning, broker credential collection in cha
 - STRAT-007, STRAT-008 and STRAT-009 now have frozen v1 specs and compile evidence. The earlier static-test failure was a source/test timing mismatch: the test expected the setup-lifetime input before the source commit adding it. The corrected source and later compile run passed; no performance or tester claim follows from that.
 - The latest completed Python CI run before the final doc-only edits passed. The current main revision's quality check is running; verify before treating that exact revision as green.
 - Current total: seven EAs compile cleanly, but none has a broker-feasibility pass or a real-market Strategy Tester report. The read-only contract exporter also compiles but has not yet been run against a selected broker demo terminal.
+
+
+### Immutable compile evidence manifest — 2026-10-13
+The successful Windows run [38392508850](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38392508850) used MetaEditor 5.0.0.6257 and reported zero errors/zero warnings for all seven EAs and the read-only symbol exporter. Artifact [11810845970](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38392508850/artifacts/11810845970) retains the binaries and logs.
+
+| EA | Source SHA-256 | EX5 SHA-256 |
+|---|---|---|
+| STRAT-001 | `21F4283A1FD03F0AC8A8AC7E51F02EE83F3C51DF6240BFA60535C18C80272DEA` | `F590ABE9A13BACA6745FA4A798F442C62602516B7973985AFDC2CD0F227F3BFE` |
+| STRAT-002 | `2B1E3E48BBD7EDCE5B1C80EC25B98F1764468464BCD30B7351271F6269810CFB` | `7619ED2BA7904E83331C537E7F2F6E7627584683E4160264F48767623075656F` |
+| STRAT-003 | `3CBCF9E92AE4FFB23C590A7836C548144445F322EF3C521AC662AF299ECCFE2F` | `65291F03C9F255279F517CCBF0F0E126DBEC5862A28898BC2FCC64FCB07B8BA8` |
+| STRAT-004 | `DB5016E44319ECDEE3AEB649B03B842D1B6BAB6E97A2147A82CC32220809FD99` | `8E29790AAE0AFD1AC2C71278CCAB8C779EBBC7D671C7CFB1475F50FFEB5829FB` |
+| STRAT-007 | `6EA3DFC2250691301D1F47F84BCA2559BC8D9E2C0F8EB34680D1C1FF254C518B` | `30E430EB68FBEC577476B4079A5B156EC4D8FCB2FC2D287372A9ADF575262ECB` |
+| STRAT-008 | `0A53F9F05F7D186D9E17702987B45F17F6D0ED2700DABEF6B3C3FD729590B833` | `963A8399CDD53E3420C8DAD14FCA7DD79D8AC1B58EE5F4ACB5035F9B75D9392B` |
+| STRAT-009 | `F7238D3DE10E19A9FA1A65BCD0E7CB4FD70FFD0F0A69B331C94971EFF0A2F306` | `C9A30C157E117332316A4AF20F2F21BA1FEA25CD1B788302D0BD8B90D54C2C87` |
+
+These hashes apply only to the exact source revision in that run. Any source change requires a new compile and new hashes. Compilation does not imply Strategy Tester validity or profitability.
