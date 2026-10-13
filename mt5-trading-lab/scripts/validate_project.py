@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 required = [
     "README.md", "../.github/workflows/mt5-mql5-compile.yml", "docs/WORKFLOW.md", "docs/EXECUTION_REALITY.md",
     "docs/ACCEPTANCE_GATES.md", "docs/ARTIFACTS_AND_DATA.md", "docs/BROKER_FEASIBILITY_RESEARCH.md", "docs/BROKER_FEASIBILITY_RESEARCH.md", "docs/MULTI_AGENT_OPERATING_PROTOCOL.md", "docs/PRE_REGISTERED_TEST_PROTOCOL.md",
-    "docs/NEXT_STEPS.md", "docs/MT5_CLOUD_RUNNER.md", "docs/PROGRESS_LOG.md", "docs/gate_register.csv", "docs/BACKGROUND_AGENT_RUNTIME_DECISION.md",
+    "docs/NEXT_STEPS.md", "docs/MT5_CLOUD_RUNNER.md", "docs/PROGRESS_LOG.md", "docs/gate_register.csv", "docs/BACKGROUND_AGENT_RUNTIME_DECISION.md", "docs/BACKTEST_INFRASTRUCTURE_PLAN.md",
     "config/project_config.json",
     "agents/agent_0_project_director.md", "agents/agent_1_researcher.md", "agents/agent_2_developer.md",
     "agents/agent_3_tester.md", "agents/agent_4_reviewer.md",
