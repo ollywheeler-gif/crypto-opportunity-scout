@@ -32,7 +32,7 @@ class ContractImportTests(unittest.TestCase):
     def args(self, path):
         return Namespace(
             broker="Test broker", instrument_type="forex", account_equity_gbp=100.0,
-            fx_conversion_rate=1.0, stop_distance_price=0.001, spread_cost=0.05,
+            fx_conversion_rate=1.0, stop_distance_price=0.004, spread_cost=0.05,
             commission_round_turn=0.02, slippage_allowance=0.03, gap_allowance=0.05,
             swap_expected=0.01, risk_cap_pct=0.5, contract_csv=path,
         )
@@ -44,7 +44,7 @@ class ContractImportTests(unittest.TestCase):
             row, result = build_row(export, self.args(path))
             self.assertEqual(row["symbol"], "EURUSD")
             self.assertEqual(row["minimum_volume"], "0.01")
-            self.assertAlmostEqual(result["estimated_worst_case_loss_gbp"], 1.11, places=6)
+            self.assertAlmostEqual(result["estimated_worst_case_loss_gbp"], 0.56, places=6)
             self.assertFalse(result["feasible_under_risk_cap"])
         finally:
             path.unlink(missing_ok=True)
