@@ -165,6 +165,26 @@ test("research enrichment extracts evidence but never marks a reward confirmed",
   assert.ok(result.researchCompleteness > 0 && result.researchCompleteness <= 100);
 });
 
+test("only a fixed per-person reward with no capital or fees and open status passes", async (t) => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(
+    '<!doctype html><html><head><title>Live USDC Rewards Campaign</title><meta name="description" content="Live rewards campaign"></head><body>The campaign is live now. Register to receive 10 USDC per user as a fixed reward. No deposit required. No fees or gas fees. Eligible users can complete the campaign today.</body></html>',
+    { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }
+  );
+  t.after(() => { globalThis.fetch = originalFetch; });
+  const result = await enrichResearchItem({
+    title: "Live USDC rewards campaign",
+    url: "https://example.org/live-rewards",
+    source: "example.org",
+    date: "2026-10-13",
+    publishedAt: "2026-10-13T09:00:00.000Z",
+    summary: "Register for the live reward campaign."
+  });
+  assert.equal(result.investmentAssessment.decision, "Worth investing in");
+  assert.match(result.verdict, /Worth investing in/);
+  assert.equal(result.reward, "Not confirmed");
+});
+
 test("research enrichment fails safely when source page cannot be fetched", async (t) => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => new Response("unavailable", { status: 503 });
@@ -207,7 +227,7 @@ test("daily collector deduplicates leads and reports transparent quality metrics
   };
   t.after(() => { globalThis.fetch = originalFetch; });
   const report = await collectReport();
-  assert.equal(report.pipelineVersion, "2.1");
+  assert.equal(report.pipelineVersion, "2.2");
   assert.equal(report.items.length, 0, "ambiguous percentage, reward pool and deposit offers must not be promoted as worthwhile");
   assert.equal(report.qualitySummary.feedsChecked, 9);
   assert.equal(report.qualitySummary.campaignDirectoriesChecked, 3);
