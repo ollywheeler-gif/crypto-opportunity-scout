@@ -152,7 +152,7 @@ test("research enrichment extracts evidence but never marks a reward confirmed",
   assert.equal(result.reward, "Not confirmed");
   assert.match(result.evidenceStatus, /reward-related wording/);
   assert.equal(result.investmentAssessment.decision, "Not recommended — insufficient evidence of worthwhile economics");
-  assert.ok(result.investmentAssessment.reasons.some((reason) => /fixed reward amount payable to each participant/i.test(reason)));
+  assert.ok(result.investmentAssessment.reasons.some((reason) => /fixed monetary reward payable to each participant/i.test(reason)));
   assert.match(result.rewardDetails, /rewards campaign/i);
   assert.match(result.taskDetails, /Connect your wallet/i);
   assert.match(result.statusEvidence, /status not established/i);
