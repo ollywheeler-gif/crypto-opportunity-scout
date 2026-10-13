@@ -28,6 +28,7 @@ class MemoryKV {
   }
   async put(key, value) { this.data.set(key, String(value)); }
   async delete(key) { this.data.delete(key); }
+  async list({ prefix = "", limit = 1000 } = {}) { return { keys: [...this.data.keys()].filter(key => key.startsWith(prefix)).slice(0, limit).map(name => ({ name })) }; }
 }
 
 async function sign(raw, timestamp) {
@@ -44,6 +45,17 @@ async function sign(raw, timestamp) {
   const hex = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
   return `t=${timestamp},v1=${hex}`;
 }
+
+test("report history returns archived reports newest first", async () => {
+  const kv = new MemoryKV();
+  await kv.put("report:archive:2026-10-11", JSON.stringify({ date: "2026-10-11", items: [] }));
+  await kv.put("report:archive:2026-10-13", JSON.stringify({ date: "2026-10-13", items: [{ title: "Latest" }] }));
+  await kv.put("report:latest", JSON.stringify({ date: "2026-10-13", items: [{ title: "Latest" }] }));
+  const response = await worker.fetch(new Request("https://scout.example/api/history"), { SCOUT_KV: kv }, {});
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.deepEqual(body.reports.map(report => report.date), ["2026-10-13", "2026-10-11"]);
+});
 
 test("test checkout -> signed webhook -> protected report access", async (t) => {
   const kv = new MemoryKV();
