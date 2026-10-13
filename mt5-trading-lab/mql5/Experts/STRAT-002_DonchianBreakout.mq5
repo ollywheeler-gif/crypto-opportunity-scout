@@ -130,6 +130,25 @@ double CalculateVolume(const ENUM_ORDER_TYPE orderType, const double entry, cons
    return volume;
 }
 
+bool HasEnoughMargin(const ENUM_ORDER_TYPE orderType, const double volume, const double price)
+{
+   double requiredMargin = 0.0;
+   if(!OrderCalcMargin(orderType, _Symbol, volume, price, requiredMargin) ||
+      requiredMargin <= 0.0)
+   {
+      Print("Margin calculation failed; trade skipped. Error=", GetLastError());
+      return false;
+   }
+   double freeMargin = AccountInfoDouble(ACCOUNT_MARGIN_FREE);
+   if(freeMargin <= 0.0 || requiredMargin > freeMargin)
+   {
+      Print("Insufficient free margin; trade skipped. Required=", requiredMargin,
+            " Free=", freeMargin);
+      return false;
+   }
+   return true;
+}
+
 int OnInit()
 {
    if((EnableStrategy && (!ConfirmBrokerCostsReviewed || EstimatedSpreadCostPerLot <= 0 || EstimatedSlippageCostPerLot <= 0)) ||
@@ -237,6 +256,7 @@ void OnTick()
          Print("Long skipped: minimum volume breaches risk cap or sizing inputs are invalid.");
          return;
       }
+      if(!HasEnoughMargin(ORDER_TYPE_BUY, volume, entry)) return;
       if(!trade.Buy(volume, _Symbol, 0.0, stop, 0.0, "STRAT-002 Donchian long") || !TradeRequestAccepted())
          Print("Buy request failed. Retcode=", trade.ResultRetcode(),
                " ", trade.ResultRetcodeDescription());
@@ -253,6 +273,7 @@ void OnTick()
          Print("Short skipped: minimum volume breaches risk cap or sizing inputs are invalid.");
          return;
       }
+      if(!HasEnoughMargin(ORDER_TYPE_SELL, volume, entry)) return;
       if(!trade.Sell(volume, _Symbol, 0.0, stop, 0.0, "STRAT-002 Donchian short") || !TradeRequestAccepted())
          Print("Sell request failed. Retcode=", trade.ResultRetcode(),
                " ", trade.ResultRetcodeDescription());
