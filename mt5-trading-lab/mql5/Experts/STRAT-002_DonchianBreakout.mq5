@@ -5,6 +5,7 @@
 #include <Trade/Trade.mqh>
 
 input bool   EnableStrategy = false;          // Must be deliberately enabled for tester/demo
+input bool   ConfirmBrokerCostsReviewed = false; // Explicitly confirm sizing cost reserve and tester cost model
 input ulong  MagicNumber = 26091502;
 input int    EntryChannelBars = 20;
 input int    ExitChannelBars = 10;
@@ -12,8 +13,8 @@ input int    AtrPeriod = 20;
 input double AtrStopMultiplier = 2.0;
 input double TargetRiskPct = 0.25;
 input double HardMaxRiskPct = 0.50;
-input double EstimatedRoundTurnCostPerLot = 0.0; // Account currency; commission + expected non-price costs
-input double EstimatedSlippageCostPerLot = 0.0;  // Account currency
+input double EstimatedRoundTurnCostPerLot = 0.0; // Account currency per lot: commission/financing risk reserve for sizing only
+input double EstimatedSlippageCostPerLot = 0.0;  // Account currency per lot; also configure realistic MT5 tester costs
 input int    MaxDeviationPoints = 20;
 
 CTrade trade;
@@ -123,7 +124,7 @@ double CalculateVolume(const ENUM_ORDER_TYPE orderType, const double entry, cons
 
 int OnInit()
 {
-   if(EntryChannelBars < 2 || ExitChannelBars < 2 || AtrPeriod < 2 ||
+   if((EnableStrategy && !ConfirmBrokerCostsReviewed) ||\n      EntryChannelBars < 2 || ExitChannelBars < 2 || AtrPeriod < 2 ||
       AtrStopMultiplier <= 0 || TargetRiskPct <= 0 || HardMaxRiskPct < TargetRiskPct ||
       EstimatedRoundTurnCostPerLot < 0 || EstimatedSlippageCostPerLot < 0)
       return INIT_PARAMETERS_INCORRECT;
