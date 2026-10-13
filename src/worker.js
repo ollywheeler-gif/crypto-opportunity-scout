@@ -148,10 +148,12 @@ async function saveReport(env, report) {
 
 async function readLatest(env) {
   return env.SCOUT_KV ? (await env.SCOUT_KV.get("report:latest", "json")) || {
-    date: new Date().toISOString().slice(0, 10), items: [],
+    date: new Date().toISOString().slice(0, 10), items: [], sources: [],
+    qualitySummary: { feedsChecked: 0, feedsAvailable: 0, candidatePagesChecked: 0, possibleRewardSignals: 0, actionableLeadsPublished: 0, economicallyQualifiedLeads: 0, fullyVerifiedRewards: 0 },
     disclaimer: "No digest collected yet. The scheduled collector will populate this page."
   } : {
-    date: new Date().toISOString().slice(0, 10), items: [],
+    date: new Date().toISOString().slice(0, 10), items: [], sources: [],
+    qualitySummary: { feedsChecked: 0, feedsAvailable: 0, candidatePagesChecked: 0, possibleRewardSignals: 0, actionableLeadsPublished: 0, economicallyQualifiedLeads: 0, fullyVerifiedRewards: 0 },
     disclaimer: "Storage is not configured yet. The site is online, but its report store needs to be connected."
   };
 }
