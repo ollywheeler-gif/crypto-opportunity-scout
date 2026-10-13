@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import worker from "../src/worker.js";
+import { enrichResearchItem } from "../src/research.js";
 
 const webhookSecret = "unit-test-webhook-secret";
 const settlementAddress = "0x1111111111111111111111111111111111111111";
@@ -130,4 +131,49 @@ test("test checkout -> signed webhook -> protected report access", async (t) => 
   ), env, {});
   assert.equal(deniedResponse.status, 403);
   assert.ok(accessToken);
+});
+
+
+test("research enrichment extracts evidence but never marks a reward confirmed", async (t) => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(
+    '<!doctype html><html><head><title>Example Rewards Campaign</title><meta name="description" content="A campaign with rewards for eligible users"></head><body><main>Rewards campaign ends on 30 October. Eligible residents of Canada may participate. A minimum deposit of 50 USDC is required. Connect your wallet and pay network gas fees. Rewards are subject to eligibility and are not guaranteed.</main></body></html>',
+    { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }
+  );
+  t.after(() => { globalThis.fetch = originalFetch; });
+  const result = await enrichResearchItem({
+    title: "Example rewards campaign",
+    url: "https://example.org/campaign",
+    source: "example.org",
+    date: "2026-10-13",
+    publishedAt: "2026-10-13T09:00:00.000Z",
+    summary: "A reward campaign is available for eligible users."
+  });
+  assert.equal(result.reward, "Not confirmed");
+  assert.match(result.evidenceStatus, /not independently confirmed/);
+  assert.match(result.deadline, /ends on 30 October/i);
+  assert.match(result.eligibility, /Eligible residents of Canada/i);
+  assert.match(result.costsAndRequirements, /minimum deposit of 50 USDC/i);
+  assert.ok(result.risks.some((risk) => /Fees may apply/.test(risk)));
+  assert.ok(result.risks.some((risk) => /Capital or deposit required/.test(risk)));
+  assert.equal(result.verificationStatus.includes("claims remain unverified"), true);
+  assert.ok(result.researchCompleteness > 0 && result.researchCompleteness <= 100);
+});
+
+test("research enrichment fails safely when source page cannot be fetched", async (t) => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response("unavailable", { status: 503 });
+  t.after(() => { globalThis.fetch = originalFetch; });
+  const result = await enrichResearchItem({
+    title: "Possible airdrop rewards",
+    url: "https://example.org/rewards",
+    source: "example.org",
+    date: "2026-10-13",
+    publishedAt: "2026-10-13T09:00:00.000Z",
+    summary: "A possible airdrop rewards campaign."
+  });
+  assert.equal(result.pageCheckedAt, null);
+  assert.match(result.verificationStatus, /could not be checked automatically/);
+  assert.equal(result.reward, "Not confirmed");
+  assert.ok(result.risks.some((risk) => /could not be fetched automatically/.test(risk)));
 });
