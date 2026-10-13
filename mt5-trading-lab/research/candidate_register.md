@@ -1,6 +1,6 @@
 # Candidate register — research hypotheses, not results
 
-**Status:** Ten initial hypotheses. STRAT-001 through STRAT-004 now have separate EA sources; all four compiled with zero errors and zero warnings in the Windows compile pipeline. STRAT-001 and STRAT-003 have frozen v1 specifications. STRAT-002 and STRAT-004 remain research-only with deterministic v1 specifications. None has a verified MT5 Strategy Tester report or broker-feasibility pass, and none is approved for demo/live use. Six other candidates remain specification drafts. Ranking prioritizes testability, lower turnover, and falsifiability—not expected profit.
+**Status:** Ten initial hypotheses. STRAT-001 through STRAT-004 have separate EA sources and verified zero-error/zero-warning MetaEditor compiles across Windows runs 38392022938 and 38391886074. STRAT-001, STRAT-003 and STRAT-004 have frozen v1 specifications; STRAT-002 has a deterministic v1 specification. STRAT-007, STRAT-008 and STRAT-009 now have EA source drafts and frozen v1 specs; their current compile run is pending. None has a verified MT5 Strategy Tester report or broker-feasibility pass, and none is approved for demo/live use. STRAT-005, STRAT-006 and STRAT-010 remain specification drafts, with session/contract or historical swap data dependencies. Ranking prioritizes testability, lower turnover, and falsifiability—not expected profit.
 
 ## Evidence informing the shortlist
 - Time-series momentum has been documented across liquid futures in currencies, equity indices, commodities, and bonds over long historical samples; this is research evidence, not proof that a retail CFD implementation remains profitable after costs: https://doi.org/10.1016/j.jfineco.2011.11.003
@@ -27,8 +27,10 @@
 - STRAT-001 / TS-MOM-01: frozen D1 v1 specification and disabled-by-default EA source; compiled with zero errors/warnings in run `38391338872` (artifact `11809220524`). Broker feasibility and Strategy Tester evidence are pending.
 - STRAT-002 / DON-02: deterministic H1 v1 specification and guarded EA source; compiled with zero errors/warnings in run `38391338872` (artifact `11809220524`). Broker feasibility and Strategy Tester evidence are pending.
 - STRAT-003 / EMA-TREND-03: frozen H4 v1 specification and disabled-by-default EA source; compiled with zero errors/warnings in run `38391338872` (artifact `11809220524`). Broker feasibility and Strategy Tester evidence are pending.
-- STRAT-004 / PULLBACK-04: frozen H1/H4 v1 specification and disabled-by-default EA source exist; Windows compile result is pending. Broker feasibility and Strategy Tester evidence remain pending.
-- STRAT-005 through STRAT-010: deterministic specification drafts exist; they remain unimplemented and untested. INDEX-ORB and CARRY-FX require additional broker-specific market/session or historical financing data.
+- STRAT-004 / PULLBACK-04: frozen H1/H4 v1 specification and disabled-by-default EA source compiled with zero errors/warnings in run `38391886074` (artifact `11810445059`). Broker feasibility and Strategy Tester evidence remain pending.
+- STRAT-005 / LONDON-05 and STRAT-006 / INDEX-ORB-06: specification drafts only. They require validated broker/server timezone or market session rules and exact instrument contract metadata before implementation is frozen.
+- STRAT-007 / VOL-COMP-07, STRAT-008 / REGIME-MR-08 and STRAT-009 / RSI-PB-09: frozen deterministic v1 specifications and separate disabled-by-default EA sources exist; compile run `38392508850` is pending. No tester or broker-feasibility evidence exists.
+- STRAT-010 / CARRY-FX-10: specification draft only and blocked pending defensible historical swap/financing data.
 
 ## Order of evaluation
 1. TS-MOM-01 and DON-02: low-turnover hypotheses with clear rules and substantial published background.
