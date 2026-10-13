@@ -27,7 +27,7 @@ Agent 0 sequences dependencies and assigns one writer per file. Do not create mo
 6. Research public broker contracts and complete feasibility calculations where authoritative data are available.
 
 ## External dependencies (not yet available)
-- A Windows PC/VM with MT5 and MetaEditor installed for full tester execution.
+- A persistent Windows MT5 terminal with broker/demo data for repeatable Strategy Tester execution. The ephemeral GitHub Windows runner can compile sources but is not a configured broker terminal.
 - A chosen broker and exact demo symbols/specifications; public research can shortlist but cannot prove account-specific settings.
 - Real historical data and actual Strategy Tester reports.
 - A permitted way to run the Windows tester and return logs/reports.
@@ -35,11 +35,11 @@ Agent 0 sequences dependencies and assigns one writer per file. Do not create mo
 
 ## Critical path
 1. Verify current main-branch Python tests and project validation.
-2. Keep the MetaEditor compile workflow reliable and recompile every EA source change.
-3. Resolve STRAT-002/003 source-review findings and run a non-live mechanics test.
-4. Research and record public broker specs; reject £100-infeasible symbol/strategy combinations before extensive testing.
+2. Finish the current compile pass for all EA sources and the shared RiskGuard include; require zero errors and zero warnings and retain source/include/EX5 hashes.
+3. Verify the daily-loss and peak-drawdown circuit-breakers in a mechanics-only tester run, including halt thresholds, position-close retries, daily reset and restart persistence.
+4. Select a broker/demo environment, export exact symbol contract metadata, and reject £100-infeasible symbol/strategy combinations before extensive testing.
 5. Only after mechanics and feasibility gates pass, execute pre-registered chronological tests, cost reconciliation, walk-forward and stress analysis.
-6. Agent 6 audits data/metrics; Agent 4 independently reviews the complete evidence; Agent 0 updates the gate register.
+6. Agent 6 audits data/metrics; Agent 4 independently reviews the complete evidence; Agent 0 updates the gate register. No EA becomes a demo candidate until the risk guard and broker feasibility gates pass.
 
 ## Owner interruption policy
 Continue autonomously on reversible, low-cost work. Ask only for a genuine external dependency, a material risk/strategy decision, spending/privileged access, credential/account action, or approval that cannot safely be inferred. Never ask for secrets in chat.
