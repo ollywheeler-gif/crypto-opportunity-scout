@@ -1,5 +1,5 @@
 # MT5 Trading Lab
-Research and validation workspace for four agent roles: strategy research, MQL5 development, backtesting, and independent review.
+Research and validation workspace for five coordinated roles: a project director, strategy research, MQL5 development, backtesting, and independent review.
 
 ## Truthful status
 This is project scaffolding, not a deployed autonomous agent service. No Windows MT5 runner, broker connection, or market-data feed is provisioned. No real-market backtests have been completed by this repository. No EA source has yet passed the project's acceptance gates.
