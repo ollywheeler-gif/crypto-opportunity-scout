@@ -2,7 +2,7 @@
 
 Candidate ID: STRAT-001
 Version: v1
-Status: SPECIFICATION DRAFT — not implemented, compiled, backtested or approved.
+Status: FROZEN SPECIFICATION v1 — deterministic rules accepted for implementation. Not backtested or approved for demo/live.
 
 ## Hypothesis
 A simple, deterministic time-series momentum rule may capture a repeatable market effect, but it may fail after realistic costs, regime changes and the £100 feasibility constraint. The test must attempt to falsify the idea.
@@ -42,3 +42,10 @@ Compile log with warnings resolved; source/spec/config hashes; exact MT5 build; 
 
 ## Approval status
 Draft v1 research rules only. Agent 0 must freeze the specification after a rule/code consistency review. No candidate is approved for demo or live use by this document.
+
+
+## Agent 0 freeze record
+- Freeze date: 2026-10-13.
+- Rules frozen: D1 126-bar close-return direction; ATR(20) stop at 3.0 ATR; exit on completed-bar direction change or stop; no same-bar reversal.
+- Agent 2 source: `mql5/Experts/STRAT-001_TimeSeriesMomentum.mq5`.
+- Freeze is a specification milestone only. Compile, broker feasibility and tester gates remain separate.
