@@ -244,8 +244,8 @@ void OnTick()
    bool hasPosition = FindOurPosition(ticket, positionType);
    if(hasPosition)
    {
-      bool reverse = (positionType == POSITION_TYPE_BUY && shortCross) ||
-                     (positionType == POSITION_TYPE_SELL && longCross);
+      bool reverse = (positionType == POSITION_TYPE_BUY && fast[0] < slow[0]) ||
+                     (positionType == POSITION_TYPE_SELL && fast[0] > slow[0]);
       if(reverse && (!trade.PositionClose(ticket) || !TradeRequestAccepted()))
          Print("Close failed. Retcode=", trade.ResultRetcode(), " ", trade.ResultRetcodeDescription());
       return;
