@@ -54,6 +54,9 @@ $compileText = Get-Content -LiteralPath $compileLog -Raw
 if ($compileExit -ne 0 -or $compileText -match '(?im)\b[1-9]\d*\s+errors?\b' -or -not (Test-Path -LiteralPath $expertEx5)) {
   throw "Compile failed or produced no EX5. Inspect $compileLog"
 }
+if ($compileText -match '(?im)\b[1-9]\d*\s+warnings?\b') {
+  throw "Compile produced warnings; review and resolve them before any tester run. Inspect $compileLog"
+}
 
 # Require explicit tester inputs rather than accepting silent defaults.
 foreach ($key in @("Expert","Symbol","Period","FromDate","ToDate","Model","Deposit","Currency","Leverage","Report")) {
