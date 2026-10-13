@@ -23,7 +23,7 @@ export default {
       return Response.json(await readLatest(env));
     }
 
-    if (request.method === "POST" && url.pathname === "/api/refresh") {
+    if ((request.method === "GET" || request.method === "POST") && url.pathname === "/api/refresh") {
       if (!env.SCOUT_KV) return Response.json({ error: "Report storage is not configured." }, { status: 503 });
       const lock = await env.SCOUT_KV.get("refresh:lock");
       if (lock) return Response.json({ ...(await readLatest(env)), refresh: "cooldown" }, { status: 429, headers: { "Retry-After": "300" } });
