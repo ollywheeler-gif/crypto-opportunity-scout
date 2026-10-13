@@ -41,7 +41,7 @@
 5. CARRY-FX-10: blocked until historical swap/financing assumptions are defensible.
 
 ## £200 feasibility gate
-For each symbol, calculate the cash loss at the broker's minimum permitted volume and the proposed stop distance, including tick value, currency conversion, spread, commission and plausible slippage. Compare with a provisional per-trade budget of £0.50–£1.00. If the minimum size exceeds the budget, reject that symbol/strategy for a £200 account; do not hide the problem by shrinking stops or using leverage assumptions unrealistically.
+For each symbol, calculate the cash loss at the broker's minimum permitted volume and the proposed stop distance, including tick value, currency conversion, spread, commission and plausible slippage. Compare with a target risk of £0.50 (0.25% of equity) and a hard modeled-loss cap of £1.00 (0.50% of equity). If the minimum size exceeds the budget, reject that symbol/strategy for a £200 account; do not hide the problem by shrinking stops or using leverage assumptions unrealistically.
 
 ## Required next step
 Next priority: export exact symbol contract data from a selected demo broker and evaluate £200 feasibility before any tester run. STRAT-006 stays blocked until cash-session hours and contract specs are verified; STRAT-010 stays blocked until historical swap/financing data are defensible. Do not attach performance numbers until actual test evidence exists.
