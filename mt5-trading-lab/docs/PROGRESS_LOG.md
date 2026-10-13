@@ -1,0 +1,33 @@
+# Progress log
+
+## 2026-10-13 — Research pipeline hardening
+
+### Added or updated
+- Added a deterministic H1 Donchian breakout specification and initial MQL5 EA source.
+- EA remains disabled by default and refuses real-account initialization.
+- Added explicit spread/slippage sizing allowances and a broker-cost-review switch.
+- Added stop-distance, minimum-lot risk, free-margin, and trade-server-retcode checks.
+- Added a guard that avoids acting when another position exists on the same symbol.
+- Added a Windows source installer that verifies SHA-256 and backs up a differing existing source.
+- Added a guarded Windows compile/test runner that checks required tester inputs, rejects credentials in the INI, refuses to launch alongside a running terminal process, removes stale EX5 before compile, and rejects stale reports.
+- Added capital-feasibility calculator and unit tests.
+- Expanded closed-trade analysis with expectancy, monthly trade-close totals and maximum consecutive losses.
+- Added static safety tests for the EA, project configuration, installer and runner.
+- Added acceptance gates, artifact conventions and setup instructions.
+
+### Evidence status
+- Source and documentation exist in GitHub.
+- No MetaEditor compilation has been performed in this environment.
+- No MT5 Strategy Tester run or real-market performance result has been produced.
+- The current GitHub integration does not expose a verified status for the most recent push-triggered Actions run, so no claim is made that the latest revision passed CI.
+- No Cloudflare connection, Windows runner, broker account or market-data feed is provisioned.
+
+### Next work
+1. Verify GitHub Actions on the latest commit and repair any test failures.
+2. Compile the EA on a dedicated Windows MT5 installation; inspect compiler warnings as well as errors.
+3. Confirm broker economics and calculate minimum-lot feasibility for candidate symbols.
+4. Run a short mechanics-only tester smoke test and reconcile the raw report.
+5. Only after the pipeline is proven, run pre-registered chronological tests and independent review.
+
+### Safety boundaries
+Research/testing only. No paid provisioning, broker credential collection in chat, real-account execution or live deployment is authorized.
