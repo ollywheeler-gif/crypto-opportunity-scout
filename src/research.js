@@ -134,6 +134,8 @@ export async function enrichResearchItem(item) {
   enriched.verificationStatus = page
     ? (page.sameHostAsFeed ? "Source page fetched on the same host as the monitored feed; claims remain unverified" : "Linked page fetched; publisher ownership and claims remain unverified")
     : "Source page could not be checked automatically";
+  enriched.reward = "Not confirmed";
+  enriched.cost = "Not established — check original terms";
   enriched.rewardSignal = rewardSignal;
   enriched.evidenceStatus = rewardSignal
     ? (page ? "Reward-related wording found on the linked page; reward and eligibility not independently confirmed" : "Reward-related wording found in feed; linked page could not be checked")
