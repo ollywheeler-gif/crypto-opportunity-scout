@@ -1,6 +1,6 @@
 candidate_id,version,gate,owner,status,evidence,blocker,next_action
 PROJECT,1,Repository structure,Agent 0,PASS,GitHub repository files present,none,Continue static validation
-PROJECT,1,Python tests and CI,Agent 0,PASS,GitHub Actions run 38390649941 completed successfully on main; repository validation and 26 Python unit tests passed,none,Keep CI required and rerun after changes
+PROJECT,1,Python tests and CI,Agent 0,PASS,GitHub Actions run 38391108676 completed successfully on main; repository validation and Python unit tests passed,none,Keep CI required and rerun after changes
 STRAT-002,1,Research specification,Agent 1,PASS,research/specs/STRAT-002-donchian-breakout-v1.md,none,Keep spec frozen during initial testing
 STRAT-002,1,EA source and safety review,Agent 2,IN_PROGRESS,mql5/Experts/STRAT-002_DonchianBreakout.mq5 and research/reviews/STRAT-002-code-review-v1.md,Code-only review has open risk, execution and lifecycle findings,Resolve open review findings and repeat review after mechanics evidence
 STRAT-002,1,MetaEditor compile,Agent 3,PASS,Windows run 38390955133 at commit b26b5185e28356e18070247d6420cf06753eefe8; MetaEditor 5.0.0.6257; Result 0 errors/0 warnings; source SHA256 2B1E3E48BBD7EDCE5B1C80EC25B98F1764468464BCD30B7351271F6269810CFB; EX5 SHA256 9E43755AA8FEB9C504FFD9A2F004F6EC040DE576DE8FAF74EAA3256200B7EB8D; artifact 11807953266,Compile only not a tester result,Recompile after any EA source change
@@ -11,7 +11,7 @@ STRAT-002,1,Independent review,Agent 4,BLOCKED,Code-only review exists; MetaEdit
 STRAT-002,1,Demo forward test,Agent 0,BLOCKED,Earlier gates not passed,Do not skip gates,Only schedule after acceptance
 PROJECT,1,Live deployment,Owner,NOT_AUTHORIZED,Explicit owner approval required,Live trading disabled,No live deployment without explicit approval
 STRAT-001,1,Research specification,Agent 0 and Agent 1,DRAFT,research/specs/strat-001-timeseries-momentum-v1.md,Needs review and frozen parameters,Review specification and register test windows before implementation
-STRAT-003,1,Research specification,Agent 0 and Agent 1,FROZEN,research/specs/strat-003-ema-trend-v1.md,Compile and broker feasibility still pending,Keep rules fixed during first compile and mechanics test
+STRAT-003,1,Research specification,Agent 0 and Agent 1,FROZEN,research/specs/strat-003-ema-trend-v1.md,Compile passed but broker feasibility and tester evidence remain pending,Keep rules fixed during first mechanics test
 STRAT-003,1,EA implementation,Agent 2,IN_PROGRESS,mql5/Experts/STRAT-003_EMATrend.mq5,Compile verified but no Strategy Tester or broker evidence,Resolve source/spec correspondence and proceed to mechanics only after broker feasibility
 STRAT-003,1,MetaEditor compile,Agent 3,PASS,Windows run 38390955133 at commit b26b5185e28356e18070247d6420cf06753eefe8; MetaEditor 5.0.0.6257; Result 0 errors/0 warnings; source SHA256 955C5F25C05FE8B5BCEF6ED951EC97401B97B70F7FB07462477956234707701B; EX5 SHA256 5FC6CF4BB6F93EAFD45CAF00C05D83F74D406F637D373C4E95C1E22E72DB2EC7; artifact 11807953266,Compile only not a tester result,Recompile after any EA source change
 STRAT-004,1,Research specification,Agent 0 and Agent 1,DRAFT,research/specs/strat-004-trend-pullback-v1.md,Needs review and frozen parameters,Review specification and register test windows before implementation
