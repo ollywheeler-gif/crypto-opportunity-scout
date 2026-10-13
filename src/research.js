@@ -14,7 +14,8 @@ const FEEDS = [
 // sources, not proof that a reward exists or that a campaign remains open.
 const CAMPAIGN_DIRECTORIES = [
   { url: "https://app.galxe.com/quest/explore/all", name: "Galxe Quest", host: "app.galxe.com" },
-  { url: "https://app.layer3.xyz/activations", name: "Layer3 Activations", host: "app.layer3.xyz" }
+  { url: "https://app.layer3.xyz/activations", name: "Layer3 Activations", host: "app.layer3.xyz" },
+  { url: "https://questira.io/campaigns", name: "Questira Campaigns", host: "questira.io" }
 ];
 
 const MAX_AGE_DAYS = 45;
@@ -286,7 +287,9 @@ function extractCampaignLinks(html, directory) {
     const path = url.pathname;
     const isCampaign = directory.host === "app.galxe.com"
       ? /^\/quest\/[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+/.test(path)
-      : /^\/(?:activations|quests)\/[A-Za-z0-9_-]+/.test(path);
+      : directory.host === "questira.io"
+        ? /^\/campaign\/[A-Za-z0-9_-]+/.test(path)
+        : /^\/(?:activations|quests)\/[A-Za-z0-9_-]+/.test(path);
     if (!isCampaign) continue;
     url.hash = "";
     const title = cleanHtml(decodeEntities(anchor[2].replace(/<[^>]+>/g, " "))).slice(0, 200);
