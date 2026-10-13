@@ -41,4 +41,12 @@ Compile log with warnings resolved; source/spec/config hashes; exact MT5 build; 
 - Material code warnings, rejected/invalid orders, missing protective stops or unsupported broker assumptions.
 
 ## Approval status
-Draft v1 research rules only. Agent 0 must freeze the specification after a rule/code consistency review. No candidate is approved for demo or live use by this document.
+Frozen v1 research rules only. No candidate is approved for demo or live use by this document.
+
+
+## Agent 0 freeze record
+- Freeze date: 2026-10-13.
+- Frozen v1 parameters: four M15 range bars; one attempt per session; stop at opposite range edge; 2R target; close at session end minus 15 minutes; no overnight positions.
+- Session times are external data, not guessed parameters. The EA reads `index_session_schedule.csv` from MT5 Common Files. Missing schedule entries block entries and cause an open position to be closed defensively.
+- Agent 2 source: `mql5/Experts/STRAT-006_IndexOpeningRange.mq5`.
+- Compile gate has not yet been verified; broker/session feasibility and tester gates remain blocked.
