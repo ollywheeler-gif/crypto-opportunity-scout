@@ -7,8 +7,16 @@ EA = (ROOT / "mql5/Experts/STRAT-002_DonchianBreakout.mq5").read_text(encoding="
 CONFIG = json.loads((ROOT / "config/project_config.json").read_text(encoding="utf-8"))
 RUNNER = (ROOT / "scripts/run_mt5_candidate.ps1").read_text(encoding="utf-8")
 INSTALLER = (ROOT / "scripts/install_mt5_candidate.ps1").read_text(encoding="utf-8")
+PROJECT_DIRECTOR = (ROOT / "agents/agent_0_project_director.md").read_text(encoding="utf-8")
+ORCHESTRATION = (ROOT / "docs/MULTI_AGENT_OPERATING_PROTOCOL.md").read_text(encoding="utf-8")
 
 class ProjectSafetyTests(unittest.TestCase):
+    def test_project_director_and_agent_handoffs_exist(self):
+        for required in ("Agent 1", "Agent 2", "Agent 3", "Agent 4", "owner approval", "BLOCKED", "£100"):
+            self.assertIn(required.lower(), PROJECT_DIRECTOR.lower())
+        for required in ("Agent 0", "Agent 1", "Agent 2", "Agent 3", "Agent 4", "raw report", "critical path"):
+            self.assertIn(required.lower(), ORCHESTRATION.lower())
+
     def test_live_and_paid_provisioning_disabled(self):
         self.assertIs(CONFIG["live_trading_enabled"], False)
         self.assertIs(CONFIG["live_deployment_allowed"], False)
