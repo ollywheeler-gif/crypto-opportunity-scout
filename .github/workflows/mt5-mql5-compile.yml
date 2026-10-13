@@ -9,6 +9,7 @@ on:
     paths:
       - 'mt5-trading-lab/mql5/Experts/**/*.mq5'
       - 'mt5-trading-lab/mql5/Scripts/**/*.mq5'
+      - 'mt5-trading-lab/mql5/Include/**/*.mqh'
       - '.github/workflows/mt5-mql5-compile.yml'
   pull_request:
     paths:
@@ -82,6 +83,16 @@ jobs:
             throw 'Could not initialize a local MQL5 standard include directory; compile was not attempted.'
           }
           "MQL5_ROOT=$portableMql5" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Install TradingLab risk guard include
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $target = Join-Path $env:MQL5_ROOT 'Include\TradingLab\RiskGuard.mqh'
+          New-Item -ItemType Directory -Force -Path (Split-Path $target -Parent) | Out-Null
+          Copy-Item 'mt5-trading-lab/mql5/Include/TradingLab/RiskGuard.mqh' $target -Force
+          if (-not (Test-Path $target -PathType Leaf)) { throw 'RiskGuard.mqh was not installed into the isolated MQL5 include tree.' }
+          Write-Host "Installed TradingLab risk guard include."
 
       - name: Compile STRAT-001 time-series momentum EA
         shell: pwsh
