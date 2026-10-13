@@ -57,3 +57,28 @@ The owner does not need to upload GitHub login details. If a broker demo login i
 
 First backtest should use one frozen candidate and one instrument, selected only after the £200 feasibility check. The test's raw report, tester journal, source/build hashes, symbol metadata, cost ledger and report reconciliation are mandatory. Only after this passes should the team expand to additional candidates or symbols.
 
+## Public broker evidence and preliminary £200 viability screen (2026-10-13)
+
+### Public facts verified from Pepperstone UK pages
+- Free demo accounts are available, MT5 is supported, and the broker says demo accounts can use virtual funds and live prices. The broker cautions that demo execution may not reflect live conditions: https://pepperstone.com/en-gb/trading/demo-account
+- UK retail leverage for major FX pairs is listed as up to 1:30: https://pepperstone.com/en-gb/trading/costs-and-fees
+- EURUSD Razor average spread is published as 0.1 pip for the August 2026 observation window; minimum spread is 0.0. Standard EURUSD spread is listed as 1.0 pip minimum and 1.1 pip average. Spreads vary: https://pepperstone.com/en-gb/markets/forex/pairs-and-spreads
+- Razor MT4/MT5 commission for a GBP-denominated account is £2.25 per standard lot per side, proportionally adjusted for smaller trades: same spread/commission page.
+- Forex standard lot size is 100,000 base units; Pepperstone's educational page describes micro lots as 1,000 units (0.01 standard lot): https://pepperstone.com/en-gb/insights/guides/cfds/what-is-cfd-trading and https://pepperstone.com/en-gb/markets/forex
+- UK entity and retail major-FX leverage are listed in the regulated offices page: https://pepperstonegroup.com/en/regulated-offices
+
+### Preliminary arithmetic — not broker-terminal verification
+Assume EURUSD, GBP account, 0.01 lot minimum (must be confirmed in MT5), and roughly USD 10 pip value per standard lot, so about USD 0.10/pip at 0.01 lot. At a notional EURUSD rate near 1.10 and USD/GBP near 0.75, this is about £0.075/pip. This FX conversion is an illustrative sensitivity assumption, not a live quote.
+- £200 × 0.25% target risk = £0.50.
+- £200 × 0.50% hard risk ceiling = £1.00.
+- Razor round-turn commission at 0.01 lot = £2.25 × 2 × 0.01 = £0.045, before spread, swap, slippage or gap reserve.
+- Using a 0.1 pip average Razor spread as a rough baseline adds around £0.0075 at 0.01 lot. Actual spread and conversion vary.
+- This leaves less than about £0.95 of the hard cap for stop-price loss and all other reserves, equivalent to roughly 12 pips at this illustrative pip value. The £0.50 target allows only around 6 pips before costs.
+- STRAT-001 uses a frozen D1 stop at 3 × ATR(20). Unless daily ATR is unusually tiny (around 4 pips or less under the assumptions above), minimum volume is likely to exceed the £1 hard cap. Thus the £200 constraint is **preliminarily incompatible with STRAT-001 on EURUSD at 0.01 lot**, even though approximate margin for a 0.01-lot EURUSD position at 1:30 is likely within £200.
+
+### Decision and next evidence
+- Do not enable STRAT-001 or describe it as broker-feasible on a £200 account. Keep it blocked pending actual symbol metadata and a stop-distance calculation from the selected MT5 terminal.
+- This public evidence is useful for screening only. It does not establish the actual demo server, account type, symbol suffix, volume min/step, tick value, current spread, margin, swaps, history availability or execution costs.
+- Once the owner creates a free Pepperstone MT5 demo with GBP account currency and a virtual balance of £200, run `ExportSymbolContract.mq5` on EURUSD (including any broker suffix) and preserve the exported CSV. Then populate `research/capital_feasibility_template.csv` with the frozen strategy's actual stop distance and conservative cost/gap allowances. Do not share credentials in ChatGPT.
+- If the minimum volume fails, the correct outcome is to reject that symbol/strategy combination, not raise the risk cap. Continue screening other frozen candidates/instruments only with their actual stop geometry and broker contract data.
+
