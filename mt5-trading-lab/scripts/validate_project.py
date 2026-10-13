@@ -4,7 +4,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 required = [
-    "README.md", "../.github/workflows/mt5-mql5-compile.yml", "docs/WORKFLOW.md", "docs/EXECUTION_REALITY.md",
+    "README.md", "../.github/workflows/mt5-mql5-compile.yml", "../.github/workflows/mt5-tester-preflight.yml", "docs/WORKFLOW.md", "docs/EXECUTION_REALITY.md",
     "docs/ACCEPTANCE_GATES.md", "docs/ARTIFACTS_AND_DATA.md", "docs/INDEX_SESSION_SCHEDULE.md", "docs/SWAP_HISTORY_REQUIREMENTS.md", "docs/BROKER_FEASIBILITY_RESEARCH.md", "docs/BROKER_FEASIBILITY_RESEARCH.md", "docs/MULTI_AGENT_OPERATING_PROTOCOL.md", "docs/PRE_REGISTERED_TEST_PROTOCOL.md",
     "docs/NEXT_STEPS.md", "docs/MT5_CLOUD_RUNNER.md", "docs/PROGRESS_LOG.md", "docs/gate_register.csv", "docs/BACKGROUND_AGENT_RUNTIME_DECISION.md", "docs/BACKTEST_INFRASTRUCTURE_PLAN.md",
     "config/project_config.json",
