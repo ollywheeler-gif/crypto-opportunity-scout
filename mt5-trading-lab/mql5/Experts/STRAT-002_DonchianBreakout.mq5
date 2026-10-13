@@ -19,6 +19,13 @@ input double EstimatedSlippageCostPerLot = 0.0;  // Account currency per lot; al
 input int    MaxDeviationPoints = 20;
 
 CTrade trade;
+bool TradeRequestAccepted()
+{
+   uint code = trade.ResultRetcode();
+   return (code == TRADE_RETCODE_DONE ||
+           code == TRADE_RETCODE_DONE_PARTIAL ||
+           code == TRADE_RETCODE_PLACED);
+}
 int atrHandle = INVALID_HANDLE;
 datetime lastBarTime = 0;
 
@@ -204,7 +211,7 @@ void OnTick()
       bool exitShort = (positionType == POSITION_TYPE_SELL && rates[1].close > exitHigh);
       if(exitLong || exitShort)
       {
-         if(!trade.PositionClose(ticket))
+         if(!trade.PositionClose(ticket) || !TradeRequestAccepted())
             Print("Position close request failed. Retcode=", trade.ResultRetcode(),
                   " ", trade.ResultRetcodeDescription());
       }
@@ -230,7 +237,7 @@ void OnTick()
          Print("Long skipped: minimum volume breaches risk cap or sizing inputs are invalid.");
          return;
       }
-      if(!trade.Buy(volume, _Symbol, 0.0, stop, 0.0, "STRAT-002 Donchian long"))
+      if(!trade.Buy(volume, _Symbol, 0.0, stop, 0.0, "STRAT-002 Donchian long") || !TradeRequestAccepted())
          Print("Buy request failed. Retcode=", trade.ResultRetcode(),
                " ", trade.ResultRetcodeDescription());
    }
@@ -246,7 +253,7 @@ void OnTick()
          Print("Short skipped: minimum volume breaches risk cap or sizing inputs are invalid.");
          return;
       }
-      if(!trade.Sell(volume, _Symbol, 0.0, stop, 0.0, "STRAT-002 Donchian short"))
+      if(!trade.Sell(volume, _Symbol, 0.0, stop, 0.0, "STRAT-002 Donchian short") || !TradeRequestAccepted())
          Print("Sell request failed. Retcode=", trade.ResultRetcode(),
                " ", trade.ResultRetcodeDescription());
    }
