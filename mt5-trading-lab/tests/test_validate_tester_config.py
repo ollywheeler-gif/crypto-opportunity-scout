@@ -33,6 +33,20 @@ class TesterConfigValidationTests(unittest.TestCase):
             path.write_text(content, encoding="utf-8")
             return validate(path)
 
+
+    def test_checked_in_smoke_template_keeps_approved_baseline(self):
+        template = ROOT / "research" / "mt5_tester_smoke_template.ini"
+        text = template.read_text(encoding="utf-8")
+        result = validate(template)
+        self.assertEqual(result["status"], "CONFIG_VALIDATION_PASS_NOT_EXECUTED")
+        self.assertEqual(result["deposit"], 200.0)
+        self.assertEqual(result["currency"], "GBP")
+        self.assertEqual(result["period"], "D1")
+        self.assertIn("STRAT-001_EURUSD_D1_smoke.html", result["report_path"])
+        self.assertFalse(result["mt5_launched"])
+        self.assertFalse(result["backtest_executed"])
+        self.assertFalse(result["performance_claim_allowed"])
+
     def test_valid_config_is_labelled_not_executed(self):
         result = self.run_validation(BASE)
         self.assertEqual(result["status"], "CONFIG_VALIDATION_PASS_NOT_EXECUTED")
