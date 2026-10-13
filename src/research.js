@@ -158,7 +158,7 @@ export async function collectReport() {
   const researchedItems = await Promise.all(candidates.map(item => enrichResearchItem(item)));
   // A reachable page is not an opportunity. Publish only leads with page evidence,
   // explicit reward wording and a concrete participation/action signal.
-  const items = researchedItems.filter(item => item.actionable === true);
+  const items = researchedItems.filter(item => item.actionable === true && item.investmentAssessment?.decision === "Worth investigating");
   items.sort((a, b) => b.relevance - a.relevance || Date.parse(b.publishedAt) - Date.parse(a.publishedAt));
 
   return {
@@ -196,6 +196,32 @@ export async function enrichResearchItem(item) {
   const actionSignal = ACTION_TERMS.test(compact);
   const endedSignal = /\b(?:campaign|airdrop|rewards?|quest|registration|claim period)\b.{0,60}\b(?:ended|closed|expired|has finished|is over|has concluded)\b|\b(?:ended|closed|expired|has finished|is over|has concluded)\b.{0,60}\b(?:campaign|airdrop|rewards?|quest|registration|claim period)\b|\b(?:campaign|quest|registration|claim period)\s+(?:is )?closed\b/i.test(compact);
   const actionable = Boolean(page && rewardSignal && actionSignal && !endedSignal);
+  const percentReturnMatch = compact.match(/\b(\d{1,3}(?:\.\d+)?)\s*%\s*(?:return|reward|yield|APR|APY|interest|bonus|back|per day|per week|over the weekend)\b/i)
+    || compact.match(/\b(?:earn|receive|get|up to)\s+(\d{1,3}(?:\.\d+)?)\s*%\b/i);
+  const numericValueMatch = compact.match(/\b(?:\$|USD\s*)\s?([\d,]+(?:\.\d{1,2})?)\s*(?:USDC|USDT|reward|prize|pool)?\b/i)
+    || compact.match(/\b([\d,]+(?:\.\d+)?)\s*(?:USDC|USDT|USD)\b/i);
+  const explicitNoCapital = /\b(?:free to participate|no purchase necessary|no deposit required|without (?:a )?deposit|no upfront capital)\b/i.test(compact);
+  const capitalRisk = /\b(?:deposit|minimum balance|minimum purchase|trading volume|leverage|borrow|collateral|lock(?:ed)? funds|stake at least)\b/i.test(compact);
+  const walletRisk = /\b(?:connect (?:your )?wallet|sign (?:a )?(?:message|transaction)|approve (?:the )?token)\b/i.test(compact);
+  const highReturn = Boolean(percentReturnMatch && Number(percentReturnMatch[1]) >= 5 && /\b(?:day|week|weekend|24 hours?|48 hours?|short term|short-term)\b/i.test(compact));
+  const riskLevel = highReturn || /\b(?:guaranteed returns?|risk[- ]free|double your money|100% profit|leverage|borrow)\b/i.test(compact)
+    ? "High"
+    : capitalRisk || walletRisk || !explicitNoCapital
+      ? "Medium / uncertain"
+      : "Lower direct-capital risk";
+  const economicEvidence = Boolean(percentReturnMatch || numericValueMatch || /\b(?:token allocation|token distribution|published points conversion|points worth|prize pool of)\b/i.test(compact));
+  const investmentDecision = actionable && economicEvidence
+    ? "Worth investigating"
+    : "Watchlist — not enough evidence of economic value";
+  const investmentReasons = [];
+  if (percentReturnMatch) investmentReasons.push("Promotional percentage detected: " + percentReturnMatch[1] + "%; verify whether it is a fixed reward, yield, APR/APY, bonus or conditional maximum.");
+  if (numericValueMatch) investmentReasons.push("A numeric monetary amount was detected; confirm the currency, conditions, pool size and whether the amount is per user.");
+  if (!economicEvidence) investmentReasons.push("No defensible monetary value or published conversion was identified, so value for money cannot yet be assessed.");
+  if (capitalRisk) investmentReasons.push("Capital, deposit, trading-volume or leverage language detected; loss of capital may exceed any advertised reward.");
+  if (walletRisk) investmentReasons.push("Wallet connection/signing language detected; inspect permissions and never sign an unexplained transaction.");
+  if (highReturn) investmentReasons.push("A return of 5% or more over a short period was detected. Treat this as high risk until the source, funding mechanism, lock-up, withdrawal terms and downside are independently checked.");
+  if (!explicitNoCapital && !capitalRisk) investmentReasons.push("Capital requirements are unclear; do not assume participation is free.");
+  if (!investmentReasons.length) investmentReasons.push("Some economic evidence is present, but project legitimacy, eligibility and net return still require manual review.");
   const eligibilityMatch = findContext(compact, /\b(?:eligible|eligibility|available in|excluding|excluded|residents of|restricted in|region|country|countries|KYC|identity verification)\b/i);
   const costMatch = findContext(compact, /\b(?:fee|fees|deposit|minimum purchase|minimum balance|trading volume|gas cost|transaction cost|purchase at least|spend at least|no purchase necessary|free to participate)\b/i);
   const deadlineMatch = findContext(compact, /\b(?:deadline|ends? on|ending on|expires? on|until|by \w+day|before \w+ \d{1,2}|ongoing|open until)\b/i);
@@ -212,6 +238,14 @@ export async function enrichResearchItem(item) {
   enriched.verificationStatus = page
     ? (page.sameHostAsFeed ? "Source page fetched on the same host as the monitored feed; claims remain unverified" : "Linked page fetched; publisher ownership and claims remain unverified")
     : "Source page could not be checked automatically";
+  enriched.investmentAssessment = {
+    decision: investmentDecision,
+    riskLevel,
+    economicEvidenceFound: economicEvidence,
+    reasons: investmentReasons,
+    estimatedNetReturn: "Not estimated — reward probability, fees, price impact and eligibility are not reliably established automatically",
+    rule: "A candidate passing this filter is worth researching, not an instruction to invest."
+  };
   enriched.reward = "Not confirmed";
   enriched.rewardDetails = rewardDetails || "No specific reward amount/type extracted";
   enriched.taskDetails = taskDetails || "No concrete task sequence extracted";
@@ -228,12 +262,16 @@ export async function enrichResearchItem(item) {
   enriched.eligibility = eligibilityMatch || "Not extracted — check original terms";
   enriched.costsAndRequirements = costMatch || "Not extracted — check original terms";
   enriched.risks = [...new Set(risks)];
-  enriched.verdict = actionable
-    ? "Potential lead — verify live status, eligibility and net value before acting"
-    : "Reject — insufficient evidence of a current, actionable reward opportunity";
-  enriched.nextStep = actionable
-    ? "Check the official campaign page for current status, your country eligibility, exact tasks, deadline, fees and capital requirements. Do not participate until these are clear."
-    : "Not shown in the daily opportunity report. A reachable source page alone is not evidence of an opportunity.";
+  enriched.verdict = !actionable
+    ? "Reject — insufficient evidence of a current, actionable reward opportunity"
+    : investmentDecision === "Worth investigating"
+      ? "Worth investigating — risk-rated, but not a recommendation to invest"
+      : "Watchlist — economic value is too unclear to justify investment yet";
+  enriched.nextStep = !actionable
+    ? "Not shown in the daily opportunity report. A reachable source page alone is not evidence of an opportunity."
+    : investmentDecision === "Worth investigating"
+      ? "Verify the advertised economic value, how it is funded, downside risk, lock-up/withdrawal terms, fees, eligibility and current status before committing any capital."
+      : "Keep on the watchlist only. Find an official monetary value or published points conversion, and establish the full costs and requirements before treating this as investable.";
   const completeness = [
     Boolean(page?.title), Boolean(page?.description), Boolean(rewardDetails),
     Boolean(taskDetails), Boolean(statusMatch), Boolean(deadlineMatch),
