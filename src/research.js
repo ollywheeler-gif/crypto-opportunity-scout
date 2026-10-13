@@ -190,6 +190,13 @@ export async function collectReport() {
       possibleRewardSignals: researchedItems.filter(item => item.rewardSignal).length,
       actionableLeadsPublished: items.length,
       rejectedAsInsufficientEvidence: researchedItems.length - items.length,
+      rejectionBreakdown: {
+        sourcePageUnavailable: researchedItems.filter(item => item.rejectionReason === "Source page unavailable").length,
+        noRewardSignal: researchedItems.filter(item => item.rejectionReason === "No explicit reward signal").length,
+        noConcreteAction: researchedItems.filter(item => item.rejectionReason === "No concrete action").length,
+        campaignEnded: researchedItems.filter(item => item.rejectionReason === "Campaign appears ended").length,
+        economicsNotEstablished: researchedItems.filter(item => item.rejectionReason === "Worthwhile economics not established").length
+      },
       fullyVerifiedRewards: 0
     },
     disclaimer: items.length
@@ -306,6 +313,17 @@ export async function enrichResearchItem(item) {
   enriched.rewardSignal = rewardSignal;
   enriched.actionSignal = actionSignal;
   enriched.actionable = actionable;
+  enriched.rejectionReason = !page
+    ? "Source page unavailable"
+    : !rewardSignal
+      ? "No explicit reward signal"
+      : !actionSignal
+        ? "No concrete action"
+        : endedSignal
+          ? "Campaign appears ended"
+          : investmentDecision !== "Worth investing in"
+            ? "Worthwhile economics not established"
+            : null;
   enriched.evidenceStatus = actionable
     ? "Source page fetched; reward-related wording and a participation/action signal found, but offer status and terms remain unverified"
     : (!page ? "Rejected from report: source page could not be fetched" : (!rewardSignal ? "Rejected from report: no explicit reward-related wording found" : (!actionSignal ? "Rejected from report: no concrete participation/action signal found" : "Rejected from report: source appears to describe an ended campaign")));
