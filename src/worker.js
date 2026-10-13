@@ -174,6 +174,13 @@ function reportPage(report) {
       (i.summary ? '<p>' + esc(i.summary) + '</p>' : '') +
       (i.sourcePageDescription ? '<p><b>Page description:</b> ' + esc(i.sourcePageDescription) + '</p>' : '') +
       '<p><a href="' + esc(i.url) + '" rel="noopener noreferrer">Open original source and terms</a></p>' +
+      '<h3>Investment snapshot</h3>' +
+      '<p><b>Risk level:</b> ' + esc(i.investmentAssessment?.riskLevel || "Unassessed") + '</p>' +
+      '<p><b>Scout decision:</b> ' + esc(i.investmentAssessment?.decision || "Not assessed") + '</p>' +
+      '<p><b>How the reward is paid:</b> ' + esc(i.payoutAsset || "Not established from the source text") + '</p>' +
+      '<p><b>Advertised reward basis:</b> ' + esc(i.rewardBasis || "Not established") + '</p>' +
+      '<p><b>Potential net return:</b> ' + esc(i.investmentAssessment?.estimatedNetReturn || "Not estimated") + '</p>' +
+      '<ul>' + (i.investmentAssessment?.reasons || []).map(reason => "<li>" + esc(reason) + "</li>").join("") + '</ul>' +
       '<h3>What the automated checks found</h3>' +
       '<p><b>Reward evidence:</b> ' + esc(i.evidenceStatus || "Not confirmed") + '</p>' +
       '<p><b>Deadline:</b> ' + esc(i.deadline || "Not extracted — check original terms") + '</p>' +
