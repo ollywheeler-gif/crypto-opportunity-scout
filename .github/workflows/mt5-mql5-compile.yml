@@ -108,6 +108,25 @@ jobs:
           if ([int]$summary.Groups[2].Value -ne 0) {
             throw 'STRAT-002 compile produced warnings; review and resolve them before acceptance.'
           }
+          $hashes = @($source, $ex5, $log) | ForEach-Object {
+            $item = Get-Item -LiteralPath $_
+            [PSCustomObject]@{
+              file = [System.IO.Path]::GetFileName($item.FullName)
+              bytes = $item.Length
+              sha256 = (Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash
+            }
+          }
+          $editorVersion = (Get-Item -LiteralPath $metaEditor).VersionInfo.ProductVersion
+          $manifest = [PSCustomObject]@{
+            status = 'COMPILED_ZERO_ERRORS_ZERO_WARNINGS'
+            repository_commit = $env:GITHUB_SHA
+            metaeditor_version = $editorVersion
+            compile_summary = $summary.Value.Trim()
+            metaeditor_process_exit_code = $exitCode
+            files = $hashes
+            note = 'Compile evidence only. No Strategy Tester run, broker validation or performance claim.'
+          }
+          $manifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $env:MT5_COMPILE_ARTIFACTS 'compile-manifest.json') -Encoding UTF8
           Get-FileHash $source,$ex5,$log -Algorithm SHA256 | Format-Table -AutoSize
 
       - name: Upload compiler evidence
