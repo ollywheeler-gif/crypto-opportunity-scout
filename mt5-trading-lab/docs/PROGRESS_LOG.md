@@ -48,3 +48,8 @@ Research/testing only. No paid provisioning, broker credential collection in cha
 - Clarified that capital-feasibility cost allowances are totals for the minimum-volume trade, preventing confusion with the EA's separate per-lot sizing inputs.
 - Hardened the capital-feasibility calculator against invalid risk caps, malformed optional margin input and inconsistent minimum-volume/volume-step values; added unit coverage and a template-schema consistency test.
 - CI status remains UNVERIFIED because the connected GitHub methods return no push-triggered workflow runs/statuses. This is not evidence of either success or failure.
+
+
+### Platform compile workaround — 2026-10-13
+- Added a GitHub-hosted Windows workflow that downloads the official MT5 installer, verifies its Authenticode signature, initializes an isolated MQL5 include tree, compiles STRAT-002 with MetaEditor, fails on compiler errors/warnings, and uploads compile logs/EX5 evidence.
+- This is a no-account compile only. It does not run the Strategy Tester, connect a broker, or establish trading performance. The workflow itself and its first run remain unverified until a successful artifact is observed.
