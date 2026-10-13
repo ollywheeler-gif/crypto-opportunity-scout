@@ -22,6 +22,8 @@ class ProjectSafetyTests(unittest.TestCase):
         self.assertIn("Get-AuthenticodeSignature", COMPILE_WORKFLOW)
         self.assertIn("metaeditor64.exe", COMPILE_WORKFLOW)
         self.assertIn("produced warnings", COMPILE_WORKFLOW)
+        self.assertIn("Start-Process -FilePath $metaEditor", COMPILE_WORKFLOW)
+        self.assertIn("-Wait -PassThru", COMPILE_WORKFLOW)
         self.assertIn("Upload compiler evidence", COMPILE_WORKFLOW)
         self.assertNotIn("Password=", COMPILE_WORKFLOW)
         self.assertNotIn("Login=", COMPILE_WORKFLOW)
@@ -64,6 +66,8 @@ class ProjectSafetyTests(unittest.TestCase):
         self.assertIn("Report was not freshly updated", RUNNER)
         self.assertIn("Compile failed or produced no EX5", RUNNER)
         self.assertIn("Compile produced warnings", RUNNER)
+        self.assertIn("Start-Process -FilePath $MetaEditorPath", RUNNER)
+        self.assertIn("-Wait -PassThru", RUNNER)
         self.assertIn("A process named", RUNNER)
         self.assertIn("Close MT5 instances", RUNNER)
 
