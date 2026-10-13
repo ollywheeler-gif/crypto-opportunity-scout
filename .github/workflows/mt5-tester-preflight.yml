@@ -71,10 +71,9 @@ jobs:
             performance_claim_allowed = $false
             required_next_step = 'Use a verified demo-terminal history source and run the dedicated tester with retained raw report, logs, symbol contract and reconciled costs.'
           }
-          $result | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $env:RUNNER_TEMP 'mt5-preflight-result.json') -Encoding UTF8
-          if (Test-Path $env:MT5_PREFLIGHT_ARTIFACTS) {
-            Copy-Item (Join-Path $env:RUNNER_TEMP 'mt5-preflight-result.json') $env:MT5_PREFLIGHT_ARTIFACTS -Force
-          }
+          $artifactDir = Join-Path $env:RUNNER_TEMP 'mt5-tester-preflight'
+          New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
+          $result | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $artifactDir 'preflight-result.json') -Encoding UTF8
 
       - name: Upload preflight evidence
         if: always()
