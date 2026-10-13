@@ -132,7 +132,7 @@ double CalculateVolume(const ENUM_ORDER_TYPE orderType, const double entry, cons
 
 int OnInit()
 {
-   if((EnableStrategy && !ConfirmBrokerCostsReviewed) ||
+   if((EnableStrategy && (!ConfirmBrokerCostsReviewed || EstimatedSpreadCostPerLot <= 0 || EstimatedSlippageCostPerLot <= 0)) ||
       EntryChannelBars < 2 || ExitChannelBars < 2 || AtrPeriod < 2 ||
       AtrStopMultiplier <= 0 || TargetRiskPct <= 0 || HardMaxRiskPct < TargetRiskPct ||
       EstimatedSpreadCostPerLot < 0 || EstimatedRoundTurnCostPerLot < 0 || EstimatedSlippageCostPerLot < 0)
