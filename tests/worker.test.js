@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import worker from "../src/worker.js";
-import { enrichResearchItem } from "../src/research.js";
+import { collectReport, enrichResearchItem } from "../src/research.js";
 
 const webhookSecret = "unit-test-webhook-secret";
 const settlementAddress = "0x1111111111111111111111111111111111111111";
@@ -176,4 +176,28 @@ test("research enrichment fails safely when source page cannot be fetched", asyn
   assert.match(result.verificationStatus, /could not be checked automatically/);
   assert.equal(result.reward, "Not confirmed");
   assert.ok(result.risks.some((risk) => /could not be fetched automatically/.test(risk)));
+});
+
+
+test("daily collector deduplicates leads and reports transparent quality metrics", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const now = new Date().toUTCString();
+  const feed = '<rss><channel><item><title>Example rewards campaign</title><link>https://example.org/campaign</link><pubDate>' + now + '</pubDate><description>Reward campaign with eligibility and deadline details.</description></item></channel></rss>';
+  const page = '<!doctype html><html><head><title>Example Rewards Campaign</title><meta name="description" content="Official campaign terms"></head><body>Reward campaign deadline is 30 October. Eligible residents may participate. Minimum deposit of 50 USDC. Rewards are not guaranteed.</body></html>';
+  globalThis.fetch = async (input) => {
+    const url = String(input);
+    if (url === "https://example.org/campaign") {
+      return new Response(page, { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });
+    }
+    return new Response(feed, { status: 200, headers: { "content-type": "application/rss+xml" } });
+  };
+  t.after(() => { globalThis.fetch = originalFetch; });
+  const report = await collectReport();
+  assert.equal(report.pipelineVersion, "2.0");
+  assert.equal(report.items.length, 1);
+  assert.equal(report.qualitySummary.feedsChecked, 9);
+  assert.equal(report.qualitySummary.candidatePagesChecked, 1);
+  assert.equal(report.qualitySummary.fullyVerifiedRewards, 0);
+  assert.match(report.items[0].verificationStatus, /claims remain unverified/);
+  assert.equal(report.items[0].reward, "Not confirmed");
 });
