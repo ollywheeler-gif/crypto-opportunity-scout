@@ -70,7 +70,7 @@ def validate(path: Path) -> dict:
     if values.get("optimization", "0") not in {"0", "false", "False"}:
         raise ValueError("Optimization must be disabled for pre-registered first-pass tests")
     report = values["report"].strip('"')
-    if not Path(report).is_absolute():
+    if not (Path(report).is_absolute() or ntpath.isabs(report)):
         raise ValueError("Report must be an absolute path so artifact capture is deterministic")
     return {
         "status": "CONFIG_VALIDATION_PASS_NOT_EXECUTED",
