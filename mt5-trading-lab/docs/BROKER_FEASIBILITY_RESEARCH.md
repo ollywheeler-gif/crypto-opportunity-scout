@@ -18,7 +18,7 @@ Official MT5 page: https://pepperstone.com/en-gb/platforms/metatrader-5
 - Official account-cost details: https://pepperstone.com/en-gb/ways-to-trade/trading-accounts/
 - Official CFD contract-size explanation: https://pepperstone.com/en-gb/insights/guides/cfds/what-is-cfd-trading
 
-**Feasibility implications:** FX micro sizing may be available, but exact MT5 minimum volume, symbol suffix, tick value, margin and financing must be read from the specific account's symbol specification. A 0.01-lot marketing minimum does not make an ATR-stop strategy fit a £0.25–£0.50 loss budget.
+**Feasibility implications:** FX micro sizing may be available, but exact MT5 minimum volume, symbol suffix, tick value, margin and financing must be read from the specific account's symbol specification. A 0.01-lot marketing minimum does not make an ATR-stop strategy fit a £0.50 target / £1.00 hard loss cap.
 
 ### IG UK — MT5 CFD account
 
@@ -35,7 +35,7 @@ Official MT5 market availability: https://www.ig.com/uk/help-and-support/article
 
 The current v1 strategy gates target 0.25% equity risk and reject if modeled minimum-volume loss exceeds 0.50% equity. At £200 equity, those amounts are £0.50 target and £1.00 hard modeled cap.
 
-For FX, a 0.01-lot position commonly represents 1,000 units of base currency. A 10-pip stop can therefore be around £0.70–£1.00 before costs for a typical major pair, depending on the pair and conversion rate. That is already above the £0.50 hard cap. This is an illustration, not a substitute for exact broker tick-value calculations.
+For FX, a 0.01-lot position commonly represents 1,000 units of base currency. A 10-pip stop can therefore be around £0.70–£1.00 before costs for a typical major pair, depending on the pair and conversion rate. That is already above the £1.00 hard cap. This is an illustration, not a substitute for exact broker tick-value calculations.
 
 For spot gold and index CFDs, contract sizes and point values vary considerably by broker. No general lot-size assumption is acceptable.
 
