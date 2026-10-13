@@ -130,7 +130,7 @@ double CalculateVolume(const ENUM_ORDER_TYPE orderType, const double entry, cons
 {
    double equity = AccountInfoDouble(ACCOUNT_EQUITY);
    double minVolume = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
-   if(equity <= 0 || minVolume <= 0 || TargetRiskPct <= 0 ||
+   if(equity <= 0 || minVolume <= 0 || TargetRiskPct <= 0 || HardMaxRiskPct > 0.50 ||
       HardMaxRiskPct < TargetRiskPct) return 0.0;
    double riskBudget = equity * TargetRiskPct / 100.0;
    double hardLimit = equity * HardMaxRiskPct / 100.0;
@@ -167,7 +167,7 @@ int OnInit()
    if((EnableStrategy && (!ConfirmBrokerCostsReviewed || EstimatedSpreadCostPerLot <= 0 ||
        EstimatedSlippageCostPerLot <= 0 || EstimatedGapCostPerLot <= 0 || MaxSpreadPoints <= 0)) ||
       MomentumLookback < 2 || AtrPeriod < 2 ||
-      AtrStopMultiplier <= 0 || TargetRiskPct <= 0 || HardMaxRiskPct < TargetRiskPct ||
+      AtrStopMultiplier <= 0 || TargetRiskPct <= 0 || HardMaxRiskPct > 0.50 || HardMaxRiskPct < TargetRiskPct ||
       EstimatedSpreadCostPerLot < 0 || EstimatedRoundTurnCostPerLot < 0 ||
       EstimatedSlippageCostPerLot < 0 || EstimatedGapCostPerLot < 0 ||
       MaxDeviationPoints < 0 || MaxSpreadPoints < 0)
