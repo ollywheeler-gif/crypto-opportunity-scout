@@ -34,7 +34,7 @@ class ProjectSafetyTests(unittest.TestCase):
             self.assertIn("#include <TradingLab/RiskGuard.mqh>", source)
             self.assertIn("TLRG_Init()", source)
             self.assertIn("TLRG_CheckAndEnforce()", source)
-        for required in ("TLRG_DailyLossLimitPct", "TLRG_DrawdownReviewPct", "TLRG_DrawdownHaltPct", "GlobalVariableSet", "TLRG_CloseStrategyPositions", "MQL_TESTER"):
+        for required in ("TLRG_DailyLossLimitPct", "TLRG_DrawdownReviewPct", "TLRG_DrawdownHaltPct", "GlobalVariableSet", "TLRG_CloseStrategyPositions", "GlobalVariablesFlush", "MQL_TESTER"):
             self.assertIn(required, RISK_GUARD)
         self.assertIn("Install TradingLab risk guard include", COMPILE_WORKFLOW)
 
