@@ -160,6 +160,32 @@ jobs:
               [void][double]::TryParse([string]$map['tick_value'], [ref]$tickValue)
             }
             if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
+
+            # Preserve only filtered terminal log lines useful for diagnosing connection/authentication.
+            # Never upload raw terminal logs, config, account identifiers, or credential-bearing text.
+            $safeLogPath = Join-Path $outDir 'terminal-connection-log-sanitized.txt'
+            $logRoots = @((Join-Path $root 'logs'), (Join-Path $root 'MQL5\Logs'))
+            $safeLines = [System.Collections.Generic.List[string]]::new()
+            foreach ($logRoot in $logRoots) {
+              if (Test-Path $logRoot) {
+                Get-ChildItem -LiteralPath $logRoot -Filter '*.log' -File -ErrorAction SilentlyContinue |
+                  Sort-Object LastWriteTime -Descending | Select-Object -First 3 | ForEach-Object {
+                    Get-Content -LiteralPath $_.FullName -ErrorAction SilentlyContinue |
+                      Where-Object { $_ -match '(?i)connect|authoriz|login|network|server|timeout|failed|error|disconnected' } |
+                      ForEach-Object {
+                        $line = [string]$_
+                        $line = $line -replace '(?i)(password|passwd|login|account|user)\s*[:=]\s*[^\s,;]+','$1=[REDACTED]'
+                        $line = $line -replace '\b\d{5,}\b','[NUMBER_REDACTED]'
+                        $line = $line -replace '(?i)'+[regex]::Escape($env:REQUESTED_SYMBOL)+'','[SYMBOL]'
+                        if ($line.Length -gt 500) { $line = $line.Substring(0,500) }
+                        $safeLines.Add($line)
+                      }
+                  }
+              }
+            }
+            if ($safeLines.Count -eq 0) { $safeLines.Add('No matching terminal connection log lines were found in expected log folders.') }
+            $safeLines | Set-Content -LiteralPath $safeLogPath -Encoding UTF8
+
             $verified = $contractPresent -and $connected -and $loggedIn -and -not [string]::IsNullOrWhiteSpace($accountCurrency) -and $tickValue -gt 0
             $status = [ordered]@{
               status = if ($verified) { 'BROKER_SESSION_VERIFIED_METADATA_USABLE' } else { 'BROKER_SESSION_NOT_VERIFIED' }
