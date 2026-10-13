@@ -52,10 +52,11 @@ if (-not (Test-Path -LiteralPath $compileLog)) {
   throw "Compiler did not produce a log. Exit code: $compileExit"
 }
 $compileText = Get-Content -LiteralPath $compileLog -Raw
-if ($compileExit -ne 0 -or $compileText -match '(?im)\b[1-9]\d*\s+errors?\b' -or -not (Test-Path -LiteralPath $expertEx5)) {
-  throw "Compile failed or produced no EX5. Inspect $compileLog"
+$compileSummary = [regex]::Match($compileText, '(?im)^\s*Result:\s*(\d+)\s+errors?,\s*(\d+)\s+warnings?')
+if (-not $compileSummary.Success -or [int]$compileSummary.Groups[1].Value -ne 0 -or -not (Test-Path -LiteralPath $expertEx5)) {
+  throw "Compile failed or produced no fresh EX5 (MetaEditor exit code $compileExit). Inspect $compileLog"
 }
-if ($compileText -match '(?im)\b[1-9]\d*\s+warnings?\b') {
+if ([int]$compileSummary.Groups[2].Value -ne 0) {
   throw "Compile produced warnings; review and resolve them before any tester run. Inspect $compileLog"
 }
 
