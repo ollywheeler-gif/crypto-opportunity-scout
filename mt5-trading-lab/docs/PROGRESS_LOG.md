@@ -141,7 +141,7 @@ These hashes apply only to the exact source revision in that run. Any source cha
 
 
 ### Eight-EA verified compile milestone — 2026-10-13
-- Windows compile run [38393677219](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38393677219) succeeded using MetaEditor 5.0.0.6257. Eight EAs (STRAT-001/002/003/004/005/007/008/009) and the no-order symbol contract exporter compiled with **zero errors and zero warnings**. Artifact [11811217733](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38393677219/artifacts/11811217733) contains EX5 files, compiler logs and manifests.
+- Windows compile run [38394444863](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38394444863) succeeded using MetaEditor 5.0.0.6257. Eight EAs (STRAT-001/002/003/004/005/007/008/009) and the no-order symbol contract exporter compiled with **zero errors and zero warnings**. Artifact [11811545078](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38394444863/artifacts/11811545078) contains EX5 files, compiler logs and manifests.
 
 | Candidate | Source SHA-256 | EX5 SHA-256 |
 |---|---|---|
