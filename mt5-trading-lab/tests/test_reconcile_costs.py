@@ -59,7 +59,12 @@ class CostReconciliationTests(unittest.TestCase):
                 reconcile(path)
         finally:
             path.unlink(missing_ok=True)
-        path = write_csv([dict(trade_id="T1", gross_profit="1")])
+        temp = tempfile.NamedTemporaryFile("w", newline="", encoding="utf-8", suffix=".csv", delete=False)
+        with temp:
+            writer = csv.DictWriter(temp, fieldnames=["trade_id", "gross_profit"])
+            writer.writeheader()
+            writer.writerow(dict(trade_id="T1", gross_profit="1"))
+        path = Path(temp.name)
         try:
             with self.assertRaisesRegex(ValueError, "missing required columns"):
                 reconcile(path)
