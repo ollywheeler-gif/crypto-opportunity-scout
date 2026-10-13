@@ -84,7 +84,7 @@ export default {
         if (!orderId || !invoice?.id) return new Response("Missing invoice details", { status: 400 });
         const order = await env.SCOUT_KV.get(`order:${orderId}`, "json");
         if (!order || order.invoiceId !== invoice.id) return new Response("Order/invoice mismatch", { status: 404 });
-        if (invoice.status !== "paid" || invoice.mode !== order.expectedMode || invoice.amount_usd_cents !== order.expectedAmountUsdCents || invoice.settlement?.chain?.toUpperCase() !== order.expectedChain || invoice.settlement?.asset?.toUpperCase() !== order.expectedAsset || invoice.settlement?.address !== order.expectedSettlementAddress) return new Response("Invoice mode, amount, status or settlement mismatch", { status: 400 });
+        if (invoice.status !== "paid" || invoice.paid_after_expiry === true || invoice.mode !== order.expectedMode || invoice.amount_usd_cents !== order.expectedAmountUsdCents || invoice.settlement?.chain?.toUpperCase() !== order.expectedChain || invoice.settlement?.asset?.toUpperCase() !== order.expectedAsset || invoice.settlement?.address !== order.expectedSettlementAddress) return new Response("Invoice mode, amount, status, expiry or settlement mismatch", { status: 400 });
         if (order.status !== "paid") {
           order.status = "paid";
           order.paidAt = new Date().toISOString();
