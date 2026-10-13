@@ -138,24 +138,40 @@ jobs:
               if ($proc.HasExited) { break }
               Start-Sleep -Seconds 5
             }
-            if (Test-Path $contract) {
-              Copy-Item $contract (Join-Path $outDir 'symbol-contract.csv') -Force
-              $loginStatus = 'CONTRACT_EXPORT_FILE_PRESENT'
-            } else {
-              $loginStatus = 'NO_CONTRACT_EXPORT_FILE'
+            $contractCopy = Join-Path $outDir 'symbol-contract.csv'
+            $contractPresent = Test-Path $contract
+            $connected = $false
+            $loggedIn = $false
+            $accountCurrency = ''
+            $tickValue = 0.0
+            if ($contractPresent) {
+              Copy-Item $contract $contractCopy -Force
+              $rows = Import-Csv -LiteralPath $contractCopy
+              $map = @{}
+              foreach ($row in $rows) { $map[$row.field] = $row.value }
+              $connected = ($map['terminal_connected'] -eq 'true')
+              $loggedIn = ($map['account_logged_in'] -eq 'true')
+              $accountCurrency = [string]$map['account_currency']
+              [void][double]::TryParse([string]$map['tick_value'], [ref]$tickValue)
             }
             if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
+            $verified = $contractPresent -and $connected -and $loggedIn -and -not [string]::IsNullOrWhiteSpace($accountCurrency) -and $tickValue -gt 0
             $status = [ordered]@{
-              status = $loginStatus
+              status = if ($verified) { 'BROKER_SESSION_VERIFIED_METADATA_USABLE' } else { 'BROKER_SESSION_NOT_VERIFIED' }
               requested_symbol = $env:REQUESTED_SYMBOL
               terminal_process_started = $true
-              contract_file_present = (Test-Path (Join-Path $outDir 'symbol-contract.csv'))
+              contract_file_present = $contractPresent
+              terminal_connected = $connected
+              account_logged_in = $loggedIn
+              account_currency_present = -not [string]::IsNullOrWhiteSpace($accountCurrency)
+              positive_tick_value_present = $tickValue -gt 0
               credential_values_printed = $false
               credential_config_uploaded = $false
               tester_executed = $false
-              note = 'A missing export is not proof of bad credentials: inspect the retained non-secret terminal/journal evidence and verify symbol/history separately.'
+              note = 'A successful workflow run alone is not sufficient; accept the broker session only when connection, login, currency and tick-value checks all pass.'
             }
             $status | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $outDir 'connection-check.json') -Encoding UTF8
+            if (-not $verified) { throw 'Broker session could not be verified from connection state and usable account metadata. See uploaded non-secret diagnostic artifact.' }
           } finally {
             Remove-Item $config -Force -ErrorAction SilentlyContinue
           }
