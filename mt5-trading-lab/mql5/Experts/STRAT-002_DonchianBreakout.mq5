@@ -54,6 +54,19 @@ bool GetChannel(const MqlRates &rates[], const int startShift, const int count,
    return (highest > -DBL_MAX && lowest < DBL_MAX);
 }
 
+bool HasForeignPositionOnSymbol()
+{
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      ulong t = PositionGetTicket(i);
+      if(t == 0) continue;
+      if(PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if((ulong)PositionGetInteger(POSITION_MAGIC) != MagicNumber)
+         return true;
+   }
+   return false;
+}
+
 bool FindOurPosition(ulong &ticket, ENUM_POSITION_TYPE &type, double &volume)
 {
    for(int i = PositionsTotal() - 1; i >= 0; i--)
@@ -154,7 +167,7 @@ int OnInit()
    if((EnableStrategy && (!ConfirmBrokerCostsReviewed || EstimatedSpreadCostPerLot <= 0 || EstimatedSlippageCostPerLot <= 0)) ||
       EntryChannelBars < 2 || ExitChannelBars < 2 || AtrPeriod < 2 ||
       AtrStopMultiplier <= 0 || TargetRiskPct <= 0 || HardMaxRiskPct < TargetRiskPct ||
-      EstimatedSpreadCostPerLot < 0 || EstimatedRoundTurnCostPerLot < 0 || EstimatedSlippageCostPerLot < 0)
+      EstimatedSpreadCostPerLot < 0 || EstimatedRoundTurnCostPerLot < 0 || EstimatedSlippageCostPerLot < 0 || MaxDeviationPoints < 0)
       return INIT_PARAMETERS_INCORRECT;
 
    // Hard safety guard: this research EA must not trade on a real account.
@@ -194,7 +207,7 @@ void OnTick()
 
    MqlRates rates[];
    ArraySetAsSeries(rates, true);
-   int required = MathMax(EntryChannelBars, ExitChannelBars) + 2;
+   int required = (int)MathMax(EntryChannelBars, ExitChannelBars) + 2;
    if(CopyRates(_Symbol, PERIOD_H1, 0, required, rates) < required)
    {
       Print("Insufficient H1 history; no action taken.");
@@ -215,6 +228,12 @@ void OnTick()
       !GetChannel(rates, 2, ExitChannelBars, exitHigh, exitLow))
    {
       Print("Invalid channel values; no action taken.");
+      return;
+   }
+
+   if(HasForeignPositionOnSymbol())
+   {
+      Print("Foreign position exists on this symbol; no action taken to avoid netting/ownership interference.");
       return;
    }
 
