@@ -49,3 +49,16 @@ Check the complete log for errors and warnings, and verify that a fresh EX5 exis
 - Preserve the INI, compiler log, terminal/tester logs, raw report, normalized trade CSV and reconciliation notes.
 
 The runner is a guarded starter, not yet proven against the user's installed MT5 build. A report file existing is not proof of a valid completed backtest. Reconcile symbol, dates, modelling mode, deposit/currency/leverage, costs, trades, P/L and logs before using any metrics.
+
+## Export broker symbol contract metadata without placing orders
+
+The repository includes `mql5/Scripts/TradingLab/ExportSymbolContract.mq5`. It is a read-only script: it selects the chosen symbol, reads MT5 symbol properties, optionally calculates the broker-reported margin for the minimum buy volume, and writes a CSV under the terminal's `MQL5/Files` directory. It does not submit, modify or close orders.
+
+1. Use a terminal logged into the intended broker's **demo** account, not a real account.
+2. Compile the script in MetaEditor and require zero errors and zero warnings.
+3. In MT5 Navigator → Scripts, run `ExportSymbolContract`; leave `ContractSymbolInput` blank to use the chart symbol, or enter the broker's exact symbol name (including suffix).
+4. Retrieve `MQL5/Files/TradingLab_symbol_contract.csv` using **File → Open Data Folder**.
+5. Verify the values against the broker's official contract specification and record the capture time, server, account currency, symbol suffix, minimum volume, tick size/value, volume step, stops/freeze levels, margin and swaps. A snapshot is not a historical spread or financing series.
+6. Enter the account equity and GBP conversion rate privately in the feasibility worksheet; neither is exported by the script. Never put login IDs or credentials in the repository.
+
+The script's CSV is evidence to review, not automatic approval. Minimum-volume loss, current margin, historical financing and cost stress still need independent checks.
