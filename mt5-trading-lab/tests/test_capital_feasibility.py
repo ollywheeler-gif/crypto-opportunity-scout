@@ -49,5 +49,31 @@ class CapitalFeasibilityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "non-negative"):
             evaluate(row)
 
+
+    def test_account_currency_conversion_is_applied_to_loss_and_margin(self):
+        row = dict(ROW)
+        row["fx_conversion_rate"] = "1.25"  # 1.25 account-currency units per GBP
+        result = evaluate(row, 0.5)
+        self.assertAlmostEqual(result["estimated_worst_case_loss_account_ccy"], 13.0)
+        self.assertAlmostEqual(result["estimated_worst_case_loss_gbp"], 10.4)
+        self.assertAlmostEqual(result["estimated_margin_gbp"], 16.0)
+        self.assertFalse(result["feasible_under_risk_cap"])
+
+    def test_non_finite_broker_inputs_fail_closed(self):
+        for key, value in (("tick_value_account_ccy", "nan"),
+                           ("stop_distance_price", "inf"),
+                           ("fx_conversion_rate", "0")):
+            with self.subTest(key=key):
+                row = dict(ROW)
+                row[key] = value
+                with self.assertRaises(ValueError):
+                    evaluate(row)
+
+    def test_negative_margin_fails_closed(self):
+        row = dict(ROW)
+        row["margin_per_min_volume_account_ccy"] = "-1"
+        with self.assertRaisesRegex(ValueError, "non-negative"):
+            evaluate(row)
+
 if __name__ == "__main__":
     unittest.main()
