@@ -36,8 +36,8 @@ class RiskGuardReferenceTests(unittest.TestCase):
         self.assertEqual(restored.peak_equity, 100.0)
 
     def test_review_threshold_logs_without_halt(self):
-        state = GuardState(server_day=20261013, day_start_equity=100.0, peak_equity=100.0)
-        result = update_state(state, equity=95.0, server_day=20261013)
+        state = GuardState(server_day=20261013, day_start_equity=100.0, peak_equity=110.0)
+        result = update_state(state, equity=104.5, server_day=20261013)
         self.assertTrue(result["review_logged"])
         self.assertFalse(result["halted"])
 
