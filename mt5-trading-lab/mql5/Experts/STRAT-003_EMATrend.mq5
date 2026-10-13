@@ -21,6 +21,7 @@ input int    MaxDeviationPoints = 20;
 input int    MaxSpreadPoints = 0;
 
 CTrade trade;
+#include <TradingLab/RiskGuard.mqh>
 int fastHandle = INVALID_HANDLE;
 int slowHandle = INVALID_HANDLE;
 int atrHandle = INVALID_HANDLE;
@@ -181,6 +182,7 @@ int OnInit()
       return INIT_FAILED;
    }
 
+   if(!TLRG_Init()) return INIT_FAILED;
    fastHandle = iMA(_Symbol, PERIOD_H4, FastEmaPeriod, 0, MODE_EMA, PRICE_CLOSE);
    slowHandle = iMA(_Symbol, PERIOD_H4, SlowEmaPeriod, 0, MODE_EMA, PRICE_CLOSE);
    atrHandle = iATR(_Symbol, PERIOD_H4, AtrPeriod);
@@ -215,8 +217,9 @@ void OnDeinit(const int reason)
 
 void OnTick()
 {
-   if(!EnableStrategy) return;
    if((ENUM_ACCOUNT_TRADE_MODE)AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL) return;
+   if(TLRG_CheckAndEnforce()) return;
+   if(!EnableStrategy) return;
    if(!IsNewBar()) return;
 
    double fast[], slow[], atr[];
