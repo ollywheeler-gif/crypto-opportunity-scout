@@ -14,6 +14,7 @@ string tlrgPeakKey = "";
 string tlrgDailyHaltKey = "";
 string tlrgPeakHaltKey = "";
 string tlrgReviewLoggedKey = "";
+string tlrgHaltLoggedKey = "";
 bool tlrgReady = false;
 
 bool TLRG_TradeRequestAccepted()
@@ -50,6 +51,7 @@ void TLRG_DeleteState()
    GlobalVariableDel(tlrgDailyHaltKey);
    GlobalVariableDel(tlrgPeakHaltKey);
    GlobalVariableDel(tlrgReviewLoggedKey);
+   GlobalVariableDel(tlrgHaltLoggedKey);
 }
 
 bool TLRG_Init()
@@ -74,6 +76,7 @@ bool TLRG_Init()
    tlrgDailyHaltKey = tlrgPrefix + "_DH";
    tlrgPeakHaltKey = tlrgPrefix + "_PH";
    tlrgReviewLoggedKey = tlrgPrefix + "_R";
+   tlrgHaltLoggedKey = tlrgPrefix + "_HL";
 
    // Every isolated Strategy Tester run starts with a clean guard state.
    // Demo/terminal runs deliberately preserve state across EA and terminal restarts.
@@ -93,7 +96,8 @@ bool TLRG_Init()
       !TLRG_SetIfMissing(tlrgDayStartKey, equity) ||
       !TLRG_SetIfMissing(tlrgDailyHaltKey, 0.0) ||
       !TLRG_SetIfMissing(tlrgPeakHaltKey, 0.0) ||
-      !TLRG_SetIfMissing(tlrgReviewLoggedKey, 0.0))
+      !TLRG_SetIfMissing(tlrgReviewLoggedKey, 0.0) ||
+      !TLRG_SetIfMissing(tlrgHaltLoggedKey, 0.0))
    {
       Print("Risk guard could not persist state; initialization blocked. Error=", GetLastError());
       return false;
@@ -165,6 +169,7 @@ bool TLRG_CheckAndEnforce()
       GlobalVariableSet(tlrgDayStartKey, equity);
       GlobalVariableSet(tlrgDailyHaltKey, 0.0);
       GlobalVariableSet(tlrgReviewLoggedKey, 0.0);
+      GlobalVariableSet(tlrgHaltLoggedKey, 0.0);
       GlobalVariablesFlush();
       Print("Risk guard daily reference reset at server-day boundary.");
    }
@@ -215,9 +220,14 @@ bool TLRG_CheckAndEnforce()
                   GlobalVariableGet(tlrgPeakHaltKey) >= 0.5);
    if(halted)
    {
-      Print("RISK HALT: daily loss=", DoubleToString(dailyLossPct, 2),
-            "%; peak drawdown=", DoubleToString(drawdownPct, 2),
-            "%. New entries blocked; closing this strategy's positions.");
+      if(GlobalVariableGet(tlrgHaltLoggedKey) < 0.5)
+      {
+         GlobalVariableSet(tlrgHaltLoggedKey, 1.0);
+         GlobalVariablesFlush();
+         Print("RISK HALT: daily loss=", DoubleToString(dailyLossPct, 2),
+               "%; peak drawdown=", DoubleToString(drawdownPct, 2),
+               "%. New entries blocked; closing this strategy's positions.");
+      }
       TLRG_CloseStrategyPositions();
       return true;
    }
