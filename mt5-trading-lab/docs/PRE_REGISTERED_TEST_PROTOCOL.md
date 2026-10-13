@@ -1,7 +1,7 @@
 # Pre-registered testing protocol — research-only
 
 Version: 1.0
-Applies to: STRAT-002 Donchian breakout and STRAT-003 EMA trend unless a candidate-specific addendum is committed before any results are inspected.
+Applies to STRAT-001 time-series momentum, STRAT-002 Donchian breakout, STRAT-003 EMA trend and STRAT-004 trend pullback unless a candidate-specific addendum is committed before any results are inspected.
 Status: Proposed fixed protocol; the data dates are conditional on available, verified history. Any change must be committed before looking at validation/locked results.
 
 ## Evidence hierarchy
