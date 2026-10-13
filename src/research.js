@@ -191,16 +191,25 @@ export async function collectReport() {
     if (candidates.length >= MAX_ITEMS) break;
   }
   const researchedItems = await Promise.all(candidates.map(item => enrichResearchItem(item)));
-  // A reachable page is not an opportunity. Publish only leads with page evidence,
-  // explicit reward wording and a concrete participation/action signal.
-  const items = researchedItems.filter(item => item.actionable === true && item.investmentAssessment?.decision === "Worth investing in");
+  // Separate discovery from economic qualification. Credible, current, actionable
+  // reward leads are useful to show even when fees, payout size or eligibility remain
+  // unknown. Only the narrower qualifiedItems list may be used for report checkout.
+  const items = researchedItems.filter(item => item.actionable === true);
+  const qualifiedItems = items.filter(item => item.investmentAssessment?.decision === "Worth investing in");
+  for (const item of items) {
+    if (item.investmentAssessment?.decision !== "Worth investing in") {
+      item.verdict = "Investigate — possible reward; economics or terms not yet established";
+      item.nextStep = "Review the official campaign terms. Confirm reward amount/type, eligibility, deadline, capital requirements, fees, payout conditions and withdrawal restrictions before deciding whether it is worthwhile.";
+    }
+  }
   items.sort((a, b) => b.relevance - a.relevance || Date.parse(b.publishedAt) - Date.parse(a.publishedAt));
 
   return {
     date: new Date().toISOString().slice(0, 10),
     generatedAt: new Date().toISOString(),
-    pipelineVersion: "2.7",
+    pipelineVersion: "2.8",
     items,
+    qualifiedItems,
     sources: [...sources, ...directoryDiagnostics],
     qualitySummary: {
       feedsChecked: sources.length,
