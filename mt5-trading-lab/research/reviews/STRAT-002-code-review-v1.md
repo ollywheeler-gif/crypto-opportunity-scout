@@ -48,7 +48,7 @@ BLOCKED. No claim of profitability or readiness for live trading is supported.
 
 
 ## Compiler evidence update
-- Windows MetaEditor compile completed with zero errors and zero warnings on MetaEditor 5.0.0.6257.
-- Verified artifact: [compile evidence for run 38390155862](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38390155862/artifacts/11808267275).
-- EX5 SHA-256: `fa968097e114fa2fbcdb29c1df1079248741d8c32c312e5e8c5656e76d447c84`.
+- Windows MetaEditor compile completed with zero errors and zero warnings on MetaEditor 5.0.0.6257; this was repeated on commit `0bff4101125e454cf99832263f53f3dd8245218b`.
+- Verified artifact: [latest compile evidence for run 38390561997](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38390561997/artifacts/11809150759).
+- EX5 SHA-256 on the latest verified compile: `887377FEC79B08C23B33559BF8EF7F1150F575635D4457672A19FA8137AB345F`.
 - This resolves the compile prerequisite for the source revision represented by that run only. Any subsequent EA source change requires another compile. The overall disposition remains BLOCKED until mechanics testing, broker feasibility and cost reconciliation are complete.
