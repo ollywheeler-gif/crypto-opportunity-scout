@@ -339,10 +339,11 @@ void OnDeinit(const int reason)
 
 void OnTick()
 {
-   if(!EnableStrategy) return;
    if((ENUM_ACCOUNT_TRADE_MODE)AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL) return;
-   if(!IsNewBar()) return;
+   // Enforce risk halts on every tick, even when new entries are disabled.
    if(TLRG_CheckAndEnforce()) return;
+   if(!EnableStrategy) return;
+   if(!IsNewBar()) return;
 
    MqlRates rates[];
    ArraySetAsSeries(rates, true);
