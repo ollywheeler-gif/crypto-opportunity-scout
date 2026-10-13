@@ -7,8 +7,8 @@ const FEEDS = [
   "https://blog.uniswap.org/rss.xml",
   "https://blog.celestia.org/rss/",
   "https://solana.com/changelog/rss.xml",
-  "https://blog.celer.network/feed/",
-  "https://gitcoin.co/blog/feed/"
+  "https://www.circle.com/blog/rss.xml",
+  "https://filecoin.io/blog/feed/index.xml"
 ];
 const PRODUCT = { id: "daily_report", amountUsdCents: 100, title: "Crypto Opportunity Scout — Detailed Report" };
 
