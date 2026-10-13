@@ -1,6 +1,6 @@
 candidate_id,version,gate,owner,status,evidence,blocker,next_action
 PROJECT,1,Repository structure,Agent 0,PASS,GitHub repository files present,none,Continue static validation
-PROJECT,1,Python tests and CI,Agent 0,BLOCKED,Latest push-triggered Actions result not exposed by current connector,Need observable latest workflow result,Use GitHub Actions UI or Actions API-capable integration; keep local/static checks moving
+PROJECT,1,Python tests and CI,Agent 0,UNVERIFIED,Latest push-triggered Actions result not exposed by current connector,Need observable latest workflow result,Use GitHub Actions UI or Actions API-capable integration; keep local/static checks moving
 STRAT-002,1,Research specification,Agent 1,PASS,research/specs/STRAT-002-donchian-breakout-v1.md,none,Keep spec frozen during initial testing
 STRAT-002,1,EA source and safety review,Agent 2,IN_PROGRESS,mql5/Experts/STRAT-002_DonchianBreakout.mq5,No MetaEditor compile yet,Compile and resolve all warnings/errors
 STRAT-002,1,MetaEditor compile,Agent 3,BLOCKED,No Windows MetaEditor available in current environment,Platform-specific compiler unavailable,Use dedicated Windows MT5 terminal when available
