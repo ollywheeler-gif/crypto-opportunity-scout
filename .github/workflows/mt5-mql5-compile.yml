@@ -96,6 +96,8 @@ jobs:
           if (-not (Test-Path $log -PathType Leaf)) {
             throw "MetaEditor produced no compiler log (exit code $exitCode)."
           }
+          Copy-Item $log -Destination $env:MT5_COMPILE_ARTIFACTS -Force
+          if (Test-Path $ex5 -PathType Leaf) { Copy-Item $ex5 -Destination $env:MT5_COMPILE_ARTIFACTS -Force }
           Get-Content $log
           $logText = Get-Content $log -Raw
           if ($exitCode -ne 0 -or $logText -match '(?im)\b[1-9]\d*\s+errors?\b' -or -not (Test-Path $ex5 -PathType Leaf)) {
@@ -105,7 +107,6 @@ jobs:
             throw 'STRAT-002 compile produced warnings; review and resolve them before acceptance.'
           }
           Get-FileHash $source,$ex5,$log -Algorithm SHA256 | Format-Table -AutoSize
-          Copy-Item $log,$ex5 -Destination $env:MT5_COMPILE_ARTIFACTS -Force
 
       - name: Upload compiler evidence
         if: always()
