@@ -14,8 +14,8 @@ REQUIRED = {
 }
 
 def evaluate(row, risk_cap_pct=0.5):
-    if not math.isfinite(risk_cap_pct) or risk_cap_pct <= 0:
-        raise ValueError("risk_cap_pct must be finite and positive")
+    if not math.isfinite(risk_cap_pct) or risk_cap_pct <= 0 or risk_cap_pct > 0.5:
+        raise ValueError("risk_cap_pct must be finite, positive and no greater than the project hard cap of 0.5%")
     missing = sorted(k for k in REQUIRED if not str(row.get(k, "")).strip())
     if missing:
         raise ValueError("Missing required broker inputs: " + ", ".join(missing))
@@ -92,13 +92,15 @@ def main():
     parser.add_argument("--risk-cap-pct", type=float, default=0.5)
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
-    if not math.isfinite(args.risk_cap_pct) or args.risk_cap_pct <= 0:
-        parser.error("--risk-cap-pct must be a finite positive number")
+    if not math.isfinite(args.risk_cap_pct) or args.risk_cap_pct <= 0 or args.risk_cap_pct > 0.5:
+        parser.error("--risk-cap-pct must be finite, positive and no greater than 0.5")
     with args.csv_path.open(newline="", encoding="utf-8-sig") as handle:
         reader = csv.DictReader(handle)
         if not reader.fieldnames:
             raise SystemExit("Input CSV has no header")
         results = [evaluate(row, args.risk_cap_pct) for row in reader]
+    if not results:
+        raise SystemExit("Input CSV contains no broker rows; feasibility cannot be assessed")
     output = json.dumps(results, indent=2)
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
