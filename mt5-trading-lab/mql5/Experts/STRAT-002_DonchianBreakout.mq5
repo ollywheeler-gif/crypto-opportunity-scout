@@ -222,7 +222,7 @@ void OnTick()
    {
       double entry = ask;
       double stop = NormalizeDouble(entry - stopDistance, _Digits);
-      if(stop <= 0 || (entry - stop) < SymbolInfoDouble(_Symbol, SYMBOL_TRADE_STOPS_LEVEL) * _Point)
+      if(stop <= 0 || (entry - stop) < (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL) * _Point)
          return;
       double volume = CalculateVolume(ORDER_TYPE_BUY, entry, stop);
       if(volume <= 0)
