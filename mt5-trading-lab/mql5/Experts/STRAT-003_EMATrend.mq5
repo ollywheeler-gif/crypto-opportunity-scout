@@ -34,6 +34,32 @@ bool TradeRequestAccepted()
            code == TRADE_RETCODE_PLACED);
 }
 
+string instanceLockName = "";
+
+bool AcquireInstanceLock()
+{
+   instanceLockName = "TL_" + StringSubstr(_Symbol, 0, 24) + "_" + (string)MagicNumber;
+   if(!GlobalVariableCheck(instanceLockName) && !GlobalVariableTemp(instanceLockName))
+   {
+      Print("Could not create instance lock; initialization blocked.");
+      return false;
+   }
+   if(!GlobalVariableSetOnCondition(instanceLockName, (double)ChartID(), 0.0))
+   {
+      Print("Another instance with the same symbol/magic is active; initialization blocked.");
+      return false;
+   }
+   return true;
+}
+
+void ReleaseInstanceLock()
+{
+   if(instanceLockName == "" || !GlobalVariableCheck(instanceLockName))
+      return;
+   if(GlobalVariableGet(instanceLockName) == (double)ChartID())
+      GlobalVariableDel(instanceLockName);
+}
+
 bool IsNewBar()
 {
    datetime t = iTime(_Symbol, PERIOD_H4, 0);
@@ -164,6 +190,15 @@ int OnInit()
       return INIT_FAILED;
    }
 
+   if(!AcquireInstanceLock())
+   {
+      IndicatorRelease(fastHandle);
+      IndicatorRelease(slowHandle);
+      IndicatorRelease(atrHandle);
+      fastHandle = slowHandle = atrHandle = INVALID_HANDLE;
+      return INIT_FAILED;
+   }
+
    trade.SetExpertMagicNumber(MagicNumber);
    trade.SetDeviationInPoints(MaxDeviationPoints);
    trade.SetTypeFillingBySymbol(_Symbol);
@@ -172,6 +207,7 @@ int OnInit()
 
 void OnDeinit(const int reason)
 {
+   ReleaseInstanceLock();
    if(fastHandle != INVALID_HANDLE) IndicatorRelease(fastHandle);
    if(slowHandle != INVALID_HANDLE) IndicatorRelease(slowHandle);
    if(atrHandle != INVALID_HANDLE) IndicatorRelease(atrHandle);
