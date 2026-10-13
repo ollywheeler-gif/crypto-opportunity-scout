@@ -26,14 +26,19 @@ The documented MetaEditor command-line pattern uses `/compile` and `/log`. The c
 $metaEditor = "C:\Path\To\MetaEditor64.exe"
 $source = "C:\Path\To\MQL5\Experts\TradingLab\STRAT-002_DonchianBreakout.mq5"
 $sourceLog = [System.IO.Path]::ChangeExtension($source, ".log")
-& $metaEditor "/compile:$source" "/log"
-$exitCode = $LASTEXITCODE
+$compileArgs = @("/compile:""$source""", "/log")
+$process = Start-Process -FilePath $metaEditor -ArgumentList $compileArgs -Wait -PassThru
+$exitCode = $process.ExitCode
 Get-Content $sourceLog
 Copy-Item $sourceLog "C:\Path\To\artifacts\compile.log"
-if ($exitCode -ne 0) { throw "MetaEditor compile returned $exitCode" }
+$compileText = Get-Content -LiteralPath $sourceLog -Raw
+$ex5 = [System.IO.Path]::ChangeExtension($source, ".ex5")
+if ($compileText -notmatch 'Result:\s*0 errors?,\s*0 warnings?' -or -not (Test-Path -LiteralPath $ex5 -PathType Leaf)) {
+  throw "Compile did not produce a fresh EX5 with zero errors and zero warnings (process exit $exitCode)."
+}
 ```
 
-Check the complete log for errors and warnings, and verify that a fresh EX5 exists. A zero exit code alone is not acceptance evidence. The runner removes any previous EX5 before compiling to prevent accidental reuse of a stale binary.
+Check the complete log for errors and warnings, and verify that a fresh EX5 exists. A zero exit code alone is not acceptance evidence. The runner removes any previous EX5 before compiling to prevent accidental reuse of a stale binary. MetaEditor may return a non-zero process exit code despite a clean compiler summary, so require the explicit zero-error/zero-warning summary and fresh EX5 together.
 
 ## Tester configuration and execution
 - Use a disposable terminal profile that is not logged into a real account. The runner rejects account credential fields in the supplied INI, but cannot inspect the account already logged into a terminal.
