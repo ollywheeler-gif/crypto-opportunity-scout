@@ -39,6 +39,8 @@ class ProjectSafetyTests(unittest.TestCase):
     def test_minimum_lot_risk_gate_exists(self):
         self.assertIn("if(minLoss == DBL_MAX || minLoss > hardLimit)", EA)
         self.assertIn("Broker minimum lot is too risky: skip rather than distort risk.", EA)
+        self.assertIn("OrderCalcMargin", EA)
+        self.assertIn("Insufficient free margin; trade skipped.", EA)
 
 if __name__ == "__main__":
     unittest.main()
