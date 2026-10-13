@@ -229,9 +229,9 @@ test("daily collector deduplicates leads and reports transparent quality metrics
   };
   t.after(() => { globalThis.fetch = originalFetch; });
   const report = await collectReport();
-  assert.equal(report.pipelineVersion, "2.6");
+  assert.equal(report.pipelineVersion, "2.7");
   assert.equal(report.items.length, 0, "ambiguous percentage, reward pool and deposit offers must not be promoted as worthwhile");
-  assert.equal(report.qualitySummary.feedsChecked, 9);
+  assert.equal(report.qualitySummary.feedsChecked, 8);
   assert.equal(report.qualitySummary.campaignDirectoriesChecked, 3);
   assert.equal(report.qualitySummary.campaignDirectoryLinksFound, 2);
   assert.equal(report.qualitySummary.candidatePagesChecked, 3);
