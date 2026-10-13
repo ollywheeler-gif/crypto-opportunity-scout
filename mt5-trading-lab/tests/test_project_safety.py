@@ -46,6 +46,8 @@ class ProjectSafetyTests(unittest.TestCase):
         self.assertIn("if(minLoss == DBL_MAX || minLoss > hardLimit)", EA)
         self.assertIn("Broker minimum lot is too risky: skip rather than distort risk.", EA)
         self.assertIn("OrderCalcMargin", EA)
+        self.assertIn("HasForeignPositionOnSymbol", EA)
+        self.assertIn("Foreign position exists on this symbol", EA)
         self.assertIn("Insufficient free margin; trade skipped.", EA)
 
 if __name__ == "__main__":
