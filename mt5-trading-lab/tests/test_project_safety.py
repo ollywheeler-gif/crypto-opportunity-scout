@@ -40,7 +40,13 @@ class ProjectSafetyTests(unittest.TestCase):
     def test_ea_defaults_to_disabled_and_cost_review_required(self):
         self.assertIn("input bool   EnableStrategy = false", EA)
         self.assertIn("input bool   ConfirmBrokerCostsReviewed = false", EA)
-        self.assertIn("EnableStrategy && (!ConfirmBrokerCostsReviewed || EstimatedSpreadCostPerLot <= 0 || EstimatedSlippageCostPerLot <= 0 || EstimatedGapCostPerLot <= 0)", EA)
+        self.assertIn("EnableStrategy && (!ConfirmBrokerCostsReviewed || EstimatedSpreadCostPerLot <= 0 || EstimatedSlippageCostPerLot <= 0 || EstimatedGapCostPerLot <= 0 || MaxSpreadPoints <= 0)", EA)
+
+    def test_spread_limit_and_tick_size_alignment_exist(self):
+        self.assertIn("MaxSpreadPoints <= 0", EA)
+        self.assertIn("SYMBOL_TRADE_TICK_SIZE", EA)
+        self.assertIn("NormalizePriceToTick", EA)
+        self.assertIn("Current spread exceeds reviewed maximum", EA)
 
     def test_gap_risk_reserve_is_required_and_sized(self):
         self.assertIn("EstimatedGapCostPerLot <= 0", EA)
