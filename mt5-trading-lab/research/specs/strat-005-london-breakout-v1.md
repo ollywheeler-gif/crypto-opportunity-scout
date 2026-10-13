@@ -2,7 +2,7 @@
 
 Candidate ID: STRAT-005
 Version: v1
-Status: SPECIFICATION DRAFT — not implemented, compiled, backtested or approved.
+Status: FROZEN SPECIFICATION v1 — deterministic session rules accepted for implementation. Not backtested or approved for demo/live.
 
 ## Hypothesis
 A simple, deterministic london range breakout rule may capture a repeatable market effect, but it may fail after realistic costs, regime changes and the £100 feasibility constraint. The test must attempt to falsify the idea.
@@ -42,3 +42,11 @@ Compile log with warnings resolved; source/spec/config hashes; exact MT5 build; 
 
 ## Approval status
 Draft v1 research rules only. Agent 0 must freeze the specification after a rule/code consistency review. No candidate is approved for demo or live use by this document.
+
+
+## Agent 0 freeze record
+- Freeze date: 2026-10-13.
+- Supported v1 broker-time scope: only brokers whose server clock uses European DST transitions and whose winter/summer UTC offsets are explicitly recorded. If that condition cannot be confirmed from broker documentation and tester history, this EA must remain disabled; do not infer offsets.
+- Rules frozen: London 07:00–07:45 M15 range; breakout closes between 08:00 and 15:45 London time; one qualifying attempt per London date persisted across restarts; opposite-range stop; skip if range exceeds 2.0 × ATR(20); close at 16:00 London time.
+- Agent 2 source: `mql5/Experts/STRAT-005_LondonBreakout.mq5`.
+- Freeze is not compile, session-validation, broker-feasibility, tester or deployment approval.
