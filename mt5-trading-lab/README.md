@@ -35,6 +35,7 @@ This is role-based project scaffolding, not a deployed autonomous agent service.
 - [Donchian reference model](scripts/donchian_reference.py) and [cost reconciliation](scripts/reconcile_costs.py), with tests, are narrow validation tools—not execution simulators.
 - [Windows MetaEditor compile workflow](../.github/workflows/mt5-mql5-compile.yml) retains no-account compile evidence; STRAT-001 through STRAT-004 and STRAT-007 through STRAT-009, plus the read-only exporter, have compiled with zero errors/warnings. This is not an MT5 backtest.
 - [MT5 source installer](scripts/install_mt5_candidate.ps1), [Windows runner](scripts/run_mt5_candidate.ps1) and [runbook](docs/MT5_CLOUD_RUNNER.md) are not yet verified as an end-to-end real-data Strategy Tester pipeline.
+- [Backtest infrastructure plan](docs/BACKTEST_INFRASTRUCTURE_PLAN.md) — sourced no-cost path using Windows GitHub Actions, a free demo environment, and independent historical data checks.
 - [Background agent runtime decision](docs/BACKGROUND_AGENT_RUNTIME_DECISION.md) — proposed OpenAI Agents SDK coordinator on GitHub Actions, with dry-run first and explicit approval before any API spend or scheduled model calls.
 - [Project plan](docs/NEXT_STEPS.md), [progress log](docs/PROGRESS_LOG.md), and [machine-readable gate register](docs/gate_register.csv).
 - [Agent 4's independent STRAT-002 code review](research/reviews/STRAT-002-code-review-v1.md) remains BLOCKED until the required runtime and broker evidence exists.
