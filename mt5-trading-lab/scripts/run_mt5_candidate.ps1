@@ -38,7 +38,7 @@ $before = if (Test-Path -LiteralPath $expertEx5) { (Get-Item -LiteralPath $exper
 $compileExit = $LASTEXITCODE
 if (-not (Test-Path -LiteralPath $compileLog)) { throw "Compiler did not produce a log. Exit code: $compileExit" }
 $compileText = Get-Content -LiteralPath $compileLog -Raw
-if ($compileExit -ne 0 -or $compileText -match '(?im)\berrors?\s*:\s*[1-9]\d*\b' -or -not (Test-Path -LiteralPath $expertEx5)) {
+if ($compileExit -ne 0 -or $compileText -match '(?im)\b[1-9]\d*\s+errors?\b' -or -not (Test-Path -LiteralPath $expertEx5)) {
   throw "Compile failed or produced no EX5. Inspect $compileLog"
 }
 if ((Get-Item -LiteralPath $expertEx5).LastWriteTimeUtc -lt $before) {
@@ -51,6 +51,50 @@ foreach ($key in @("Expert","Symbol","Period","FromDate","ToDate","Model","Depos
     throw "Tester config is missing required [Tester] setting '$key'. No tester launched."
   }
 }
+$configuredReportMatch = [regex]::Match($configText, '(?im)^\s*Report\s*=\s*(.+?)\s*
+if ($process.ExitCode -ne 0) { throw "MT5 terminal returned exit code $($process.ExitCode). Inspect terminal logs." }
+if (-not (Test-Path -LiteralPath $resolvedReport -PathType Leaf)) {
+  throw "Tester report not found at configured Report path: $resolvedReport. A zero exit code is not proof of a completed test."
+}
+$reportAfterUtc = (Get-Item -LiteralPath $resolvedReport).LastWriteTimeUtc
+if ($reportAfterUtc -le $reportBeforeUtc -or $reportAfterUtc -lt $runStartedUtc) {
+  throw "Report was not freshly updated during this run; refusing to archive a potentially stale report."
+}
+
+$reportCopy = Join-Path $resolvedArtifacts "report-$stamp$( [System.IO.Path]::GetExtension($resolvedReport) )"
+Copy-Item -LiteralPath $resolvedReport -Destination $reportCopy -Force
+Copy-Item -LiteralPath $TesterConfig -Destination (Join-Path $resolvedArtifacts "tester-config-$stamp.ini") -Force
+$hashes = @($resolvedSource, $expertEx5, $compileLog, $reportCopy) | ForEach-Object {
+  if (Test-Path -LiteralPath $_ -PathType Leaf) {
+    $item = Get-Item -LiteralPath $_
+    $hash = Get-FileHash -LiteralPath $_ -Algorithm SHA256
+    [PSCustomObject]@{ path=$item.FullName; bytes=$item.Length; sha256=$hash.Hash; lastWriteUtc=$item.LastWriteTimeUtc.ToString("o") }
+  }
+}
+$manifest = [PSCustomObject]@{
+  status = "RUN_COMPLETED_REPORT_PRESENT_REQUIRES_MANUAL_RECONCILIATION"
+  runTimestampLocal = (Get-Date).ToString("o")
+  metaEditorPath = $MetaEditorPath
+  terminalPath = $TerminalPath
+  expertSource = $resolvedSource
+  testerConfig = [System.IO.Path]::GetFullPath($TesterConfig)
+  compileExitCode = $compileExit
+  terminalExitCode = $process.ExitCode
+  artifacts = $hashes
+  note = "A report file existing is not proof of valid results. Verify tester completion, symbol, dates, model, costs, deposit, currency, leverage, and report/log consistency."
+}
+$manifest | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $resolvedArtifacts "manifest-$stamp.json") -Encoding UTF8
+Write-Host "Run artifacts recorded in $resolvedArtifacts"
+)
+if (-not $configuredReportMatch.Success) { throw "Tester report setting could not be parsed." }
+$configuredReport = $configuredReportMatch.Groups[1].Value.Trim().Trim('"')
+if ([System.IO.Path]::GetFullPath($configuredReport) -ne $resolvedReport) {
+  throw "ReportPath argument must exactly match the Report setting in TesterConfig."
+}
+$reportBeforeUtc = if (Test-Path -LiteralPath $resolvedReport) {
+  (Get-Item -LiteralPath $resolvedReport).LastWriteTimeUtc
+} else { [datetime]::MinValue }
+$runStartedUtc = [datetime]::UtcNow
 $terminalArgs = @("/config:$([System.IO.Path]::GetFullPath($TesterConfig))")
 $process = Start-Process -FilePath $TerminalPath -ArgumentList $terminalArgs -PassThru -Wait
 if ($process.ExitCode -ne 0) { throw "MT5 terminal returned exit code $($process.ExitCode). Inspect terminal logs." }
