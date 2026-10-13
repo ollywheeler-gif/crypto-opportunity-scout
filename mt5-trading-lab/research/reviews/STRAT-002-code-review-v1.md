@@ -59,6 +59,6 @@ Both STRAT-002 and STRAT-003 were compiled on Windows run [38390955133](https://
 
 
 ## Latest verified compile — 2026-10-13
-- Windows run [38393677219](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38393677219) compiled STRAT-001/002/003/004/005/007/008/009 plus the no-order symbol contract exporter on MetaEditor 5.0.0.6257 with zero errors and zero warnings.
-- Combined artifact [11811217733](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38393677219/artifacts/11811217733) contains the compiler logs, EX5 binaries and manifests. Current STRAT-002 source SHA-256: `FB878706B50D6A6265020C95B8E665CAE4EEE96418E4A9F3343A51892953B298`; EX5 SHA-256: `777159AFD7BEBC8DA07548DE12420AC8F36D14DA04C23DE43395EBB7957DADBA`.
+- Windows run [38394444863](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38394444863) compiled STRAT-001/002/003/004/005/007/008/009 plus the no-order symbol contract exporter on MetaEditor 5.0.0.6257 with zero errors and zero warnings.
+- Combined artifact [11811545078](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38394444863/artifacts/11811545078) contains the compiler logs, EX5 binaries and manifests. Current STRAT-002 source SHA-256: `FB878706B50D6A6265020C95B8E665CAE4EEE96418E4A9F3343A51892953B298`; EX5 SHA-256: `777159AFD7BEBC8DA07548DE12420AC8F36D14DA04C23DE43395EBB7957DADBA`.
 - Compilation is resolved for that exact source revision. CR-01, CR-02, CR-03, CR-05, CR-06 and CR-07 remain open; the overall disposition remains **BLOCKED** pending tester mechanics, broker feasibility, cost reconciliation and runtime lifecycle evidence.
