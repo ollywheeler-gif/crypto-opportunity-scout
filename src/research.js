@@ -49,16 +49,20 @@ export async function collectReport() {
       const xml = (await response.text()).slice(0, 1500000);
       const blocks = [...xml.matchAll(/<(item|entry)\b[\s\S]*?<\/\1>/gi)].map(m => m[0]).slice(0, 30);
       let accepted = 0;
+      const skipped = { missingTitle: 0, missingLink: 0, invalidDate: 0, staleDate: 0, futureDate: 0 };
       for (const block of blocks) {
         const title = cleanXml(getTag(block, "title"));
         const href = extractFeedLink(block);
         const date = cleanXml(getTag(block, "pubDate") || getTag(block, "updated") || getTag(block, "published") || getTag(block, "date"));
         const summary = cleanXml(getTag(block, "description") || getTag(block, "summary") || getTag(block, "content"));
         const url = normalizeArticleUrl(href);
-        if (!title || !url) continue;
+        if (!title) { skipped.missingTitle++; continue; }
+        if (!url) { skipped.missingLink++; continue; }
         const publishedMs = Date.parse(date);
+        if (!Number.isFinite(publishedMs)) { skipped.invalidDate++; continue; }
         const ageMs = Date.now() - publishedMs;
-        if (!Number.isFinite(publishedMs) || ageMs < -24 * 60 * 60 * 1000 || ageMs > MAX_AGE_DAYS * 24 * 60 * 60 * 1000) continue;
+        if (ageMs < -24 * 60 * 60 * 1000) { skipped.futureDate++; continue; }
+        if (ageMs > MAX_AGE_DAYS * 24 * 60 * 60 * 1000) { skipped.staleDate++; continue; }
         const text = title + " " + summary;
         const rewardSignal = REWARD_TERMS.test(text);
         const lower = text.toLowerCase();
@@ -90,7 +94,18 @@ export async function collectReport() {
         });
         accepted++;
       }
-      sources.push({ source: feedHost, ok: true, status: response.status, entriesFound: blocks.length, itemsAccepted: accepted, issue: blocks.length ? (accepted ? null : "Entries were found, but none passed link, date and freshness checks.") : "No RSS or Atom entries matched the expected format." });
+      const formatLooksLikeHtml = /<html\\b|<!doctype\\s+html/i.test(xml.slice(0, 2000));
+      const issue = blocks.length === 0
+        ? (formatLooksLikeHtml
+          ? "HTTP succeeded, but the response is HTML rather than a detectable RSS/Atom feed; the endpoint may have changed or require JavaScript."
+          : "HTTP succeeded, but no RSS/Atom item or entry blocks were detected.")
+        : (accepted > 0 ? null : "Feed entries were detected, but none were usable.");
+      sources.push({
+        source: feedHost, ok: true, status: response.status,
+        entriesFound: blocks.length, itemsAccepted: accepted, skipped,
+        issue,
+        contentType: response.headers.get("content-type") || "unknown"
+      });
     } catch (error) {
       sources.push({ source: feedHost, ok: false, status: null, entriesFound: 0, itemsAccepted: 0, issue: error?.name === "TimeoutError" ? "Feed request timed out." : "Feed could not be fetched or parsed." });
     }
