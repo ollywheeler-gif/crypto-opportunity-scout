@@ -77,7 +77,7 @@ bool TLRG_Init()
 
    // Every isolated Strategy Tester run starts with a clean guard state.
    // Demo/terminal runs deliberately preserve state across EA and terminal restarts.
-   if(MQLInfoInteger(MQL_TESTER) || MQLInfoInteger(MQL_OPTIMIZATION))
+   if(MQLInfoInteger(MQL_TESTER) != 0 || MQLInfoInteger(MQL_OPTIMIZATION) != 0)
       TLRG_DeleteState();
 
    double equity = AccountInfoDouble(ACCOUNT_EQUITY);
