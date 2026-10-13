@@ -73,3 +73,12 @@ Research/testing only. No paid provisioning, broker credential collection in cha
 - Agent 0/Agent 1 froze STRAT-003 EMA trend v1 after checking the completed-bar cross, ATR stop and exit rules against the EA implementation. The specification is frozen for first mechanics testing; no performance or broker-feasibility approval is implied.
 
 - Updated Agent 4's code-only review to reflect implemented tick-size alignment and duplicate-instance guards while retaining the BLOCKED disposition until runtime and broker evidence exists.
+
+
+### Additional quality gates — 2026-10-13
+- Added `scripts/reconcile_costs.py`, a strict arithmetic check that normalized net trade P/L equals gross P/L plus commission, swap and fees exactly once. Duplicate trade IDs, missing columns, non-finite values and mismatches are rejected. A normalized ledger template and unit tests are included. This does not replace mapping/verification of the raw MT5 export.
+- Added `docs/PRE_REGISTERED_TEST_PROTOCOL.md` with chronological train/validation/locked-out-of-sample windows, stress tests, evidence fields and rejection rules. The date windows are conditional on verified data coverage; replacement boundaries must be frozen before inspecting results.
+- Both STRAT-002 and STRAT-003 were compiled by Windows MetaEditor 5.0.0.6257 in run [38390955133](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38390955133), at commit `b26b5185e28356e18070247d6420cf06753eefe8`. Each compiler summary reports **0 errors, 0 warnings**. Evidence artifact [11807953266](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38390955133/artifacts/11807953266) contains both EX5 files, logs and manifests. MetaEditor returned process exit code 1 for STRAT-002 despite the clean summary; the workflow records that diagnostic separately and checks the fresh EX5 and compiler summary.
+- STRAT-002 EX5 SHA-256: `9E43755AA8FEB9C504FFD9A2F004F6EC040DE576DE8FAF74EAA3256200B7EB8D`. STRAT-003 EX5 SHA-256: `5FC6CF4BB6F93EAFD45CAF00C05D83F74D406F637D373C4E95C1E22E72DB2EC7`.
+- CI run [38391274628](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38391274628) passed after the cost-reconciliation tool and its tests were added. Later runs are validating the pre-registration docs and final integration changes.
+- Neither EA has been run in Strategy Tester; no broker feasibility, actual cost reconciliation, performance test or demo forward test exists. Both remain research-only.
