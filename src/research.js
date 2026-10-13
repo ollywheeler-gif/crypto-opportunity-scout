@@ -276,17 +276,17 @@ async function fetchArticlePage(url) {
 
 function extractCampaignLinks(html, directory) {
   const found = new Map();
-  const anchors = [...html.matchAll(/<a\\b([^>]*)>([\\s\\S]*?)<\\/a>/gi)].slice(0, 5000);
+  const anchors = [...html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)].slice(0, 5000);
   for (const anchor of anchors) {
-    const href = anchor[1].match(/\\bhref=[\"']([^\"']+)[\"']/i)?.[1];
+    const href = anchor[1].match(/\bhref=[\"']([^\"']+)[\"']/i)?.[1];
     if (!href) continue;
     let url;
     try { url = new URL(decodeEntities(href), directory.url); } catch { continue; }
     if (url.protocol !== "https:" || url.hostname !== directory.host || url.username || url.password) continue;
     const path = url.pathname;
     const isCampaign = directory.host === "app.galxe.com"
-      ? /^\\/quest\\/[A-Za-z0-9_-]+\\/[A-Za-z0-9_-]+/.test(path)
-      : /^\\/(?:activations|quests)\\/[A-Za-z0-9_-]+/.test(path);
+      ? /^\/quest\/[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+/.test(path)
+      : /^\/(?:activations|quests)\/[A-Za-z0-9_-]+/.test(path);
     if (!isCampaign) continue;
     url.hash = "";
     const title = cleanHtml(decodeEntities(anchor[2].replace(/<[^>]+>/g, " "))).slice(0, 200);
@@ -343,7 +343,7 @@ function cleanXml(s) {
 }
 
 function getTag(s, tag) {
-  const re = new RegExp("<" + tag + "(?:\\s[^>]*)?>([\\s\\S]*?)</" + tag + ">", "i");
+  const re = new RegExp("<" + tag + "(?:\s[^>]*)?>([\s\S]*?)</" + tag + ">", "i");
   const m = s.match(re);
   return m ? m[1].replace(/<!\[CDATA\[|\]\]>/g, "") : "";
 }
