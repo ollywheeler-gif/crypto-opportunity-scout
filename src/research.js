@@ -338,8 +338,8 @@ export async function enrichResearchItem(item) {
       : "Reject — not demonstrably worthwhile from available evidence";
   enriched.nextStep = !actionable
     ? "Not shown in the daily opportunity report. A reachable source page alone is not evidence of an opportunity."
-    : investmentDecision === "Potentially worth investing in"
-      ? "Verify publisher legitimacy, eligibility, exact payout, current status and withdrawal terms before acting. A worthwhile-economics pass is not a guarantee."
+    : investmentDecision === "Worth investing in"
+      ? "Verify publisher legitimacy, eligibility, exact payout, current status and withdrawal terms before acting. A preliminary economics pass is not a guarantee."
       : "Do not pursue or promote this as an opportunity. Reconsider only if official terms establish a fixed per-person reward, no required capital, fees absent or covered, current availability and credible payout conditions.";
   const completeness = [
     Boolean(page?.title), Boolean(page?.description), Boolean(rewardDetails),
