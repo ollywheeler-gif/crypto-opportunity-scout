@@ -1,3 +1,15 @@
+const FEEDS = [
+  "https://blog.ethereum.org/en/feed.xml",
+  "https://blog.base.dev/feed",
+  "https://offchain.medium.com/feed",
+  "https://optimism.mirror.xyz/feed/atom",
+  "https://blog.chain.link/rss/",
+  "https://www.circle.com/blog/rss.xml",
+  "https://solana.com/changelog/rss.xml",
+  "https://www.bnbchain.org/en/blog/rss.xml",
+  "https://trondao.org/blog/feed/"
+];
+
 const MAX_AGE_DAYS = 45;
 const MAX_ITEMS = 12;
 const PAGE_TIMEOUT_MS = 6000;
