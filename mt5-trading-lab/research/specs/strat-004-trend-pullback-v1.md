@@ -2,7 +2,7 @@
 
 Candidate ID: STRAT-004
 Version: v1
-Status: FROZEN SPECIFICATION v1 — deterministic rules accepted for implementation. Not backtested or approved for demo/live.
+Status: FROZEN SPECIFICATION v1 — EA compiled with zero errors and zero warnings. Not Strategy Tester tested, not broker-feasibility validated, and not approved for demo/live.
 
 ## Hypothesis
 A simple, deterministic higher-timeframe trend pullback rule may capture a repeatable market effect, but it may fail after realistic costs, regime changes and the £100 feasibility constraint. The test must attempt to falsify the idea.
@@ -49,3 +49,12 @@ Draft v1 research rules only. Agent 0 must freeze the specification after a rule
 - Rules frozen: completed H4 EMA(50/200) trend filter; completed H1 RSI(2) extreme plus H1 close relative to completed H4 EMA(50); ATR(14) stop at 2.0 ATR; exit on opposite H4 trend or after 12 completed H1 bars; no averaging or adding.
 - Agent 2 source: `mql5/Experts/STRAT-004_TrendPullback.mq5`.
 - Freeze is not a compile, broker-feasibility, tester or deployment approval.
+
+
+## Implementation evidence status
+- Windows MetaEditor 5.0.0.6257 compile run: [38392022938](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38392022938), source revision `d90224bc33139fcd688a8fb3e76ebc29f09a8a36`.
+- Compiler summary: `Result: 0 errors, 0 warnings`.
+- Source SHA-256: `DB5016E44319ECDEE3AEB649B03B842D1B6BAB6E97A2147A82CC32220809FD99`.
+- EX5 SHA-256: `D0948061EE3C3A80D1F6F3200F6D03072AFD469B80827169AACD9BD2180EE0F6`.
+- Retained compile artifact: [11810895108](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38392022938/artifacts/11810895108).
+- Compile evidence does not establish runtime behavior or strategy performance.
