@@ -1,9 +1,9 @@
 candidate_id,version,gate,owner,status,evidence,blocker,next_action
 PROJECT,1,Repository structure,Agent 0,PASS,GitHub repository files present,none,Continue static validation
-PROJECT,1,Python tests and CI,Agent 0,UNVERIFIED,Latest push-triggered Actions result not exposed by current connector,Need observable latest workflow result,Use GitHub Actions UI or Actions API-capable integration; keep local/static checks moving
+PROJECT,1,Python tests and CI,Agent 0,PASS,GitHub Actions run 38390209713 completed successfully on main; Python validator and unit tests passed,none,Keep CI required and rerun after changes
 STRAT-002,1,Research specification,Agent 1,PASS,research/specs/STRAT-002-donchian-breakout-v1.md,none,Keep spec frozen during initial testing
 STRAT-002,1,EA source and safety review,Agent 2,IN_PROGRESS,mql5/Experts/STRAT-002_DonchianBreakout.mq5,No MetaEditor compile yet,Compile and resolve all warnings/errors
-STRAT-002,1,MetaEditor compile,Agent 3,UNVERIFIED,.github/workflows/mt5-mql5-compile.yml added for temporary Windows compile,No completed workflow result observed yet,Inspect compiler artifact and fix any errors/warnings before acceptance
+STRAT-002,1,MetaEditor compile,Agent 3,PASS,Windows run 38390155862; MetaEditor 5.0.0.6257; commit e2e987c88e64c95e8ad1e4eb3efdc9de090fa0c1; 0 errors/0 warnings; EX5 SHA256 fa968097e114fa2fbcdb29c1df1079248741d8c32c312e5e8c5656e76d447c84; artifact 11808267275,Compile only not a tester result,Compile again after source changes and preserve manifest/log/EX5
 STRAT-002,1,Mechanics smoke test,Agent 3,BLOCKED,No MT5 Strategy Tester run,Requires compiled EX5 and MT5 terminal,Run short non-real-account smoke test after compile
 STRAT-002,1,Broker feasibility at GBP100,Agent 3,BLOCKED,No broker symbol contract specs supplied or verified,Minimum volume and margin unknown,Source public broker specs or owner-approved broker choice
 STRAT-002,1,Chronological and robustness testing,Agent 3,BLOCKED,No valid raw MT5 report,Must pass compile and feasibility first,Run pre-registered train validation locked test and stress scenarios
