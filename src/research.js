@@ -21,8 +21,8 @@ const MAX_AGE_DAYS = 45;
 const MAX_ITEMS = 12;
 const PAGE_TIMEOUT_MS = 6000;
 
-const REWARD_TERMS = /\bairdrop\b|\bclaim (?:your|rewards?|tokens?)\b|\breward (?:program|programme|campaign|pool)\b|\bincentive (?:program|programme|campaign|pool)\b|\bquest campaign\b|\bpoints campaign\b|\bretroactive rewards?\b|\bearn rewards?\b|\btoken rewards?\b/i;
-const ACTION_TERMS = /\b(?:register|sign up|claim|connect (?:your )?wallet|complete (?:tasks|quests|missions)|join (?:the )?campaign|mint|bridge|stake|trade|submit (?:a )?(?:form|proof|application)|verify (?:your )?account|perform (?:eligible )?transactions)\b/i;
+const REWARD_TERMS = /\bairdrop\b|\bclaim (?:your|rewards?|tokens?)\b|\breward (?:program|programme|campaign|pool)\b|\bincentive (?:program|programme|campaign|pool)\b|\bquest campaign\b|\bpoints campaign\b|\bretroactive rewards?\b|\bearn rewards?\b|\btoken rewards?\b|\b(?:earn|get|win|claim)\s+(?:up to )?[\d,.]+\s+(?:points?|tokens?|USDT|USDC|ETH|BTC)\b|\b(?:token reward|cash reward|prize pool|reward pool)\b/i;
+const ACTION_TERMS = /\b(?:register|sign up|claim|connect (?:your )?wallet|complete (?:tasks|quests|missions)|join (?:the )?campaign|mint|bridge|stake|trade|submit (?:a )?(?:form|proof|application)|verify (?:your )?account|perform (?:eligible )?transactions|follow (?:the )?project|join (?:the )?(?:discord|telegram|community)|visit (?:the )?website|answer (?:a )?quiz)\b/i;
 const RISK_TERMS = [
   ["Capital or deposit required", /\bdeposit\b|\bminimum (?:balance|deposit|purchase)\b|\bhold (?:at least|a minimum)\b|\btrading volume\b/i],
   ["Fees may apply", /\bfee\b|\bspread\b|\bgas\b|\btransaction cost\b/i],
@@ -193,7 +193,7 @@ export async function enrichResearchItem(item) {
   const compact = combined.replace(/\s+/g, " ").trim();
   const rewardSignal = REWARD_TERMS.test(compact);
   const actionSignal = ACTION_TERMS.test(compact);
-  const endedSignal = /\b(?:campaign|airdrop|rewards?)\b.{0,50}\b(?:ended|closed|expired|has finished|is over)\b|\b(?:ended|closed|expired)\b.{0,50}\b(?:campaign|airdrop|rewards?)\b/i.test(compact);
+  const endedSignal = /\b(?:campaign|airdrop|rewards?|quest|registration|claim period)\b.{0,60}\b(?:ended|closed|expired|has finished|is over|has concluded)\b|\b(?:ended|closed|expired|has finished|is over|has concluded)\b.{0,60}\b(?:campaign|airdrop|rewards?|quest|registration|claim period)\b|\b(?:campaign|quest|registration|claim period)\s+(?:is )?closed\b/i.test(compact);
   const actionable = Boolean(page && rewardSignal && actionSignal && !endedSignal);
   const eligibilityMatch = findContext(compact, /\b(?:eligible|eligibility|available in|excluding|excluded|residents of|restricted in|region|country|countries|KYC|identity verification)\b/i);
   const costMatch = findContext(compact, /\b(?:fee|fees|deposit|minimum purchase|minimum balance|trading volume|gas cost|transaction cost|purchase at least|spend at least|no purchase necessary|free to participate)\b/i);
