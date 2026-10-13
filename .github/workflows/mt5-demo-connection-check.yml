@@ -7,6 +7,10 @@ on:
         description: 'Broker symbol to inspect (must match the Pepperstone MT5 Market Watch name)'
         required: true
         default: 'EURUSD'
+  push:
+    paths:
+      - 'mt5-trading-lab/mql5/Scripts/TradingLab/ExportSymbolContract.mq5'
+      - '.github/workflows/mt5-demo-connection-check.yml'
 
 permissions:
   contents: read
