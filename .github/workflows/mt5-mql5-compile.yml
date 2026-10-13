@@ -1,5 +1,9 @@
 name: MT5 EA compile (Windows)
 
+concurrency:
+  group: mt5-compile-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     paths:
