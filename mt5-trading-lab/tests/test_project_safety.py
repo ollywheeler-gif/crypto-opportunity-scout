@@ -97,6 +97,12 @@ class ProjectSafetyTests(unittest.TestCase):
         self.assertIn("Installed source hash does not match", INSTALLER)
         self.assertIn("No compile, terminal launch, account login or trading action was performed.", INSTALLER)
 
+    def test_duplicate_instance_lock_exists(self):
+        for source in (EA, EMA_EA):
+            self.assertIn("GlobalVariableSetOnCondition", source)
+            self.assertIn("Another instance with the same symbol/magic is active", source)
+            self.assertIn("ReleaseInstanceLock();", source)
+
     def test_minimum_lot_risk_gate_exists(self):
         self.assertIn("if(minLoss == DBL_MAX || minLoss > hardLimit)", EA)
         self.assertIn("Broker minimum lot is too risky: skip rather than distort risk.", EA)
