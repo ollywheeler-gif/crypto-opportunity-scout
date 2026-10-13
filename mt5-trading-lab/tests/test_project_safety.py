@@ -37,6 +37,8 @@ class ProjectSafetyTests(unittest.TestCase):
         for required in ("TLRG_DailyLossLimitPct", "TLRG_DrawdownReviewPct", "TLRG_DrawdownHaltPct", "GlobalVariableSet", "TLRG_CloseStrategyPositions", "GlobalVariablesFlush", "MQL_TESTER"):
             self.assertIn(required, RISK_GUARD)
         self.assertIn("Install TradingLab risk guard include", COMPILE_WORKFLOW)
+        self.assertIn("risk-guard-manifest.json", COMPILE_WORKFLOW)
+        self.assertIn("$env:MT5_RISK_GUARD_PATH", COMPILE_WORKFLOW)
 
     def test_demo_gate_requires_account_level_drawdown_controls(self):
         self.assertIn("account-level daily-loss stop", ACCEPTANCE_GATES)
