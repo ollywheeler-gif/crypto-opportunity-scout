@@ -49,3 +49,12 @@ Frozen v1 research rules only. The freeze record above fixes the initial experim
 - Rules frozen: ATR(10)/ATR(50) crosses below 0.70 to arm; contraction bar cannot trigger; next 12 completed H1 bars are eligible; 20-bar prior channel breakout; 2.0 × ATR(20) stop; opposite 10-bar exit channel; setup expires without a breakout.
 - Agent 2 source: `mql5/Experts/STRAT-007_VolatilityContraction.mq5`.
 - Freeze is not compile, broker-feasibility, tester or deployment approval.
+
+
+## Implementation evidence status
+- Windows MetaEditor 5.0.0.6257 compile run: [38392508850](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38392508850), source revision `63c88464af602353902e45a894a108ef9b1f385c`.
+- Compiler summary: `Result: 0 errors, 0 warnings`.
+- Source SHA-256: `6EA3DFC2250691301D1F47F84BCA2559BC8D9E2C0F8EB34680D1C1FF254C518B`.
+- EX5 SHA-256: `30E430EB68FBEC577476B4079A5B156EC4D8FCB2FC2D287372A9ADF575262ECB`.
+- Retained compile artifact: [11810845970](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38392508850/artifacts/11810845970).
+- Compile evidence does not establish runtime behavior or strategy performance.
