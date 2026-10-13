@@ -102,7 +102,7 @@ export async function collectReport() {
         });
         accepted++;
       }
-      const formatLooksLikeHtml = /<html\\b|<!doctype\\s+html/i.test(xml.slice(0, 2000));
+      const formatLooksLikeHtml = /<html\b|<!doctype\s+html/i.test(xml.slice(0, 2000));
       const issue = blocks.length === 0
         ? (formatLooksLikeHtml
           ? "HTTP succeeded, but the response is HTML rather than a detectable RSS/Atom feed; the endpoint may have changed or require JavaScript."
