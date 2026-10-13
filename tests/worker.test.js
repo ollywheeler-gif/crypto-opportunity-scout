@@ -150,7 +150,10 @@ test("research enrichment extracts evidence but never marks a reward confirmed",
     summary: "A reward campaign is available for eligible users."
   });
   assert.equal(result.reward, "Not confirmed");
-  assert.match(result.evidenceStatus, /not independently confirmed/);
+  assert.match(result.evidenceStatus, /reward-related wording/);
+  assert.match(result.rewardDetails, /rewards campaign/i);
+  assert.match(result.taskDetails, /Connect your wallet/i);
+  assert.match(result.statusEvidence, /campaign ends on 30 October/i);
   assert.match(result.deadline, /ends on 30 October/i);
   assert.match(result.eligibility, /Eligible residents of Canada/i);
   assert.match(result.costsAndRequirements, /minimum deposit of 50 USDC/i);
