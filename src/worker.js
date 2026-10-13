@@ -126,7 +126,7 @@ export default {
     if (request.method === "POST" && url.pathname === "/admin/collect") {
       if (!env.SCOUT_ADMIN_TOKEN || request.headers.get("Authorization") !== `Bearer ${env.SCOUT_ADMIN_TOKEN}`) return new Response("Unauthorized", { status: 401 });
       const report = await collectReport();
-      await env.SCOUT_KV.put("report:latest", JSON.stringify(report), { expirationTtl: 864000 });
+      await saveReport(env, report);
       return Response.json({ ok: true, date: report.date, count: report.items.length });
     }
 
@@ -136,7 +136,7 @@ export default {
   async scheduled(controller, env, ctx) {
     ctx.waitUntil((async () => {
       const report = await collectReport();
-      await env.SCOUT_KV.put("report:latest", JSON.stringify(report), { expirationTtl: 864000 });
+      await saveReport(env, report);
     })());
   }
 };
