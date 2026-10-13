@@ -189,17 +189,26 @@ test("daily collector deduplicates leads and reports transparent quality metrics
   const page = '<!doctype html><html><head><title>Example Rewards Campaign</title><meta name="description" content="Official campaign terms"></head><body>Register for the reward campaign and complete tasks. Reward campaign deadline is 30 October. Eligible residents may participate. Minimum deposit of 50 USDC. Rewards are not guaranteed.</body></html>';
   globalThis.fetch = async (input) => {
     const url = String(input);
-    if (url === "https://example.org/campaign") {
+    if (url === "https://example.org/campaign" || url === "https://app.galxe.com/quest/Demo/ABC123") {
       return new Response(page, { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });
+    }
+    if (url === "https://app.galxe.com/quest/explore/all") {
+      return new Response('<html><body><a href="/quest/Demo/ABC123">Example Rewards Campaign</a></body></html>', { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });
+    }
+    if (url === "https://app.layer3.xyz/activations") {
+      return new Response('<html><body><p>Explore activations</p></body></html>', { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });
     }
     return new Response(feed, { status: 200, headers: { "content-type": "application/rss+xml" } });
   };
   t.after(() => { globalThis.fetch = originalFetch; });
   const report = await collectReport();
   assert.equal(report.pipelineVersion, "2.0");
-  assert.equal(report.items.length, 1);
+  assert.equal(report.items.length, 2);
   assert.equal(report.qualitySummary.feedsChecked, 9);
-  assert.equal(report.qualitySummary.candidatePagesChecked, 1);
+  assert.equal(report.qualitySummary.campaignDirectoriesChecked, 2);
+  assert.equal(report.qualitySummary.campaignDirectoryLinksFound, 1);
+  assert.equal(report.qualitySummary.candidatePagesChecked, 2);
+  assert.ok(report.items.some((candidate) => candidate.source === "Galxe Quest"));
   assert.equal(report.qualitySummary.fullyVerifiedRewards, 0);
   assert.match(report.items[0].verificationStatus, /claims remain unverified/);
   assert.equal(report.items[0].reward, "Not confirmed");
