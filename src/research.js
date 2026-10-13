@@ -15,7 +15,7 @@ const MAX_ITEMS = 12;
 const PAGE_TIMEOUT_MS = 6000;
 
 const REWARD_TERMS = /\bairdrop\b|\bclaim (?:your|rewards?|tokens?)\b|\breward (?:program|programme|campaign|pool)\b|\bincentive (?:program|programme|campaign|pool)\b|\bquest campaign\b|\bpoints campaign\b|\bretroactive rewards?\b|\bearn rewards?\b|\btoken rewards?\b/i;
-const ACTION_TERMS = /\bregister\b|\bdeadline\b|\beligib(?:le|ility)\b|\bsnapshot\b|\bdeposit\b|\btrade\b|\bhold\b|\bcomplete (?:tasks|quests|missions)\b|\bclaim\b|\bparticipat(?:e|ion)\b/i;
+const ACTION_TERMS = /\b(?:register|sign up|claim|connect (?:your )?wallet|complete (?:tasks|quests|missions)|join (?:the )?campaign|mint|bridge|stake|trade|submit (?:a )?(?:form|proof|application)|verify (?:your )?account|perform (?:eligible )?transactions)\b/i;
 const RISK_TERMS = [
   ["Capital or deposit required", /\bdeposit\b|\bminimum (?:balance|deposit|purchase)\b|\bhold (?:at least|a minimum)\b|\btrading volume\b/i],
   ["Fees may apply", /\bfee\b|\bspread\b|\bgas\b|\btransaction cost\b/i],
@@ -129,9 +129,12 @@ export async function enrichResearchItem(item) {
   const actionSignal = ACTION_TERMS.test(compact);
   const endedSignal = /\b(?:campaign|airdrop|rewards?)\b.{0,50}\b(?:ended|closed|expired|has finished|is over)\b|\b(?:ended|closed|expired)\b.{0,50}\b(?:campaign|airdrop|rewards?)\b/i.test(compact);
   const actionable = Boolean(page && rewardSignal && actionSignal && !endedSignal);
-  const eligibilityMatch = findContext(compact, /\b(?:eligible|eligibility|available in|excluding|excluded|residents of|restricted in|region|country|countries)\b/i);
-  const costMatch = findContext(compact, /\b(?:fee|fees|deposit|minimum purchase|minimum balance|trading volume|gas cost|transaction cost|purchase at least|spend at least)\b/i);
-  const deadlineMatch = findContext(compact, /\b(?:deadline|ends? on|ending on|expires? on|until|by \w+day|before \w+ \d{1,2})\b/i);
+  const eligibilityMatch = findContext(compact, /\b(?:eligible|eligibility|available in|excluding|excluded|residents of|restricted in|region|country|countries|KYC|identity verification)\b/i);
+  const costMatch = findContext(compact, /\b(?:fee|fees|deposit|minimum purchase|minimum balance|trading volume|gas cost|transaction cost|purchase at least|spend at least|no purchase necessary|free to participate)\b/i);
+  const deadlineMatch = findContext(compact, /\b(?:deadline|ends? on|ending on|expires? on|until|by \w+day|before \w+ \d{1,2}|ongoing|open until)\b/i);
+  const rewardDetails = findContext(compact, /\b(?:reward|rewards|prize|prizes|token allocation|token distribution|points|USDC|USD|ETH|BTC|airdrop)\b/i);
+  const taskDetails = findContext(compact, /\b(?:register|sign up|claim|connect (?:your )?wallet|complete (?:tasks|quests|missions)|join (?:the )?campaign|mint|bridge|stake|trade|submit|verify|transaction)\b/i);
+  const statusMatch = findContext(compact, /\b(?:live now|now live|campaign is live|campaign is active|campaign has ended|campaign ended|closed campaign|registration open|registration closed|claim is live|claim period|snapshot taken|snapshot date)\b/i);
   const risks = RISK_TERMS.filter(([, regex]) => regex.test(compact)).map(([label]) => label);
   risks.push("Eligibility and reward details have not been independently confirmed.");
   if (!page) risks.push("The source page could not be fetched automatically; inspect the original link manually.");
@@ -143,6 +146,10 @@ export async function enrichResearchItem(item) {
     ? (page.sameHostAsFeed ? "Source page fetched on the same host as the monitored feed; claims remain unverified" : "Linked page fetched; publisher ownership and claims remain unverified")
     : "Source page could not be checked automatically";
   enriched.reward = "Not confirmed";
+  enriched.rewardDetails = rewardDetails || "No specific reward amount/type extracted";
+  enriched.taskDetails = taskDetails || "No concrete task sequence extracted";
+  enriched.statusEvidence = statusMatch || "Current campaign status not established";
+  enriched.campaignStatus = endedSignal ? "Possibly ended — exclude" : (statusMatch ? "Status evidence found — manual confirmation needed" : "Unconfirmed");
   enriched.cost = "Not established — check original terms";
   enriched.rewardSignal = rewardSignal;
   enriched.actionSignal = actionSignal;
@@ -161,9 +168,9 @@ export async function enrichResearchItem(item) {
     ? "Check the official campaign page for current status, your country eligibility, exact tasks, deadline, fees and capital requirements. Do not participate until these are clear."
     : "Not shown in the daily opportunity report. A reachable source page alone is not evidence of an opportunity.";
   const completeness = [
-    Boolean(page), Boolean(page?.title), Boolean(page?.description || item.summary),
-    Boolean(Number.isFinite(Date.parse(item.publishedAt))), Boolean(rewardSignal),
-    Boolean(deadlineMatch), Boolean(eligibilityMatch), Boolean(costMatch)
+    Boolean(page?.title), Boolean(page?.description), Boolean(rewardDetails),
+    Boolean(taskDetails), Boolean(statusMatch), Boolean(deadlineMatch),
+    Boolean(eligibilityMatch), Boolean(costMatch)
   ].filter(Boolean).length;
   enriched.researchCompleteness = Math.round(completeness / 8 * 100);
   enriched.assessment = enriched.researchCompleteness + "% research completeness — not a score for reward likelihood";
