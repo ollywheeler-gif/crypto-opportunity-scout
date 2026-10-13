@@ -40,6 +40,9 @@ void OnStart()
    FileWrite(handle, "symbol", symbol, "");
    FileWrite(handle, "captured_server_time", TimeToString(TimeTradeServer(), TIME_DATE|TIME_SECONDS), "broker server time");
    FileWrite(handle, "terminal_build", (string)TerminalInfoInteger(TERMINAL_BUILD), "");
+   FileWrite(handle, "terminal_connected", BoolText((bool)TerminalInfoInteger(TERMINAL_CONNECTED)), "must be true to accept broker metadata");
+   FileWrite(handle, "account_logged_in", BoolText(AccountInfoInteger(ACCOUNT_LOGIN) > 0), "boolean only; account number is never exported");
+   FileWrite(handle, "account_trade_allowed", BoolText((bool)AccountInfoInteger(ACCOUNT_TRADE_ALLOWED)), "account permission flag; no orders are sent");
    FileWrite(handle, "account_currency", AccountInfoString(ACCOUNT_CURRENCY), "currency only; no account identifier exported");
    FileWrite(handle, "point", DoubleToString(SymbolInfoDouble(symbol, SYMBOL_POINT), 10), "price units");
    FileWrite(handle, "digits", (string)SymbolInfoInteger(symbol, SYMBOL_DIGITS), "");
