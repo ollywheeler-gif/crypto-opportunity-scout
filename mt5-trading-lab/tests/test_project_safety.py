@@ -3,6 +3,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+MOMENTUM_EA = (ROOT / "mql5/Experts/STRAT-001_TimeSeriesMomentum.mq5").read_text(encoding="utf-8")
 EA = (ROOT / "mql5/Experts/STRAT-002_DonchianBreakout.mq5").read_text(encoding="utf-8")
 EMA_EA = (ROOT / "mql5/Experts/STRAT-003_EMATrend.mq5").read_text(encoding="utf-8")
 PULLBACK_EA = (ROOT / "mql5/Experts/STRAT-004_TrendPullback.mq5").read_text(encoding="utf-8")
@@ -18,6 +19,7 @@ PROJECT_DIRECTOR = (ROOT / "agents/agent_0_project_director.md").read_text(encod
 ORCHESTRATION = (ROOT / "docs/MULTI_AGENT_OPERATING_PROTOCOL.md").read_text(encoding="utf-8")
 CODE_REVIEW = (ROOT / "research/reviews/STRAT-002-code-review-v1.md").read_text(encoding="utf-8")
 ACCEPTANCE_GATES = (ROOT / "docs/ACCEPTANCE_GATES.md").read_text(encoding="utf-8")
+RISK_GUARD = (ROOT / "mql5/Include/TradingLab/RiskGuard.mqh").read_text(encoding="utf-8")
 COMPILE_WORKFLOW = (ROOT.parent / ".github/workflows/mt5-mql5-compile.yml").read_text(encoding="utf-8")
 
 class ProjectSafetyTests(unittest.TestCase):
@@ -26,6 +28,15 @@ class ProjectSafetyTests(unittest.TestCase):
         self.assertIn("not a performance approval", CODE_REVIEW.lower())
         self.assertIn("CR-04", CODE_REVIEW)
         self.assertIn("no performance approval", CODE_REVIEW.lower())
+
+    def test_all_eas_use_persistent_risk_guard(self):
+        for source in (MOMENTUM_EA, EA, EMA_EA, PULLBACK_EA, LONDON_EA, VOL_EA, MR_EA, RSI_EA):
+            self.assertIn("#include <TradingLab/RiskGuard.mqh>", source)
+            self.assertIn("TLRG_Init()", source)
+            self.assertIn("TLRG_CheckAndEnforce()", source)
+        for required in ("TLRG_DailyLossLimitPct", "TLRG_DrawdownReviewPct", "TLRG_DrawdownHaltPct", "GlobalVariableSet", "TLRG_CloseStrategyPositions", "MQL_TESTER"):
+            self.assertIn(required, RISK_GUARD)
+        self.assertIn("Install TradingLab risk guard include", COMPILE_WORKFLOW)
 
     def test_demo_gate_requires_account_level_drawdown_controls(self):
         self.assertIn("account-level daily-loss stop", ACCEPTANCE_GATES)
