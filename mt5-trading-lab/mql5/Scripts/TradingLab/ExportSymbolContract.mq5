@@ -27,10 +27,11 @@ void OnStart()
    string currencyNow = AccountInfoString(ACCOUNT_CURRENCY);
    if(!connectedNow || !loggedInNow || currencyNow == "")
    {
-      Print("CONTRACT_EXPORT_FAILED broker session not verified connected=", BoolText(connectedNow),
+      // Still write a diagnostic snapshot so CI can distinguish a failed login
+      // from a script-launch/file-output failure. The workflow rejects this as unusable.
+      Print("CONTRACT_EXPORT_DIAGNOSTIC broker session not verified connected=", BoolText(connectedNow),
             " logged_in=", BoolText(loggedInNow),
             " currency_present=", BoolText(currencyNow != ""));
-      return;
    }
 
    string symbol = ContractSymbolInput;
