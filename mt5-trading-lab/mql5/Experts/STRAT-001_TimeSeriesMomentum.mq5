@@ -174,7 +174,7 @@ int OnInit()
 
    if((ENUM_ACCOUNT_TRADE_MODE)AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL)
    {
-      Print("BLOCKED: STRAT-003 research EA refuses to initialize on a real account.");
+      Print("BLOCKED: STRAT-001 research EA refuses to initialize on a real account.");
       return INIT_FAILED;
    }
 
