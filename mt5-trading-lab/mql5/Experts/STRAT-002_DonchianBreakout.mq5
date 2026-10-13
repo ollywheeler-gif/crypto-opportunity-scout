@@ -13,7 +13,8 @@ input int    AtrPeriod = 20;
 input double AtrStopMultiplier = 2.0;
 input double TargetRiskPct = 0.25;
 input double HardMaxRiskPct = 0.50;
-input double EstimatedRoundTurnCostPerLot = 0.0; // Account currency per lot: commission/financing risk reserve for sizing only
+input double EstimatedSpreadCostPerLot = 0.0; // Account currency per lot; estimate round-trip spread cost for sizing
+input double EstimatedRoundTurnCostPerLot = 0.0; // Account currency per lot: commission/financing reserve for sizing
 input double EstimatedSlippageCostPerLot = 0.0;  // Account currency per lot; also configure realistic MT5 tester costs
 input int    MaxDeviationPoints = 20;
 
@@ -91,7 +92,7 @@ double LossForVolume(const ENUM_ORDER_TYPE orderType, const double volume,
    if(!OrderCalcProfit(orderType, _Symbol, volume, entry, stop, profit))
       return DBL_MAX;
    double priceLoss = MathMax(0.0, -profit);
-   return priceLoss + (EstimatedRoundTurnCostPerLot + EstimatedSlippageCostPerLot) * volume;
+   return priceLoss + (EstimatedSpreadCostPerLot + EstimatedRoundTurnCostPerLot + EstimatedSlippageCostPerLot) * volume;
 }
 
 double CalculateVolume(const ENUM_ORDER_TYPE orderType, const double entry, const double stop)
@@ -127,7 +128,7 @@ int OnInit()
    if((EnableStrategy && !ConfirmBrokerCostsReviewed) ||
       EntryChannelBars < 2 || ExitChannelBars < 2 || AtrPeriod < 2 ||
       AtrStopMultiplier <= 0 || TargetRiskPct <= 0 || HardMaxRiskPct < TargetRiskPct ||
-      EstimatedRoundTurnCostPerLot < 0 || EstimatedSlippageCostPerLot < 0)
+      EstimatedSpreadCostPerLot < 0 || EstimatedRoundTurnCostPerLot < 0 || EstimatedSlippageCostPerLot < 0)
       return INIT_PARAMETERS_INCORRECT;
 
    // Hard safety guard: this research EA must not trade on a real account.
