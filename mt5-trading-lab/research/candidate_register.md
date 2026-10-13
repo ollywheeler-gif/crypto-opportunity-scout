@@ -1,6 +1,6 @@
 # Candidate register — research hypotheses, not results
 
-**Status:** Ten initial hypotheses. STRAT-001 through STRAT-004 have separate EA sources and verified zero-error/zero-warning MetaEditor compiles across Windows runs 38392022938 and 38391886074. STRAT-001, STRAT-003 and STRAT-004 have frozen v1 specifications; STRAT-002 has a deterministic v1 specification. STRAT-007, STRAT-008 and STRAT-009 now have EA source drafts and frozen v1 specs; their current compile run is pending. None has a verified MT5 Strategy Tester report or broker-feasibility pass, and none is approved for demo/live use. STRAT-005, STRAT-006 and STRAT-010 remain specification drafts, with session/contract or historical swap data dependencies. Ranking prioritizes testability, lower turnover, and falsifiability—not expected profit.
+**Status:** Ten initial hypotheses. STRAT-001 through STRAT-004 and STRAT-007 through STRAT-009 have separate EA sources and verified zero-error/zero-warning MetaEditor compiles in Windows run 38392508850. Their v1 specifications are frozen. STRAT-005, STRAT-006 and STRAT-010 remain specification drafts. None has a verified MT5 Strategy Tester report or broker-feasibility pass, and none is approved for demo/live use. STRAT-005, STRAT-006 and STRAT-010 remain specification drafts, with session/contract or historical swap data dependencies. Ranking prioritizes testability, lower turnover, and falsifiability—not expected profit.
 
 ## Evidence informing the shortlist
 - Time-series momentum has been documented across liquid futures in currencies, equity indices, commodities, and bonds over long historical samples; this is research evidence, not proof that a retail CFD implementation remains profitable after costs: https://doi.org/10.1016/j.jfineco.2011.11.003
@@ -44,3 +44,5 @@ For each symbol, calculate the cash loss at the broker's minimum permitted volum
 
 ## Required next step
 Agent 0 and Agent 1 must review/freeze the nine new v1 spec drafts; define date windows before results are seen, then assess broker feasibility. Do not attach performance numbers until actual test evidence exists.
+
+- STRAT-007, STRAT-008 and STRAT-009 each have a frozen v1 spec and compiled EA source; Windows run [38392508850](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38392508850) reports zero errors and zero warnings for all three. They remain research-only, with no broker-feasibility or Strategy Tester evidence.
