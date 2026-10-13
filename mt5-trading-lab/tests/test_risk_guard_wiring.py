@@ -42,6 +42,12 @@ class RiskGuardWiringTests(unittest.TestCase):
                     self.assertLess(guard_pos, bar_pos,
                                     'Risk guard must run on every tick, not only new bars')
 
+    def test_candidates_fail_initialization_if_guard_cannot_initialize(self):
+        for name in CANDIDATES:
+            with self.subTest(candidate=name):
+                source = (EXPERTS / name).read_text(encoding="utf-8")
+                self.assertIn("if(!TLRG_Init()) return INIT_FAILED;", source)
+
     def test_research_eas_block_real_accounts(self):
         for name in CANDIDATES:
             with self.subTest(candidate=name):
