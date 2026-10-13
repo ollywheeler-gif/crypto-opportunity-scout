@@ -11,7 +11,7 @@ STRAT-002,1,Independent review,Agent 4,BLOCKED,Code-only review exists; MetaEdit
 STRAT-002,1,Demo forward test,Agent 0,BLOCKED,Earlier gates not passed,Do not skip gates,Only schedule after acceptance
 PROJECT,1,Live deployment,Owner,NOT_AUTHORIZED,Explicit owner approval required,Live trading disabled,No live deployment without explicit approval
 STRAT-001,1,Research specification,Agent 0 and Agent 1,DRAFT,research/specs/strat-001-timeseries-momentum-v1.md,Needs review and frozen parameters,Review specification and register test windows before implementation
-STRAT-003,1,Research specification,Agent 0 and Agent 1,DRAFT,research/specs/strat-003-ema-trend-v1.md,Needs review and frozen parameters,Review specification and register test windows before performance testing
+STRAT-003,1,Research specification,Agent 0 and Agent 1,FROZEN,research/specs/strat-003-ema-trend-v1.md,Compile and broker feasibility still pending,Keep rules fixed during first compile and mechanics test
 STRAT-003,1,EA implementation,Agent 2,IN_PROGRESS,mql5/Experts/STRAT-003_EMATrend.mq5,Not yet compiled,Resolve compile warnings/errors and verify source/spec correspondence
 STRAT-003,1,MetaEditor compile,Agent 3,UNVERIFIED,.github/workflows/mt5-mql5-compile.yml now includes STRAT-003 compile gate,Awaiting run result,Inspect manifest and retain EX5/log before any tester test
 STRAT-004,1,Research specification,Agent 0 and Agent 1,DRAFT,research/specs/strat-004-trend-pullback-v1.md,Needs review and frozen parameters,Review specification and register test windows before implementation
