@@ -2,7 +2,7 @@
 
 Candidate ID: STRAT-001
 Version: v1
-Status: FROZEN SPECIFICATION v1 — deterministic rules accepted for implementation. Not backtested or approved for demo/live.
+Status: FROZEN SPECIFICATION v1 — EA compiled with zero errors and zero warnings. Not Strategy Tester tested, not broker-feasibility validated, and not approved for demo/live.
 
 ## Hypothesis
 A simple, deterministic time-series momentum rule may capture a repeatable market effect, but it may fail after realistic costs, regime changes and the £100 feasibility constraint. The test must attempt to falsify the idea.
@@ -49,3 +49,12 @@ Draft v1 research rules only. Agent 0 must freeze the specification after a rule
 - Rules frozen: D1 126-bar close-return direction; ATR(20) stop at 3.0 ATR; exit on completed-bar direction change or stop; no same-bar reversal.
 - Agent 2 source: `mql5/Experts/STRAT-001_TimeSeriesMomentum.mq5`.
 - Freeze is a specification milestone only. Compile, broker feasibility and tester gates remain separate.
+
+
+## Implementation evidence status
+- Windows MetaEditor 5.0.0.6257 compile run: [38391736678](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38391736678), source revision `0676e9066aaf98f12aa22c5a5b3da769cd144a4a`.
+- Compiler summary: `Result: 0 errors, 0 warnings`.
+- Source SHA-256: `A878E0274C9422B5DB5545199AF6A75F9FD3BE72670BA9D2825A576B0ADD4F02`.
+- EX5 SHA-256: `4141642164602BB9223A700D32BC393E59BF7D27DFF11EA8A680B7268F5C6EF4`.
+- Retained compile artifact: [11809281108](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38391736678/artifacts/11809281108).
+- Compile evidence does not establish runtime behavior or strategy performance.
