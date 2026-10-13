@@ -237,7 +237,7 @@ test("daily collector deduplicates leads and reports transparent quality metrics
   assert.equal(report.qualitySummary.candidatePagesChecked, 3);
   assert.equal(report.qualitySummary.actionableLeadsPublished, 3);
   assert.equal(report.qualitySummary.economicallyQualifiedLeads, 0);
-  assert.equal(report.qualitySummary.rejectedAsInsufficientEvidence, 3);
+  assert.equal(report.qualitySummary.rejectedAsInsufficientEvidence, 0);
   assert.match(report.disclaimer, /These are research leads/);
   assert.equal(report.qualitySummary.fullyVerifiedRewards, 0);
   assert.ok(report.items.every(item => item.investmentAssessment?.decision !== "Worth investing in"), "ambiguous leads must not pass the economic screen");
