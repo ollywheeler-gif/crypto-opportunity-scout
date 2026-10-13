@@ -34,7 +34,7 @@ Requires Node.js 22 or later.
 npm test
 ```
 
-GitHub Actions runs the test suite on pushes and pull requests. The deployment workflow publishes changes to `src/**`, `wrangler.toml`, and its own workflow file to Cloudflare Workers.
+GitHub Actions has a dedicated integration-test workflow for pushes and pull requests. The deployment workflow publishes changes to `src/**`, `wrangler.toml`, and its own workflow file to Cloudflare Workers.
 
 ## Deployment notes
 
