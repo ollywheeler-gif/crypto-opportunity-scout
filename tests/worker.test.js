@@ -216,6 +216,8 @@ test("daily collector deduplicates leads and reports transparent quality metrics
   assert.equal(report.qualitySummary.fullyVerifiedRewards, 0);
   assert.match(report.items[0].verificationStatus, /claims remain unverified/);
   assert.equal(report.items[0].reward, "Not confirmed");
+  assert.ok(report.items.every((candidate) => typeof candidate.payoutAsset === "string" && candidate.payoutAsset.length > 0));
+  assert.ok(report.items.some((candidate) => /10%/.test(candidate.rewardBasis) && candidate.investmentAssessment?.riskLevel === "High"));
   assert.ok(report.items.every((candidate) => candidate.investmentAssessment?.decision === "Worth investigating"));
   assert.ok(report.items.some((candidate) => candidate.investmentAssessment?.riskLevel === "High"));
 });
