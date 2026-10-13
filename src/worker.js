@@ -162,16 +162,17 @@ async function collectReport() {
         if (!Number.isFinite(publishedAt) || ageMs < -24 * 60 * 60 * 1000 || ageMs > 45 * 24 * 60 * 60 * 1000) continue;
         const text = title + " " + summary;
         const lower = text.toLowerCase();
-        let category = classify(text);
+        const rewardSignal = /\bairdrop\b|\bclaim (your|rewards?|tokens?)\b|\breward (program|campaign|pool)\b|\bincentive (program|campaign|pool)\b|\bquest campaign\b|\bpoints campaign\b|\bretroactive rewards?\b/i.test(text);
+        let category = classify(text, rewardSignal);
         let relevance = 20;
-        if (/airdrop|claim|reward|incentive|quest|points campaign|retroactive|testnet|mainnet incentive/.test(lower)) relevance += 45;
-        if (/eligibility|snapshot|deadline|registration|official campaign/.test(lower)) relevance += 20;
-        if (/security|exploit|phishing|governance|upgrade|research paper/.test(lower)) relevance -= 10;
+        if (rewardSignal || /\btestnet\b|\bdevnet\b/i.test(lower)) relevance += 35;
+        if (/eligibility|snapshot|deadline|registration|official campaign/i.test(lower)) relevance += 15;
+        if (/security|exploit|phishing|governance|upgrade|research paper/i.test(lower)) relevance -= 10;
         if (source.includes("ethereum.org") || source.includes("base.dev")) relevance += 5;
         const item = {
           title: title.slice(0, 200), url: href, source, date, summary: summary.slice(0, 280),
           category, relevance, reward: "Unverified", cost: "Not established",
-          evidenceStatus: /airdrop|reward|incentive|claim|points campaign|retroactive/i.test(text) ? "Possible reward mentioned — not confirmed" : "No specific reward identified",
+          evidenceStatus: rewardSignal ? "Possible reward signal in source wording — not confirmed" : "No specific reward identified",
           nextStep: /testnet|devnet/i.test(text) ? "Check the official project page for live testnet instructions. Participation does not guarantee a reward." : /airdrop|reward|incentive|claim|points campaign|retroactive/i.test(text) ? "Check the official source for eligibility, dates and claim instructions before acting." : /security|exploit|phishing/i.test(text) ? "Review the official security notice for any recommended action." : "Review the official announcement to see whether it contains a concrete action relevant to you.",
           assessment: relevance >= 65 ? "Higher keyword relevance; manual verification needed" : relevance >= 40 ? "Worth a quick review" : "General ecosystem information",
           verification: "Research lead only. Eligibility, fees, deadlines and withdrawal conditions are not independently verified. Never share a seed phrase or sign a transaction solely because of this listing."
@@ -193,8 +194,8 @@ async function collectReport() {
       : "No usable leads were collected. Source diagnostics are available to help identify whether a feed was unavailable or its format changed."
   };
 }
-function classify(s) {
-  if (/airdrop|reward|campaign|incentive|quest|points/i.test(s)) return "Possible reward — manual verification required";
+function classify(s, rewardSignal = false) {
+  if (rewardSignal) return "Possible reward — manual verification required";
   if (/security|scam|exploit|phishing/i.test(s)) return "Security update";
   if (/testnet|devnet/i.test(s)) return "Testnet/developer update";
   return "Ecosystem announcement";
