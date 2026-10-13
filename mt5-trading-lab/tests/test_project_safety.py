@@ -150,6 +150,12 @@ class ProjectSafetyTests(unittest.TestCase):
         self.assertIs(CONFIG["live_deployment_allowed"], False)
         self.assertIs(CONFIG["paid_services_auto_provision"], False)
         self.assertIs(CONFIG["require_explicit_owner_approval_for_live"], True)
+        risk = CONFIG["risk"]
+        self.assertEqual(risk["daily_loss_halt_pct"], 1.0)
+        self.assertEqual(risk["drawdown_review_pct"], 5)
+        self.assertEqual(risk["drawdown_halt_pct"], 10)
+        self.assertIs(risk["drawdown_state_persists_across_restarts"], True)
+        self.assertIs(risk["peak_drawdown_halt_requires_deliberate_reset"], True)
 
     def test_ea_has_real_account_guard(self):
         self.assertIn("ACCOUNT_TRADE_MODE_REAL", EA)
