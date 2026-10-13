@@ -2,8 +2,8 @@
 
 Date: 2026-10-13
 Reviewer role: Agent 4 (independent review)
-Scope: written specification and MQL5 source inspection only.
-Disposition: BLOCKED — not compiled; no Strategy Tester evidence; no broker contract data.
+Scope: written specification and MQL5 source inspection, plus verified compiler evidence. No runtime trade mechanics or performance review has been performed.
+Disposition: BLOCKED — MetaEditor compile is verified with zero errors/warnings; no Strategy Tester evidence or broker contract data.
 This is not a performance approval.
 
 ## Findings
@@ -45,3 +45,10 @@ BLOCKED. No claim of profitability or readiness for live trading is supported.
 - CR-04 partial mitigation committed: the EA now rounds protective-stop prices to `SYMBOL_TRADE_TICK_SIZE` and requires a broker-reviewed `MaxSpreadPoints` ceiling before strategy enablement. This reduces known price-alignment/spread risks but is **not resolved** until compiled and exercised against real broker contract data; freeze-level and filling-mode behavior still require tester evidence.
 - The local and CI compile runners now wait for the MetaEditor process and reject compiler warnings before tester execution. Automated compile is currently being retried after the first observed run revealed the process had been launched asynchronously.
 - Remaining CR-01, CR-02, CR-03, CR-05, CR-06 and CR-07 remain open. No performance approval is possible at this stage.
+
+
+## Compiler evidence update
+- Windows MetaEditor compile completed with zero errors and zero warnings on MetaEditor 5.0.0.6257.
+- Verified artifact: [compile evidence for run 38390155862](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38390155862/artifacts/11808267275).
+- EX5 SHA-256: `fa968097e114fa2fbcdb29c1df1079248741d8c32c312e5e8c5656e76d447c84`.
+- This resolves the compile prerequisite for the source revision represented by that run only. Any subsequent EA source change requires another compile. The overall disposition remains BLOCKED until mechanics testing, broker feasibility and cost reconciliation are complete.
