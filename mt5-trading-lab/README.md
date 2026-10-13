@@ -19,6 +19,7 @@ This is project scaffolding, not a deployed autonomous agent service. No Windows
 - [First deterministic test specification](research/specs/STRAT-002-donchian-breakout-v1.md) — source is written but not yet compiled or tested.
 - [Eight additional deterministic strategy-spec drafts](research/specs/) cover time-series momentum, EMA trend, pullback, London breakout, index opening range, volatility contraction, regime mean reversion, RSI pullback and swap-aware FX momentum. These are drafts, not validated strategies.
 - [Acceptance gates](docs/ACCEPTANCE_GATES.md) — feasibility, costs, chronological testing, review and demo gates.
+- [Pre-registered test protocol](docs/PRE_REGISTERED_TEST_PROTOCOL.md) — fixed date-split policy, stress tests, rejection gates and manifest requirements.
 - [Capital feasibility worksheet](research/capital_feasibility_template.csv) and [calculator](scripts/capital_feasibility.py) — require real broker inputs; estimates only.
 - [Artifact and data conventions](docs/ARTIFACTS_AND_DATA.md).
 - Static tests check safety invariants in the EA source; these do not replace MetaEditor compilation.
