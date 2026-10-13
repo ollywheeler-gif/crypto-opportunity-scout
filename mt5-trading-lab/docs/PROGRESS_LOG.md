@@ -82,3 +82,11 @@ Research/testing only. No paid provisioning, broker credential collection in cha
 - STRAT-002 EX5 SHA-256: `9E43755AA8FEB9C504FFD9A2F004F6EC040DE576DE8FAF74EAA3256200B7EB8D`. STRAT-003 EX5 SHA-256: `5FC6CF4BB6F93EAFD45CAF00C05D83F74D406F637D373C4E95C1E22E72DB2EC7`.
 - CI run [38391274628](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38391274628) passed after the cost-reconciliation tool and its tests were added. Later runs are validating the pre-registration docs and final integration changes.
 - Neither EA has been run in Strategy Tester; no broker feasibility, actual cost reconciliation, performance test or demo forward test exists. Both remain research-only.
+
+
+### Bounded team expansion — 2026-10-13
+- Expanded the documented operating model from five roles to eight: Agent 0 project director plus Agents 1–7.
+- Added dedicated Agent 5 broker/capital feasibility, Agent 6 independent test/data analysis, and Agent 7 build/automation role definitions.
+- Updated Agent 0, README and the multi-agent protocol with parallel-work boundaries, single-writer discipline, evidence handoffs, and an eight-role ceiling to prevent management sprawl.
+- Added repository validation requirements and a safety test for the role files and truthful runtime description.
+- These are explicit workstreams and instructions, not proof that eight independent persistent agents are running. No paid services, live accounts or trading permissions were enabled.
