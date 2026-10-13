@@ -1,6 +1,6 @@
 # Candidate register — research hypotheses, not results
 
-**Status:** Ten initial hypotheses. DON-02 has a written v1 specification and initial MQL5 source (`STRAT-002_DonchianBreakout.mq5`), but it is still research-only: not compiled, not backtested, and not approved for demo/live use. The other nine remain hypotheses. Ranking prioritizes testability, lower turnover, and falsifiability—not expected profit.
+**Status:** Ten initial hypotheses. DON-02 has a written v1 specification and initial MQL5 source (`STRAT-002_DonchianBreakout.mq5`), but it is still research-only: not compiled, not backtested, and not approved for demo/live use. The other nine now have deterministic v1 research-spec drafts, but none is implemented, compiled or backtested. Ranking prioritizes testability, lower turnover, and falsifiability—not expected profit.
 
 ## Evidence informing the shortlist
 - Time-series momentum has been documented across liquid futures in currencies, equity indices, commodities, and bonds over long historical samples; this is research evidence, not proof that a retail CFD implementation remains profitable after costs: https://doi.org/10.1016/j.jfineco.2011.11.003
@@ -23,7 +23,7 @@
 | RSI-PB-09 | Short-term RSI pullback entry only in a higher-timeframe trend; no averaging down | FX majors; H1 | Indicator parameter mining, trend reversals, crowded exits |
 | CARRY-FX-10 | Slow FX trend/momentum combined with documented broker swap/financing filter; no naked carry assumption | Major FX; D1 | Missing historic swaps, swap changes, weekend/holiday financing, rate regime changes |
 
-## Current implementation status\n- DON-02 / STRAT-002: written deterministic H1 v1 specification and guarded EA source exist. The first compile, broker-feasibility check, and tester smoke test are still pending. No performance claim is made.\n- Other candidates: no implementation until the end-to-end compile/test pipeline is demonstrated and capital feasibility is assessed.\n\n## Order of evaluation
+## Current implementation status\n- DON-02 / STRAT-002: written deterministic H1 v1 specification and guarded EA source exist. The first compile, broker-feasibility check, and tester smoke test are still pending. No performance claim is made.\n- Other candidates: deterministic v1 research-spec drafts are now present in `research/specs/`; they remain drafts pending Agent 0 review and are not implemented, compiled or backtested.\n\n## Order of evaluation
 1. TS-MOM-01 and DON-02: low-turnover hypotheses with clear rules and substantial published background.
 2. EMA-TREND-03 and PULLBACK-04: simple baselines that can expose whether added complexity helps.
 3. LONDON-05, INDEX-ORB-06, and VOL-COMP-07: session/intraday candidates, requiring better cost and execution assumptions.
@@ -34,4 +34,4 @@
 For each symbol, calculate the cash loss at the broker's minimum permitted volume and the proposed stop distance, including tick value, currency conversion, spread, commission and plausible slippage. Compare with a provisional per-trade budget of £0.25–£0.50. If the minimum size exceeds the budget, reject that symbol/strategy for a £100 account; do not hide the problem by shrinking stops or using leverage assumptions unrealistically.
 
 ## Required next step
-Convert candidates into frozen specifications with exact entries/exits, stop logic, bounded parameters, session definitions, and train/validation/locked-test dates. Then obtain reliable data and broker contract assumptions. Do not attach performance numbers until the actual test evidence exists.
+Agent 0 and Agent 1 must review/freeze the nine new v1 spec drafts; define date windows before results are seen, then assess broker feasibility. Do not attach performance numbers until actual test evidence exists.
