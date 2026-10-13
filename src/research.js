@@ -10,6 +10,13 @@ const FEEDS = [
   "https://trondao.org/blog/feed/"
 ];
 
+// Dedicated campaign directories complement network blogs. They are discovery
+// sources, not proof that a reward exists or that a campaign remains open.
+const CAMPAIGN_DIRECTORIES = [
+  { url: "https://app.galxe.com/quest/explore/all", name: "Galxe Quest", host: "app.galxe.com" },
+  { url: "https://app.layer3.xyz/activations", name: "Layer3 Activations", host: "app.layer3.xyz" }
+];
+
 const MAX_AGE_DAYS = 45;
 const MAX_ITEMS = 12;
 const PAGE_TIMEOUT_MS = 6000;
@@ -88,6 +95,62 @@ export async function collectReport() {
     }
   }
 
+  const directoryDiagnostics = [];
+  for (const directory of CAMPAIGN_DIRECTORIES) {
+    try {
+      const response = await fetch(directory.url, {
+        headers: { "User-Agent": "CryptoOpportunityScout/2.1", "Accept": "text/html,application/xhtml+xml;q=0.9,*/*;q=0.5" },
+        signal: AbortSignal.timeout(9000)
+      });
+      if (!response.ok) {
+        directoryDiagnostics.push({ source: directory.name, kind: "campaign-directory", ok: false, status: response.status, entriesFound: 0, itemsAccepted: 0, issue: "Directory returned a non-success HTTP status." });
+        continue;
+      }
+      const html = (await response.text()).slice(0, 1000000);
+      const links = extractCampaignLinks(html, directory);
+      let accepted = 0;
+      for (const link of links) {
+        all.push({
+          title: link.title || directory.name + " campaign",
+          url: link.url,
+          source: directory.name,
+          sourceFeed: directory.url,
+          date: new Date().toUTCString(),
+          publishedAt: new Date().toISOString(),
+          summary: link.summary || "Discovered through a public campaign directory; verify the campaign's own terms.",
+          relevance: 70,
+          rewardSignal: /airdrop|reward|token|point|quest|incentive|campaign/i.test(link.title + " " + link.summary),
+          reward: "Not confirmed",
+          cost: "Not established",
+          evidenceStatus: "Discovered in a campaign directory; campaign terms not yet checked",
+          verificationStatus: "Awaiting individual campaign-page check",
+          pageCheckedAt: null, sourcePageTitle: null, sourcePageDescription: null,
+          deadline: "Not extracted — check original terms",
+          eligibility: "Not established — check original terms",
+          costsAndRequirements: "Not established — check original terms",
+          risks: ["Directory listing is not proof that the campaign is live or legitimate.", "Eligibility and reward details have not been independently confirmed."],
+          verdict: "Investigate — verify official campaign terms first",
+          nextStep: "Open the campaign page and confirm status, reward type, eligibility, deadline, fees and any required capital before acting.",
+          assessment: "Automated research lead; not a reward-probability score",
+          researchCompleteness: 0,
+          verification: "Directory discovery only. Rewards, campaign status and eligibility are not guaranteed."
+        });
+        accepted++;
+      }
+      directoryDiagnostics.push({
+        source: directory.name, kind: "campaign-directory", ok: true, status: response.status,
+        entriesFound: links.length, itemsAccepted: accepted,
+        issue: links.length ? null : "No campaign links could be extracted; this may be a JavaScript-rendered directory."
+      });
+    } catch (error) {
+      directoryDiagnostics.push({
+        source: directory.name, kind: "campaign-directory", ok: false, status: null,
+        entriesFound: 0, itemsAccepted: 0,
+        issue: error?.name === "TimeoutError" ? "Directory request timed out." : "Directory could not be fetched or parsed."
+      });
+    }
+  }
+
   const deduped = [...new Map(all.map(item => [item.url, item])).values()];
   deduped.sort((a, b) => Number(b.rewardSignal) - Number(a.rewardSignal) || b.relevance - a.relevance || Date.parse(b.publishedAt) - Date.parse(a.publishedAt));
   const candidates = deduped.slice(0, MAX_ITEMS);
@@ -102,10 +165,13 @@ export async function collectReport() {
     generatedAt: new Date().toISOString(),
     pipelineVersion: "2.0",
     items,
-    sources,
+    sources: [...sources, ...directoryDiagnostics],
     qualitySummary: {
       feedsChecked: sources.length,
       feedsAvailable: sources.filter(source => source.ok).length,
+      campaignDirectoriesChecked: directoryDiagnostics.length,
+      campaignDirectoriesAvailable: directoryDiagnostics.filter(source => source.ok).length,
+      campaignDirectoryLinksFound: directoryDiagnostics.reduce((sum, source) => sum + source.entriesFound, 0),
       candidatePagesChecked: researchedItems.filter(item => item.pageCheckedAt).length,
       possibleRewardSignals: researchedItems.filter(item => item.rewardSignal).length,
       actionableLeadsPublished: items.length,
@@ -206,6 +272,29 @@ async function fetchArticlePage(url) {
   const feedHost = new URL(url).hostname;
   const finalHost = new URL(response.url || url).hostname;
   return { title, description, text, sameHostAsFeed: finalHost === feedHost || finalHost.endsWith("." + feedHost) };
+}
+
+function extractCampaignLinks(html, directory) {
+  const found = new Map();
+  const anchors = [...html.matchAll(/<a\\b([^>]*)>([\\s\\S]*?)<\\/a>/gi)].slice(0, 5000);
+  for (const anchor of anchors) {
+    const href = anchor[1].match(/\\bhref=[\"']([^\"']+)[\"']/i)?.[1];
+    if (!href) continue;
+    let url;
+    try { url = new URL(decodeEntities(href), directory.url); } catch { continue; }
+    if (url.protocol !== "https:" || url.hostname !== directory.host || url.username || url.password) continue;
+    const path = url.pathname;
+    const isCampaign = directory.host === "app.galxe.com"
+      ? /^\\/quest\\/[A-Za-z0-9_-]+\\/[A-Za-z0-9_-]+/.test(path)
+      : /^\\/(?:activations|quests)\\/[A-Za-z0-9_-]+/.test(path);
+    if (!isCampaign) continue;
+    url.hash = "";
+    const title = cleanHtml(decodeEntities(anchor[2].replace(/<[^>]+>/g, " "))).slice(0, 200);
+    if (title.length < 3) continue;
+    const summary = title;
+    found.set(url.toString(), { url: url.toString(), title, summary });
+  }
+  return [...found.values()].slice(0, 80);
 }
 
 function extractFeedLink(block) {
