@@ -209,8 +209,8 @@ test("research enrichment fails safely when source page cannot be fetched", asyn
 test("daily collector deduplicates leads and reports transparent quality metrics", async (t) => {
   const originalFetch = globalThis.fetch;
   const now = new Date().toUTCString();
-  const feed = '<rss><channel><item><title>Example rewards campaign</title><link>https://example.org/campaign</link><pubDate>' + now + '</pubDate><description>Register for the reward campaign and complete tasks; eligibility and deadline details apply.</description></item></channel></rss>';
-  const page = '<!doctype html><html><head><title>Example Rewards Campaign</title><meta name="description" content="Official campaign terms"></head><body>Register for the reward campaign and complete tasks. Reward campaign deadline is 30 October. Eligible residents may participate. The reward pool is 50 USDC. Earn a 10% reward over the weekend. Minimum deposit of 50 USDC. Rewards are not guaranteed.</body></html>';
+  const feed = '<rss><channel><item><title>Example rewards campaign</title><link>https://example.org/campaign</link><pubDate>' + now + '</pubDate><description>Earn rewards by registering for the campaign and completing tasks; eligibility and deadline details apply.</description></item></channel></rss>';
+  const page = '<!doctype html><html><head><title>Example Rewards Campaign</title><meta name="description" content="Earn rewards by registering and completing tasks"></head><body>Earn rewards by registering for the reward campaign and complete tasks. Reward campaign deadline is 30 October. Eligible residents may participate. The reward pool is 50 USDC. Earn a 10% reward over the weekend. Minimum deposit of 50 USDC. Rewards are not guaranteed.</body></html>';
   globalThis.fetch = async (input) => {
     const url = String(input);
     if (url === "https://example.org/campaign" || url === "https://app.galxe.com/quest/Demo/ABC123" || url === "https://questira.io/campaign/Cambrian-Network") {
