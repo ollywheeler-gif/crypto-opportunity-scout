@@ -24,6 +24,9 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Run integration tests before deployment
+        run: npm test
+
       - name: Install Wrangler
         run: npm install --global wrangler
 
@@ -83,3 +86,20 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ steps.cloudflare.outputs.account_id }}
         run: wrangler deploy
+
+      - name: Smoke-test deployed website and report API
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://holy-art-98ea.crypto-opportunity-scout.workers.dev"
+          curl --fail-with-body --silent --show-error --retry 5 --retry-delay 2 "$base/" -o /tmp/scout-home.html
+          grep -q "Crypto Opportunity Scout" /tmp/scout-home.html
+          grep -q "Collect latest public research" /tmp/scout-home.html
+          curl --fail-with-body --silent --show-error --retry 5 --retry-delay 2 "$base/api/daily" -o /tmp/scout-report.json
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const report = JSON.parse(fs.readFileSync("/tmp/scout-report.json", "utf8"));
+            if (!Array.isArray(report.items)) throw new Error("Report API did not return an items array");
+            if (!report.qualitySummary || typeof report.qualitySummary !== "object") throw new Error("Report API is missing quality metrics");
+            console.log(JSON.stringify({ date: report.date, leads: report.items.length, qualified: report.qualitySummary.economicallyQualifiedLeads ?? 0 }));
+          '
