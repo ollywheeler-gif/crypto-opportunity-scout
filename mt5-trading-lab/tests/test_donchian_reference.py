@@ -19,7 +19,7 @@ class DonchianReferenceTests(unittest.TestCase):
     def test_breakout_requires_strict_close_beyond_channel(self):
         bars = [bar(10, 8, 9), bar(9.8, 8.2, 9), bar(10, 8, 10)]
         self.assertIsNone(entry_signal(bars, 2, 2))
-        bars.append(bar(11, 8, 7.9))
+        bars.append(bar(11, 7.8, 7.9))
         self.assertEqual(entry_signal(bars, 3, 2), "short")
 
     def test_insufficient_history_does_not_signal(self):
