@@ -1,6 +1,6 @@
 # Candidate register — research hypotheses, not results
 
-**Status:** Ten initial hypotheses. STRAT-001 through STRAT-005 and STRAT-007 through STRAT-009 have separate EA sources and verified zero-error/zero-warning MetaEditor compiles in Windows run 38393677219. STRAT-001 and STRAT-003 through STRAT-005 plus STRAT-007 through STRAT-009 have frozen v1 specifications; STRAT-002 has a deterministic v1 spec. STRAT-006 and STRAT-010 remain drafts because broker session/contract or historical financing inputs are missing. No candidate has a verified MT5 Strategy Tester report or broker-feasibility pass, and none is approved for demo/live use. Ranking prioritizes testability, lower turnover, and falsifiability—not expected profit.
+**Status:** Ten initial hypotheses. STRAT-001 through STRAT-005 and STRAT-007 through STRAT-009 have separate EA sources and verified zero-error/zero-warning MetaEditor compiles in Windows run 38394444863. STRAT-006 has a source draft but its compile gate is blocked. STRAT-001 and STRAT-003 through STRAT-005 plus STRAT-007 through STRAT-009 have frozen v1 specifications; STRAT-002 has a deterministic v1 spec. STRAT-006 and STRAT-010 remain drafts because broker session/contract or historical financing inputs are missing. No candidate has a verified MT5 Strategy Tester report or broker-feasibility pass, and none is approved for demo/live use. Ranking prioritizes testability, lower turnover, and falsifiability—not expected profit.
 
 ## Evidence informing the shortlist
 - Time-series momentum has been documented across liquid futures in currencies, equity indices, commodities, and bonds over long historical samples; this is research evidence, not proof that a retail CFD implementation remains profitable after costs: https://doi.org/10.1016/j.jfineco.2011.11.003
@@ -24,12 +24,12 @@
 | CARRY-FX-10 | Slow FX trend/momentum combined with documented broker swap/financing filter; no naked carry assumption | Major FX; D1 | Missing historic swaps, swap changes, weekend/holiday financing, rate regime changes |
 
 ## Current implementation status
-- STRAT-001 / TS-MOM-01: frozen D1 v1 specification and disabled-by-default EA source; compiled with zero errors/warnings in run `38391338872` (artifact `11809220524`). Broker feasibility and Strategy Tester evidence are pending.
+- STRAT-001 / TS-MOM-01: frozen D1 v1 specification and disabled-by-default EA source; compiled with zero errors/warnings in run `38394444863` (artifact `11811545078`). Broker feasibility and Strategy Tester evidence are pending.
 - STRAT-002 / DON-02: deterministic H1 v1 specification and guarded EA source; compiled with zero errors/warnings in run `38391338872` (artifact `11809220524`). Broker feasibility and Strategy Tester evidence are pending.
 - STRAT-003 / EMA-TREND-03: frozen H4 v1 specification and disabled-by-default EA source; compiled with zero errors/warnings in run `38391338872` (artifact `11809220524`). Broker feasibility and Strategy Tester evidence are pending.
-- STRAT-004 / PULLBACK-04: frozen H1/H4 v1 specification and disabled-by-default EA source compiled with zero errors/warnings in run `38391886074` (artifact `11810445059`). Broker feasibility and Strategy Tester evidence remain pending.
-- STRAT-005 / LONDON-05: frozen v1 specification and disabled-by-default EA source compiled with zero errors/warnings in run `38393677219` (artifact `11811217733`). V1 supports only a broker with verified European-DST server mapping; broker feasibility and tester evidence are pending.
-- STRAT-006 / INDEX-ORB-06: specification draft only. It requires verified broker session hours, holidays and exact instrument contract metadata before implementation is frozen.
+- STRAT-004 / PULLBACK-04: frozen H1/H4 v1 specification and disabled-by-default EA source compiled with zero errors/warnings in run `38394444863` (artifact `11811545078`). Broker feasibility and Strategy Tester evidence remain pending.
+- STRAT-005 / LONDON-05: frozen v1 specification and disabled-by-default EA source compiled with zero errors/warnings in run `38394444863` (artifact `11811545078`). V1 supports only a broker with verified European-DST server mapping; broker feasibility and tester evidence are pending.
+- STRAT-006 / INDEX-ORB-06: frozen v1 specification and disabled-by-default EA source draft exist. Compile is currently blocked because the Windows workflow extension could not be completed; exact broker session hours, holidays and contract metadata are also unverified.
 - STRAT-007 / VOL-COMP-07, STRAT-008 / REGIME-MR-08 and STRAT-009 / RSI-PB-09: frozen deterministic v1 specifications and separate disabled-by-default EA sources exist; compiled with zero errors/warnings in run `38393677219` (artifact `11811217733`). No tester or broker-feasibility evidence exists.
 - STRAT-010 / CARRY-FX-10: specification draft only and blocked pending defensible historical swap/financing data.
 
