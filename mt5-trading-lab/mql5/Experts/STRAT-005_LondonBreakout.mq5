@@ -32,6 +32,7 @@ bool TradeRequestAccepted()
 int atrHandle = INVALID_HANDLE;
 datetime lastBarTime = 0;
 int lastAttemptLondonDateKey = 0;
+string attemptDateKeyName = "";
 
 double NormalizePriceToTick(const double price)
 {
@@ -305,6 +306,10 @@ int OnInit()
       return INIT_FAILED;
    }
 
+   attemptDateKeyName = "TL5_LAST_" + StringSubstr(_Symbol, 0, 20) + "_" + (string)MagicNumber;
+   if(GlobalVariableCheck(attemptDateKeyName))
+      lastAttemptLondonDateKey = (int)GlobalVariableGet(attemptDateKeyName);
+
    trade.SetExpertMagicNumber(MagicNumber);
    trade.SetDeviationInPoints(MaxDeviationPoints);
    trade.SetTypeFillingBySymbol(_Symbol);
@@ -386,6 +391,7 @@ void OnTick()
 
    // Count a qualifying breakout as the one attempt for the London date, even if risk/cost gates reject it.
    lastAttemptLondonDateKey = londonDateKey;
+   if(attemptDateKeyName != "") GlobalVariableSet(attemptDateKeyName, (double)lastAttemptLondonDateKey);
 
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
