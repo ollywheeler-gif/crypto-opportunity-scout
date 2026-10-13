@@ -23,7 +23,8 @@
 | RSI-PB-09 | Short-term RSI pullback entry only in a higher-timeframe trend; no averaging down | FX majors; H1 | Indicator parameter mining, trend reversals, crowded exits |
 | CARRY-FX-10 | Slow FX trend/momentum combined with documented broker swap/financing filter; no naked carry assumption | Major FX; D1 | Missing historic swaps, swap changes, weekend/holiday financing, rate regime changes |
 
-## Current implementation status\n- DON-02 / STRAT-002: written deterministic H1 v1 specification and guarded EA source exist. The first compile, broker-feasibility check, and tester smoke test are still pending. No performance claim is made.\n- Other candidates: deterministic v1 research-spec drafts are now present in `research/specs/`; they remain drafts pending Agent 0 review and are not implemented, compiled or backtested.\n\n## Order of evaluation
+## Current implementation status\n- DON-02 / STRAT-002: written deterministic H1 v1 specification and guarded EA source exist. The first compile, broker-feasibility check, and tester smoke test are still pending. No performance claim is made.\n- STRAT-003: a disabled-by-default EMA trend EA source has been added; compilation and Strategy Tester evidence are pending.
+- Other candidates: deterministic v1 research-spec drafts are present in `research/specs/`; they remain drafts pending Agent 0 review and are not implemented, compiled or backtested.\n\n## Order of evaluation
 1. TS-MOM-01 and DON-02: low-turnover hypotheses with clear rules and substantial published background.
 2. EMA-TREND-03 and PULLBACK-04: simple baselines that can expose whether added complexity helps.
 3. LONDON-05, INDEX-ORB-06, and VOL-COMP-07: session/intraday candidates, requiring better cost and execution assumptions.
