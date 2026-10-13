@@ -1,7 +1,7 @@
 # Broker feasibility research — no broker selected
 
 Date reviewed: 2026-10-13
-Status: Preliminary public-source comparison only. This is not a broker recommendation or proof that any symbol is feasible at £100.
+Status: Preliminary public-source comparison only. This is not a broker recommendation or proof that any symbol is feasible at £200.
 
 ## Why exact MT5 symbol specifications matter
 
@@ -29,11 +29,11 @@ Official MT5 market availability: https://www.ig.com/uk/help-and-support/article
 - Official FX product details: https://www.ig.com/uk/help-and-support/articles/681874-forex-cfd-product-details
 - Official spot-metals funding and minimum-size details: https://www.ig.com/uk/help-and-support/articles/681831-commodities-cfd-product-details
 
-**Feasibility implications:** A market can be available on MT5 yet be too coarse for a £100 account. Verify the exact instrument's minimum size and margin before considering it for a bot.
+**Feasibility implications:** A market can be available on MT5 yet be too coarse for a £200 account. Verify the exact instrument's minimum size and margin before considering it for a bot.
 
 ## Provisional risk calculation — illustrative only
 
-The current v1 strategy gates target 0.25% equity risk and reject if modeled minimum-volume loss exceeds 0.50% equity. At £100 equity, those amounts are £0.25 target and £0.50 hard modeled cap.
+The current v1 strategy gates target 0.25% equity risk and reject if modeled minimum-volume loss exceeds 0.50% equity. At £200 equity, those amounts are £0.50 target and £1.00 hard modeled cap.
 
 For FX, a 0.01-lot position commonly represents 1,000 units of base currency. A 10-pip stop can therefore be around £0.70–£1.00 before costs for a typical major pair, depending on the pair and conversion rate. That is already above the £0.50 hard cap. This is an illustration, not a substitute for exact broker tick-value calculations.
 
