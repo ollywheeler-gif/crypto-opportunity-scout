@@ -31,3 +31,12 @@
 
 ### Safety boundaries
 Research/testing only. No paid provisioning, broker credential collection in chat, real-account execution or live deployment is authorized.
+
+
+## 2026-10-13 — Project governance and multi-agent integration
+
+- Added Agent 0 project director with explicit authority boundaries, specialist handoffs, acceptance state machine and owner interruption policy.
+- Added the multi-agent operating protocol, defining required artifacts, run immutability, critical path and blocker handling.
+- Linked both documents from the README and added project validation/unit-test checks for the new governance files.
+- Added a machine-readable gate register so the current state and real blockers are explicit rather than implied.
+- Current external blockers remain: no Windows MetaEditor/MT5 environment for compile and Strategy Tester evidence; broker-specific minimum volume, costs and margin remain unverified; latest push-triggered CI result is not observable through the currently available GitHub connector methods. No paid resources or live trading have been enabled.
