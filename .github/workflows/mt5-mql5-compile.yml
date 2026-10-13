@@ -53,6 +53,9 @@ jobs:
             throw "Expected MT5/MetaEditor files were not found under $installDir"
           }
           "MT5_INSTALL_DIR=$installDir" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          $artifactDir = Join-Path $env:RUNNER_TEMP 'mt5-compile-evidence'
+          New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
+          "MT5_COMPILE_ARTIFACTS=$artifactDir" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Initialize isolated MQL5 include directory
         shell: pwsh
@@ -102,6 +105,7 @@ jobs:
             throw 'STRAT-002 compile produced warnings; review and resolve them before acceptance.'
           }
           Get-FileHash $source,$ex5,$log -Algorithm SHA256 | Format-Table -AutoSize
+          Copy-Item $log,$ex5 -Destination $env:MT5_COMPILE_ARTIFACTS -Force
 
       - name: Upload compiler evidence
         if: always()
@@ -109,7 +113,6 @@ jobs:
         with:
           name: mt5-compile-evidence
           path: |
-            ${{ runner.temp }}/**/STRAT-002_DonchianBreakout.log
-            ${{ runner.temp }}/**/STRAT-002_DonchianBreakout.ex5
+            ${{ runner.temp }}/mt5-compile-evidence/**
           if-no-files-found: warn
           retention-days: 30
