@@ -6,10 +6,14 @@
 
 input bool   EnableStrategy = false;          // Must be deliberately enabled for tester/demo
 input bool   ConfirmBrokerCostsReviewed = false; // Explicitly confirm sizing cost reserve and tester cost model
-input ulong  MagicNumber = 26091502;
+input ulong  MagicNumber = 26101307;
 input int    EntryChannelBars = 20;
 input int    ExitChannelBars = 10;
 input int    AtrPeriod = 20;
+input int    AtrShortPeriod = 10;
+input int    AtrLongPeriod = 50;
+input int    SetupLifetimeBars = 12;
+input double ContractionRatio = 0.70;
 input double AtrStopMultiplier = 2.0;
 input double TargetRiskPct = 0.25;
 input double HardMaxRiskPct = 0.50;
@@ -214,7 +218,7 @@ int OnInit()
    // Hard safety guard: this research EA must not trade on a real account.
    if((ENUM_ACCOUNT_TRADE_MODE)AccountInfoInteger(ACCOUNT_TRADE_MODE) == ACCOUNT_TRADE_MODE_REAL)
    {
-      Print("BLOCKED: STRAT-002 research EA refuses to initialize on a real account.");
+      Print("BLOCKED: STRAT-007 research EA refuses to initialize on a real account.");
       return INIT_FAILED;
    }
 
