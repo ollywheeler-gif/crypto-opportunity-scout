@@ -18,20 +18,20 @@ The EA's sizing reserve is not itself the MT5 tester's cost model. Define and au
 The implementation uses shifts 2..N+1, which excludes the current live bar and the just-closed signal bar from the channel. That matches the spec's interpretation of a breakout beyond the previous channel. Before strategy testing, create a deterministic synthetic-bar test where the signal bar breaks the prior channel, and verify no look-ahead and no signal-bar inclusion.
 
 ### CR-04 — Stop and broker constraints need real symbol validation (HIGH)
-The EA checks `SYMBOL_TRADE_STOPS_LEVEL` but does not separately check freeze-level behavior, tick-size alignment, market execution mode, or broker-specific filling/rejection behavior. `NormalizeDouble(..., _Digits)` aligns decimal digits but does not necessarily align to `SYMBOL_TRADE_TICK_SIZE`. Add tick-size price normalization and test against real contract metadata. Verify stop placement and retcodes in a tester smoke test.
+The EA now aligns protective-stop prices to `SYMBOL_TRADE_TICK_SIZE` and applies a broker-reviewed maximum-spread gate. Freeze-level behavior, market execution mode, and broker-specific filling/rejection behavior still need real-symbol validation. Verify stop placement and retcodes in a tester smoke test.
 
 ### CR-05 — Risk cap is a model, not a guaranteed maximum loss (HIGH)
 Gap reserve cannot cap losses during discontinuous markets. The EA rejects minimum volume when the modeled loss exceeds 0.5% equity, but actual loss can exceed this. The owner-facing documentation must never describe the cap as guaranteed. Consider maximum spread and stale quote guards, daily equity/drawdown circuit-breakers and a fail-closed trading-hours/data-health policy before any demo proposal.
 
 ### CR-06 — Position management assumes a single position per symbol/magic (MEDIUM)
-The code finds the first matching position and returns after exit handling. It intentionally blocks foreign positions on the symbol, but hedging accounts and duplicated instances should still be tested. Add a one-instance guard or explicit account-mode support; verify no duplicate order can be opened if multiple copies are attached.
+The code finds the first matching position and returns after exit handling. It intentionally blocks foreign positions on the symbol, but hedging accounts and duplicated instances should still be tested. A terminal global-variable lock has been added per symbol/magic to block duplicate instances. This must still be verified under MT5 lifecycle/restart tests.
 
 ### CR-07 — EA versioning is not yet tied to a test manifest (MEDIUM)
 `#property version` and source filename are not sufficient evidence. Every run must bind source commit/hash, strategy-spec hash, exact tester config, terminal build, broker symbol contract, data range and cost assumptions to the report. The runner should write this automatically.
 
 ## Required actions before any performance claim
-1. Obtain a zero-warning MetaEditor compile and preserve the compiler log and EX5 hash.
-2. Fix CR-04 tick-size alignment and test order constraints; verify CR-06 duplicate-instance behavior.
+1. Keep zero-warning MetaEditor compile evidence and source/EX5 hashes for every EA revision.
+2. Test tick-size alignment, freeze/filling behavior and duplicate-instance lock lifecycle in MT5.
 3. Run a short mechanics-only MT5 Strategy Tester test with an explicit non-real-account configuration.
 4. Record broker contract/cost data and evaluate minimum-volume loss/margin for £100.
 5. Reconcile raw report and trade ledger, then run frozen chronological and stress tests.
@@ -52,3 +52,7 @@ BLOCKED. No claim of profitability or readiness for live trading is supported.
 - Verified artifact: [latest compile evidence for run 38390561997](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38390561997/artifacts/11809150759).
 - EX5 SHA-256 on the latest verified compile: `887377FEC79B08C23B33559BF8EF7F1150F575635D4457672A19FA8137AB345F`.
 - This resolves the compile prerequisite for the source revision represented by that run only. Any subsequent EA source change requires another compile. The overall disposition remains BLOCKED until mechanics testing, broker feasibility and cost reconciliation are complete.
+
+
+## Latest compile status
+Both STRAT-002 and STRAT-003 were compiled on Windows run [38390955133](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38390955133) using MetaEditor 5.0.0.6257 with zero errors and zero warnings. Combined artifact: [11807953266](https://github.com/ollywheeler-gif/crypto-opportunity-scout/actions/runs/38390955133/artifacts/11807953266). This resolves compilation for that source revision only; no Strategy Tester or broker feasibility evidence exists. Review disposition remains BLOCKED.
