@@ -1,8 +1,9 @@
+import csv
 import sys
 import unittest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from scripts.capital_feasibility import evaluate
+from scripts.capital_feasibility import evaluate, REQUIRED
 
 ROW = {
     "broker": "Demo", "symbol": "TEST", "account_equity_gbp": "100",
@@ -15,6 +16,12 @@ ROW = {
 }
 
 class CapitalFeasibilityTests(unittest.TestCase):
+    def test_template_contains_every_required_input(self):
+        template = Path(__file__).resolve().parents[1] / "research/capital_feasibility_template.csv"
+        with template.open(newline="", encoding="utf-8") as handle:
+            headers = set(next(csv.reader(handle)))
+        self.assertTrue(REQUIRED.issubset(headers), f"Template missing: {sorted(REQUIRED - headers)}")
+
     def test_loss_and_reject_over_cap(self):
         result = evaluate(ROW, 0.5)
         self.assertAlmostEqual(result["estimated_worst_case_loss_gbp"], 13.0)
