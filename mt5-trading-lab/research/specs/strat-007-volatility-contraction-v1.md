@@ -41,7 +41,7 @@ Compile log with warnings resolved; source/spec/config hashes; exact MT5 build; 
 - Material code warnings, rejected/invalid orders, missing protective stops or unsupported broker assumptions.
 
 ## Approval status
-Draft v1 research rules only. Agent 0 must freeze the specification after a rule/code consistency review. No candidate is approved for demo or live use by this document.
+Frozen v1 research rules only. The freeze record above fixes the initial experiment; no candidate is approved for demo or live use by this document.
 
 
 ## Agent 0 freeze record
