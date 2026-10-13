@@ -20,7 +20,7 @@ export default {
     }
 
     if (request.method === "GET" && url.pathname === "/api/daily") {
-      return Response.json(await readLatest(env));
+      return Response.json(await readLatest(env), { headers: { "Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache" } });
     }
 
     if ((request.method === "GET" || request.method === "POST") && url.pathname === "/api/refresh") {
@@ -30,7 +30,8 @@ export default {
       await env.SCOUT_KV.put("refresh:lock", "1", { expirationTtl: 300 });
       const report = await collectReport();
       await env.SCOUT_KV.put("report:latest", JSON.stringify(report), { expirationTtl: 864000 });
-      return Response.json({ ...report, refresh: "completed" });
+      await env.SCOUT_KV.delete("refresh:lock");
+      return Response.json({ ...report, refresh: "completed" }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache" } });
     }
 
     if (request.method === "POST" && url.pathname === "/checkout") {
