@@ -47,7 +47,7 @@ async function sign(raw, timestamp) {
 
 test("test checkout -> signed webhook -> protected report access", async (t) => {
   const kv = new MemoryKV();
-  await kv.put("report:latest", JSON.stringify({ date: "2026-10-13", items: [item] }));
+  await kv.put("report:latest", JSON.stringify({ date: "2026-10-13", items: [item], qualifiedItems: [item] }));
   const env = {
     SCOUT_KV: kv,
     SHIELDZ_API_KEY: "sk_test_unit_test",
@@ -230,14 +230,15 @@ test("daily collector deduplicates leads and reports transparent quality metrics
   t.after(() => { globalThis.fetch = originalFetch; });
   const report = await collectReport();
   assert.equal(report.pipelineVersion, "2.8");
-  assert.equal(report.items.length, 0, "ambiguous percentage, reward pool and deposit offers must not be promoted as worthwhile");
+  assert.equal(report.items.length, 3, "actionable reward leads should be visible even when their economics are not yet established");
   assert.equal(report.qualitySummary.feedsChecked, 8);
   assert.equal(report.qualitySummary.campaignDirectoriesChecked, 3);
   assert.equal(report.qualitySummary.campaignDirectoryLinksFound, 2);
   assert.equal(report.qualitySummary.candidatePagesChecked, 3);
-  assert.equal(report.qualitySummary.actionableLeadsPublished, 0);
+  assert.equal(report.qualitySummary.actionableLeadsPublished, 3);
+  assert.equal(report.qualitySummary.economicallyQualifiedLeads, 0);
   assert.equal(report.qualitySummary.rejectedAsInsufficientEvidence, 3);
-  assert.match(report.disclaimer, /No demonstrably worthwhile opportunities/);
+  assert.match(report.disclaimer, /These are research leads/);
   assert.equal(report.qualitySummary.fullyVerifiedRewards, 0);
-  assert.equal(report.items.length, 0, "no candidate is promoted without sufficient evidence of positive economics");
+  assert.ok(report.items.every(item => item.investmentAssessment?.decision !== "Worth investing in"), "ambiguous leads must not pass the economic screen");
 });
