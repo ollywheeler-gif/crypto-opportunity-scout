@@ -99,10 +99,10 @@ jobs:
       - name: Attempt demo login and export broker symbol metadata
         shell: pwsh
         env:
-          MT5_DEMO_LOGIN: \${{ secrets.MT5_DEMO_LOGIN }}
-          MT5_DEMO_PASSWORD: \${{ secrets.MT5_DEMO_PASSWORD }}
-          MT5_DEMO_SERVER: \${{ secrets.MT5_DEMO_SERVER }}
-          REQUESTED_SYMBOL: \${{ inputs.symbol || 'EURUSD' }}
+          MT5_DEMO_LOGIN: ${{ secrets.MT5_DEMO_LOGIN }}
+          MT5_DEMO_PASSWORD: ${{ secrets.MT5_DEMO_PASSWORD }}
+          MT5_DEMO_SERVER: ${{ secrets.MT5_DEMO_SERVER }}
+          REQUESTED_SYMBOL: ${{ inputs.symbol || 'EURUSD' }}
         run: |
           $ErrorActionPreference = 'Stop'
           $root = $env:MT5_INSTALL_DIR
