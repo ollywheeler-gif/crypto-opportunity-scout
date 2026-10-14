@@ -216,6 +216,7 @@ jobs:
           if ($safeLines.Count -eq 0) { $safeLines.Add('No matching terminal journal lines were found for this run.') }
           $safeLines | Set-Content -LiteralPath (Join-Path $outDir 'terminal-connection-log-sanitized.txt') -Encoding UTF8
 
+          $authFailure = @($safeLines | Where-Object { $_ -match '(?i)authorization.*failed|invalid account' }).Count -gt 0
           $verified = $contractPresent -and $connected -and $loggedIn -and -not [string]::IsNullOrWhiteSpace($accountCurrency) -and $tickValue -gt 0
           $status = [ordered]@{
             status = if ($verified) { 'BROKER_SESSION_VERIFIED_METADATA_USABLE' } else { 'BROKER_SESSION_NOT_VERIFIED' }
@@ -233,7 +234,7 @@ jobs:
             credential_values_printed = $false
             credential_config_uploaded = $false
             tester_executed = $false
-            diagnosis = if (-not $contractPresent) { 'EXPORTER_DID_NOT_WRITE_CONTRACT' } elseif (-not $connected) { 'MT5_TERMINAL_NOT_CONNECTED_TO_TRADE_SERVER' } elseif (-not $loggedIn) { 'ACCOUNT_LOGIN_NOT_CONFIRMED' } elseif ([string]::IsNullOrWhiteSpace($accountCurrency)) { 'ACCOUNT_CURRENCY_UNAVAILABLE' } elseif ($tickValue -le 0) { 'SYMBOL_TICK_VALUE_UNAVAILABLE' } else { 'VERIFIED' }
+            diagnosis = if ($authFailure) { 'AUTHORIZATION_FAILED_CHECK_DEMO_LOGIN_PASSWORD_AND_SERVER' } elseif (-not $contractPresent) { 'EXPORTER_DID_NOT_WRITE_CONTRACT' } elseif (-not $connected) { 'MT5_TERMINAL_NOT_CONNECTED_TO_TRADE_SERVER' } elseif (-not $loggedIn) { 'ACCOUNT_LOGIN_NOT_CONFIRMED' } elseif ([string]::IsNullOrWhiteSpace($accountCurrency)) { 'ACCOUNT_CURRENCY_UNAVAILABLE' } elseif ($tickValue -le 0) { 'SYMBOL_TICK_VALUE_UNAVAILABLE' } else { 'VERIFIED' }
             note = 'No orders are sent and the strategy tester is not run.'
           }
           $status | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $outDir 'connection-check.json') -Encoding UTF8
