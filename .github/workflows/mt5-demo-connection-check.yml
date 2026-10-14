@@ -108,7 +108,10 @@ jobs:
           $root = $env:MT5_INSTALL_DIR
           $login = $env:MT5_DEMO_LOGIN.Trim()
           $password = $env:MT5_DEMO_PASSWORD.Trim()
-          $server = $env:MT5_DEMO_SERVER.Trim()
+          $serverLabel = $env:MT5_DEMO_SERVER.Trim()
+          # Pepperstone's support instructions specify the demo trade-server address for desktop MT5.
+          # The account portal's friendly label (e.g. PepperstoneUK-Demo) is not necessarily the endpoint MT5 needs.
+          $server = if ($serverLabel -eq 'PepperstoneUK-Demo') { 'mt5-demo01.pepperstone.com' } else { $serverLabel }
           $requestedSymbol = $env:REQUESTED_SYMBOL.Trim()
           if ([string]::IsNullOrWhiteSpace($login) -or [string]::IsNullOrWhiteSpace($password) -or [string]::IsNullOrWhiteSpace($server)) { throw 'Demo login inputs are empty after trimming whitespace.' }
           $outDir = Join-Path $env:RUNNER_TEMP 'mt5-demo-evidence'
@@ -117,6 +120,8 @@ jobs:
           $config = Join-Path $env:RUNNER_TEMP 'mt5-demo-transient.ini'
           # Credentials exist only in this temporary file for the login attempt.
           # Never print, upload, or retain this file.
+          # Record only whether a known friendly label was mapped; never emit the supplied secret value.
+          $serverMapping = if ($serverLabel -eq 'PepperstoneUK-Demo') { 'PepperstoneUK-Demo mapped to official demo endpoint mt5-demo01.pepperstone.com' } else { 'Using configured server identifier as supplied' }
           $ini = @(
             '[Common]',
             ('Login=' + $login),
@@ -205,6 +210,7 @@ jobs:
             $status = [ordered]@{
               status = if ($verified) { 'BROKER_SESSION_VERIFIED_METADATA_USABLE' } else { 'BROKER_SESSION_NOT_VERIFIED' }
               requested_symbol = $requestedSymbol
+              server_configuration = $serverMapping
               terminal_process_started = $true
               contract_file_present = $contractPresent
               terminal_connected = $connected
