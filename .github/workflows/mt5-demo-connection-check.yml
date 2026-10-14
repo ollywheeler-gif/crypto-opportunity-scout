@@ -152,8 +152,6 @@ jobs:
           $loggedIn = $false
           $accountCurrency = ''
           $tickValue = 0.0
-          $dnsResolved = $false
-          $tcpReachable = $false
           try {
             try {
               [void][Net.Dns]::GetHostAddresses('mt5-demo01.pepperstone.com')
@@ -221,7 +219,7 @@ jobs:
           $status = [ordered]@{
             status = if ($verified) { 'BROKER_SESSION_VERIFIED_METADATA_USABLE' } else { 'BROKER_SESSION_NOT_VERIFIED' }
             requested_symbol = $requestedSymbol
-            configured_server_label = if ($serverLabel -eq 'PepperstoneUK-Demo') { 'PepperstoneUK-Demo' } else { 'custom configured server (redacted)' }
+            configured_server_label = $serverLabel
             mt5_server_value_used = $server
             endpoint_dns_resolved = $dnsResolved
             endpoint_tcp_443_reachable = $tcpReachable
@@ -240,7 +238,6 @@ jobs:
           $status | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $outDir 'connection-check.json') -Encoding UTF8
           "MT5_DIAGNOSTIC_STATUS=$($status.status)"
           "MT5_DIAGNOSTIC_REASON=$($status.diagnosis)"
-          "MT5_ENDPOINT_DNS=$dnsResolved; MT5_ENDPOINT_TCP_443=$tcpReachable"
           "MT5_CONNECTED=$connected; ACCOUNT_LOGIN_FLAG=$loggedIn; CURRENCY_PRESENT=$(-not [string]::IsNullOrWhiteSpace($accountCurrency)); POSITIVE_TICK_VALUE=$($tickValue -gt 0); CONTRACT_PRESENT=$contractPresent"
           if (-not $verified) { throw "MT5 demo diagnostic failed: $($status.diagnosis). See sanitized terminal log artifact." }
 
