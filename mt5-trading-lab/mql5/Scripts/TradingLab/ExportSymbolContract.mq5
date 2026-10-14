@@ -65,7 +65,10 @@ void OnStart()
    FileWrite(handle, "captured_server_time", TimeToString(TimeTradeServer(), TIME_DATE|TIME_SECONDS), "broker server time");
    FileWrite(handle, "terminal_build", (string)TerminalInfoInteger(TERMINAL_BUILD), "");
    FileWrite(handle, "terminal_connected", BoolText((bool)TerminalInfoInteger(TERMINAL_CONNECTED)), "must be true to accept broker metadata");
-   FileWrite(handle, "account_logged_in", BoolText(AccountInfoInteger(ACCOUNT_LOGIN) > 0), "boolean only; account number is never exported");
+   bool sessionVerified = connectedNow && loggedInNow && currencyNow != "";
+   FileWrite(handle, "account_login_configured", BoolText(AccountInfoInteger(ACCOUNT_LOGIN) > 0), "configured login value only; not proof of authentication");
+   FileWrite(handle, "account_logged_in", BoolText(sessionVerified), "true only when terminal is connected and account currency is present");
+   FileWrite(handle, "broker_session_verified", BoolText(sessionVerified), "requires connected terminal, configured login, and account currency");
    FileWrite(handle, "account_trade_allowed", BoolText((bool)AccountInfoInteger(ACCOUNT_TRADE_ALLOWED)), "account permission flag; no orders are sent");
    FileWrite(handle, "account_currency", AccountInfoString(ACCOUNT_CURRENCY), "currency only; no account identifier exported");
    FileWrite(handle, "point", DoubleToString(SymbolInfoDouble(symbol, SYMBOL_POINT), 10), "price units");
