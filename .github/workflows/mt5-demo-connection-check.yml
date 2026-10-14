@@ -99,18 +99,17 @@ jobs:
       - name: Attempt demo login and export broker symbol metadata
         shell: pwsh
         env:
-          MT5_DEMO_LOGIN: ${{ secrets.MT5_DEMO_LOGIN }}
-          MT5_DEMO_PASSWORD: ${{ secrets.MT5_DEMO_PASSWORD }}
-          MT5_DEMO_SERVER: ${{ secrets.MT5_DEMO_SERVER }}
-          REQUESTED_SYMBOL: ${{ inputs.symbol || 'EURUSD' }}
+          MT5_DEMO_LOGIN: \${{ secrets.MT5_DEMO_LOGIN }}
+          MT5_DEMO_PASSWORD: \${{ secrets.MT5_DEMO_PASSWORD }}
+          MT5_DEMO_SERVER: \${{ secrets.MT5_DEMO_SERVER }}
+          REQUESTED_SYMBOL: \${{ inputs.symbol || 'EURUSD' }}
         run: |
           $ErrorActionPreference = 'Stop'
           $root = $env:MT5_INSTALL_DIR
           $login = $env:MT5_DEMO_LOGIN.Trim()
           $password = $env:MT5_DEMO_PASSWORD.Trim()
           $serverLabel = $env:MT5_DEMO_SERVER.Trim()
-          # Pepperstone documents the demo connection address separately from the account's display label.
-          # Preserve the configured label for reporting; use the broker-published hostname in MT5's Server field.
+          # Pepperstone's documented desktop MT5 demo connection address differs from the display label.
           $server = if ($serverLabel -eq 'PepperstoneUK-Demo') { 'mt5-demo01.pepperstone.com' } else { $serverLabel }
           $requestedSymbol = $env:REQUESTED_SYMBOL.Trim()
           $outDir = Join-Path $env:RUNNER_TEMP 'mt5-demo-evidence'
@@ -119,10 +118,7 @@ jobs:
           $contract = Join-Path $filesDir 'TradingLab_symbol_contract.csv'
           $contractCopy = Join-Path $outDir 'symbol-contract.csv'
           $config = Join-Path $env:RUNNER_TEMP 'mt5-demo-transient.ini'
-          $safeLogPath = Join-Path $outDir 'terminal-connection-log-sanitized.txt'
-          $logInventoryPath = Join-Path $outDir 'terminal-log-inventory.txt'
-          $statusPath = Join-Path $outDir 'connection-check.json'
-          # Ensure no stale exporter output can be mistaken for this run.
+          $runStart = Get-Date
           Remove-Item $contract,$contractCopy -Force -ErrorAction SilentlyContinue
           $ini = @(
             '[Common]',
@@ -140,9 +136,8 @@ jobs:
             ('Symbol=' + $requestedSymbol),
             'Period=D1',
             'ShutdownTerminal=1'
-          ) -join "`r`n"
+          ) -join "\`r\`n"
           [IO.File]::WriteAllText($config,$ini,[Text.Encoding]::Unicode)
-          # Remove credentials from the process environment before starting MT5.
           Remove-Item Env:MT5_DEMO_PASSWORD -ErrorAction SilentlyContinue
           Remove-Item Env:MT5_DEMO_LOGIN -ErrorAction SilentlyContinue
           Remove-Item Env:MT5_DEMO_SERVER -ErrorAction SilentlyContinue
@@ -154,29 +149,19 @@ jobs:
           $tickValue = 0.0
           $dnsResolved = $false
           $tcpReachable = $false
-          $endpointHost = $null
-          $endpointPort = 443
-          # Probe the actual MT5 connection hostname before launch.
-          if ($server -match '^(?<host>[A-Za-z0-9.-]+)(:(?<port>\d+))?
-            $endpointHost = $Matches.host
-            if ($Matches.port) { $endpointPort = [int]$Matches.port }
-            try {
-              [void][Net.Dns]::GetHostAddresses($endpointHost)
-              $dnsResolved = $true
-              try { $tcp = Test-NetConnection -ComputerName $endpointHost -Port $endpointPort -WarningAction SilentlyContinue; $tcpReachable = [bool]$tcp.TcpTestSucceeded } catch {}
-            } catch {}
-          }
-          $runStart = Get-Date
           try {
+            try {
+              [void][Net.Dns]::GetHostAddresses('mt5-demo01.pepperstone.com')
+              $dnsResolved = $true
+              $tcp = Test-NetConnection -ComputerName 'mt5-demo01.pepperstone.com' -Port 443 -WarningAction SilentlyContinue
+              $tcpReachable = [bool]$tcp.TcpTestSucceeded
+            } catch {}
             $argsLine = '/portable /config:"' + $config + '"'
             $proc = Start-Process -FilePath (Join-Path $root 'terminal64.exe') -ArgumentList $argsLine -PassThru
             $deadline = (Get-Date).AddMinutes(4)
             while ((Get-Date) -lt $deadline) {
               if (Test-Path $contract) {
-                try {
-                  $rows = Import-Csv -LiteralPath $contract
-                  if ($rows.Count -gt 0) { break }
-                } catch {}
+                try { $rows = Import-Csv -LiteralPath $contract; if ($rows.Count -gt 0) { break } } catch {}
               }
               if ($proc.HasExited) { break }
               Start-Sleep -Seconds 2
@@ -196,21 +181,20 @@ jobs:
             Remove-Item $config -Force -ErrorAction SilentlyContinue
           }
 
-          # Capture recent MT5 journals and redact account identifiers, credentials, server labels, and symbol.
+          # Read only terminal journals, not the very large MetaEditor compile journal.
           $safeLines = [System.Collections.Generic.List[string]]::new()
           $inventory = [System.Collections.Generic.List[string]]::new()
           foreach ($logRoot in @((Join-Path $root 'logs'),(Join-Path $root 'MQL5\Logs'))) {
             if (-not (Test-Path $logRoot)) { $inventory.Add(($logRoot + ': directory missing')); continue }
-            # Exclude MetaEditor logs: they are huge and bury the terminal's actual server/login errors.
             $logFiles = @(Get-ChildItem -LiteralPath $logRoot -Filter '*.log' -File -ErrorAction SilentlyContinue |
               Where-Object { $_.LastWriteTime -ge $runStart.AddMinutes(-1) -and $_.Name -notmatch 'metaeditor' } |
               Sort-Object LastWriteTime -Descending | Select-Object -First 3)
-            $inventory.Add(($logRoot + ': ' + $logFiles.Count + ' recent log files'))
+            $inventory.Add(($logRoot + ': ' + $logFiles.Count + ' recent terminal log files'))
             foreach ($file in $logFiles) {
               $inventory.Add(($file.Name + ' bytes=' + $file.Length))
               foreach ($raw in (Get-Content -LiteralPath $file.FullName -Tail 500 -ErrorAction SilentlyContinue)) {
                 $line = [string]$raw
-                if ($line -match '(?i)terminal|network|connect|authoriz|login|server|timeout|failed|error|disconnected|resolve|socket|certificate|trade|account|demo|broker|\bping\b|\brequest\b|\bresponse\b') {
+                if ($line -match '(?i)terminal|network|connect|authoriz|login|server|timeout|failed|error|disconnected|resolve|socket|certificate|trade|account|demo|broker|ping|request|response') {
                   foreach ($secret in @($password,$login,$server,$serverLabel)) {
                     if (-not [string]::IsNullOrEmpty($secret)) { $line = $line.Replace($secret,'[REDACTED]') }
                   }
@@ -223,20 +207,18 @@ jobs:
               }
             }
           }
-          $inventory | Set-Content -LiteralPath $logInventoryPath -Encoding UTF8
+          $inventory | Set-Content -LiteralPath (Join-Path $outDir 'terminal-log-inventory.txt') -Encoding UTF8
           if ($safeLines.Count -eq 0) { $safeLines.Add('No matching terminal journal lines were found for this run.') }
-          $safeLines | Set-Content -LiteralPath $safeLogPath -Encoding UTF8
+          $safeLines | Set-Content -LiteralPath (Join-Path $outDir 'terminal-connection-log-sanitized.txt') -Encoding UTF8
 
           $verified = $contractPresent -and $connected -and $loggedIn -and -not [string]::IsNullOrWhiteSpace($accountCurrency) -and $tickValue -gt 0
           $status = [ordered]@{
             status = if ($verified) { 'BROKER_SESSION_VERIFIED_METADATA_USABLE' } else { 'BROKER_SESSION_NOT_VERIFIED' }
             requested_symbol = $requestedSymbol
-            configured_server_label = if ($serverLabel -eq 'PepperstoneUK-Demo') { 'PepperstoneUK-Demo (display label)' } else { 'custom configured server (redacted)' }
+            configured_server_label = if ($serverLabel -eq 'PepperstoneUK-Demo') { 'PepperstoneUK-Demo' } else { 'custom configured server (redacted)' }
             broker_server_hostname_used = if ($serverLabel -eq 'PepperstoneUK-Demo') { 'mt5-demo01.pepperstone.com' } else { 'custom configured server (redacted)' }
-            server_value_used_verbatim = ($server -eq $serverLabel)
-            endpoint_dns_probe_applicable = ($null -ne $endpointHost)
             endpoint_dns_resolved = $dnsResolved
-            endpoint_tcp_reachable = $tcpReachable
+            endpoint_tcp_443_reachable = $tcpReachable
             terminal_process_started = ($null -ne $proc)
             contract_file_present = $contractPresent
             terminal_connected = $connected
@@ -247,14 +229,14 @@ jobs:
             credential_config_uploaded = $false
             tester_executed = $false
             diagnosis = if (-not $contractPresent) { 'EXPORTER_DID_NOT_WRITE_CONTRACT' } elseif (-not $connected) { 'MT5_TERMINAL_NOT_CONNECTED_TO_TRADE_SERVER' } elseif (-not $loggedIn) { 'ACCOUNT_LOGIN_NOT_CONFIRMED' } elseif ([string]::IsNullOrWhiteSpace($accountCurrency)) { 'ACCOUNT_CURRENCY_UNAVAILABLE' } elseif ($tickValue -le 0) { 'SYMBOL_TICK_VALUE_UNAVAILABLE' } else { 'VERIFIED' }
-            note = 'The configured server string was passed unchanged. This workflow sends no orders and does not run the strategy tester.'
+            note = 'No orders are sent and the strategy tester is not run.'
           }
-          $status | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $statusPath -Encoding UTF8
-          # Print only non-secret status fields in the job log to make failures diagnosable without opening artifacts.
+          $status | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $outDir 'connection-check.json') -Encoding UTF8
           "MT5_DIAGNOSTIC_STATUS=$($status.status)"
           "MT5_DIAGNOSTIC_REASON=$($status.diagnosis)"
+          "MT5_ENDPOINT_DNS=$dnsResolved; MT5_ENDPOINT_TCP_443=$tcpReachable"
           "MT5_CONNECTED=$connected; ACCOUNT_LOGIN_FLAG=$loggedIn; CURRENCY_PRESENT=$(-not [string]::IsNullOrWhiteSpace($accountCurrency)); POSITIVE_TICK_VALUE=$($tickValue -gt 0); CONTRACT_PRESENT=$contractPresent"
-          if (-not $verified) { throw "MT5 demo diagnostic failed: $($status.diagnosis). Download the non-secret artifact for sanitized journal details." }
+          if (-not $verified) { throw "MT5 demo diagnostic failed: $($status.diagnosis). See sanitized terminal log artifact." }
 
       - name: Upload non-secret diagnostic evidence
         if: always()
