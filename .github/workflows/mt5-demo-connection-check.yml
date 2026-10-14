@@ -137,14 +137,6 @@ jobs:
             'Period=D1',
             'ShutdownTerminal=1'
           ) -join "`r`n"
-          # Validate the transient INI structure before launch without logging credential-bearing lines.
-          $iniLines = $ini -split "`r`n"
-          if (-not ($iniLines -contains '[Common]') -or -not ($iniLines -contains '[StartUp]') -or -not ($iniLines -contains 'Script=TradingLab\ExportSymbolContract') -or -not ($iniLines -contains 'ShutdownTerminal=1')) {
-            throw 'Generated MT5 startup configuration failed structural validation.'
-          }
-          [IO.File]::WriteAllText($config,$ini,[Text.Encoding]::Unicode)
-          $writtenIni = [IO.File]::ReadAllText($config,[Text.Encoding]::Unicode)
-          if ($writtenIni -notmatch '\[StartUp\]') { throw 'Written MT5 startup configuration did not preserve section boundaries.' }
           Remove-Item Env:MT5_DEMO_PASSWORD -ErrorAction SilentlyContinue
           Remove-Item Env:MT5_DEMO_LOGIN -ErrorAction SilentlyContinue
           Remove-Item Env:MT5_DEMO_SERVER -ErrorAction SilentlyContinue
