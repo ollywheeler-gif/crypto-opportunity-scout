@@ -112,10 +112,10 @@ jobs:
           # Use the exact MT5 server identifier supplied by the account owner; do not substitute another endpoint.
           $server = $serverLabel
           $requestedSymbol = $env:REQUESTED_SYMBOL.Trim()
-          # Test DNS and TCP reachability for the configured demo endpoint without printing credentials.
-          $endpointHost = $null
-          $endpointPort = 443
-          if ($server -match '^([^:]+):(\d+)
+          # A friendly MT5 server label is not a DNS hostname; preserve it verbatim.
+          # Endpoint probes are intentionally unavailable unless a real hostname is configured.
+          $dnsResolved = $false
+          $tcpReachable = $false
           $outDir = Join-Path $env:RUNNER_TEMP 'mt5-demo-evidence'
           New-Item -ItemType Directory -Force -Path $outDir | Out-Null
           $contractName = 'TradingLab_symbol_contract.csv'
