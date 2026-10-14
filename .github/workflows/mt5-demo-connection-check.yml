@@ -136,7 +136,7 @@ jobs:
             ('Symbol=' + $requestedSymbol),
             'Period=D1',
             'ShutdownTerminal=1'
-          ) -join "`r`n"
+          ) -join [Environment]::NewLine
           Remove-Item Env:MT5_DEMO_PASSWORD -ErrorAction SilentlyContinue
           Remove-Item Env:MT5_DEMO_LOGIN -ErrorAction SilentlyContinue
           Remove-Item Env:MT5_DEMO_SERVER -ErrorAction SilentlyContinue
