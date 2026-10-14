@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       symbol:
-        description: 'Broker symbol to inspect (must match the Pepperstone MT5 Market Watch name)'
+        description: 'Broker symbol to inspect (must match the IC Markets MT5 Market Watch name)'
         required: true
         default: 'EURUSD'
   push:
@@ -109,8 +109,8 @@ jobs:
           $login = $env:MT5_DEMO_LOGIN.Trim()
           $password = $env:MT5_DEMO_PASSWORD.Trim()
           $serverLabel = $env:MT5_DEMO_SERVER.Trim()
-          if ($serverLabel -cne 'PepperstoneUK-Demo') {
-            throw 'MT5_DEMO_SERVER secret does not exactly match the required server label PepperstoneUK-Demo.'
+          if ($serverLabel -cne 'ICMarketsSC-Demo') {
+            throw 'MT5_DEMO_SERVER secret does not exactly match the required server label ICMarketsSC-Demo.'
           }
           $server = $serverLabel
           $requestedSymbol = $env:REQUESTED_SYMBOL.Trim()
