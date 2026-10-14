@@ -108,7 +108,10 @@ jobs:
           $root = $env:MT5_INSTALL_DIR
           $login = $env:MT5_DEMO_LOGIN.Trim()
           $password = $env:MT5_DEMO_PASSWORD.Trim()
-          $server = $env:MT5_DEMO_SERVER.Trim()
+          $serverLabel = $env:MT5_DEMO_SERVER.Trim()
+          # Pepperstone documents the demo connection address separately from the account's display label.
+          # Preserve the configured label for reporting; use the broker-published hostname in MT5's Server field.
+          $server = if ($serverLabel -eq 'PepperstoneUK-Demo') { 'mt5-demo01.pepperstone.com' } else { $serverLabel }
           $requestedSymbol = $env:REQUESTED_SYMBOL.Trim()
           $outDir = Join-Path $env:RUNNER_TEMP 'mt5-demo-evidence'
           New-Item -ItemType Directory -Force -Path $outDir | Out-Null
@@ -153,8 +156,115 @@ jobs:
           $tcpReachable = $false
           $endpointHost = $null
           $endpointPort = 443
-          # Probe DNS only if the configured value is a hostname; do not change the Server= value.
-          if ($server -match '^(?<host>[A-Za-z0-9.-]+)(:(?<port>\d+))?$' -and $server -match '\.') {
+          # Probe the actual MT5 connection hostname before launch.
+          if ($server -match '^(?<host>[A-Za-z0-9.-]+)(:(?<port>\d+))?
+            $endpointHost = $Matches.host
+            if ($Matches.port) { $endpointPort = [int]$Matches.port }
+            try {
+              [void][Net.Dns]::GetHostAddresses($endpointHost)
+              $dnsResolved = $true
+              try { $tcp = Test-NetConnection -ComputerName $endpointHost -Port $endpointPort -WarningAction SilentlyContinue; $tcpReachable = [bool]$tcp.TcpTestSucceeded } catch {}
+            } catch {}
+          }
+          $runStart = Get-Date
+          try {
+            $argsLine = '/portable /config:"' + $config + '"'
+            $proc = Start-Process -FilePath (Join-Path $root 'terminal64.exe') -ArgumentList $argsLine -PassThru
+            $deadline = (Get-Date).AddMinutes(4)
+            while ((Get-Date) -lt $deadline) {
+              if (Test-Path $contract) {
+                try {
+                  $rows = Import-Csv -LiteralPath $contract
+                  if ($rows.Count -gt 0) { break }
+                } catch {}
+              }
+              if ($proc.HasExited) { break }
+              Start-Sleep -Seconds 2
+            }
+            if (Test-Path $contract) {
+              Copy-Item $contract $contractCopy -Force
+              $contractPresent = $true
+              $map = @{}
+              foreach ($row in (Import-Csv -LiteralPath $contractCopy)) { $map[$row.field] = $row.value }
+              $connected = ($map['terminal_connected'] -eq 'true')
+              $loggedIn = ($map['account_logged_in'] -eq 'true')
+              $accountCurrency = [string]$map['account_currency']
+              [void][double]::TryParse([string]$map['tick_value'], [ref]$tickValue)
+            }
+          } finally {
+            if ($proc -and -not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
+            Remove-Item $config -Force -ErrorAction SilentlyContinue
+          }
+
+          # Capture recent MT5 journals and redact account identifiers, credentials, server labels, and symbol.
+          $safeLines = [System.Collections.Generic.List[string]]::new()
+          $inventory = [System.Collections.Generic.List[string]]::new()
+          foreach ($logRoot in @((Join-Path $root 'logs'),(Join-Path $root 'MQL5\Logs'))) {
+            if (-not (Test-Path $logRoot)) { $inventory.Add(($logRoot + ': directory missing')); continue }
+            # Exclude MetaEditor logs: they are huge and bury the terminal's actual server/login errors.
+            $logFiles = @(Get-ChildItem -LiteralPath $logRoot -Filter '*.log' -File -ErrorAction SilentlyContinue |
+              Where-Object { $_.LastWriteTime -ge $runStart.AddMinutes(-1) -and $_.Name -notmatch 'metaeditor' } |
+              Sort-Object LastWriteTime -Descending | Select-Object -First 3)
+            $inventory.Add(($logRoot + ': ' + $logFiles.Count + ' recent log files'))
+            foreach ($file in $logFiles) {
+              $inventory.Add(($file.Name + ' bytes=' + $file.Length))
+              foreach ($raw in (Get-Content -LiteralPath $file.FullName -Tail 500 -ErrorAction SilentlyContinue)) {
+                $line = [string]$raw
+                if ($line -match '(?i)terminal|network|connect|authoriz|login|server|timeout|failed|error|disconnected|resolve|socket|certificate|trade|account|demo|broker|\bping\b|\brequest\b|\bresponse\b') {
+                  foreach ($secret in @($password,$login,$server,$serverLabel)) {
+                    if (-not [string]::IsNullOrEmpty($secret)) { $line = $line.Replace($secret,'[REDACTED]') }
+                  }
+                  $line = $line -replace '(?i)(password|passwd|login|account|user)\s*[:=]\s*[^\s,;]+','$1=[REDACTED]'
+                  $line = $line -replace '\b\d{5,}\b','[NUMBER_REDACTED]'
+                  $line = $line -replace ('(?i)' + [regex]::Escape($requestedSymbol)), '[SYMBOL]'
+                  if ($line.Length -gt 500) { $line = $line.Substring(0,500) }
+                  $safeLines.Add($line)
+                }
+              }
+            }
+          }
+          $inventory | Set-Content -LiteralPath $logInventoryPath -Encoding UTF8
+          if ($safeLines.Count -eq 0) { $safeLines.Add('No matching terminal journal lines were found for this run.') }
+          $safeLines | Set-Content -LiteralPath $safeLogPath -Encoding UTF8
+
+          $verified = $contractPresent -and $connected -and $loggedIn -and -not [string]::IsNullOrWhiteSpace($accountCurrency) -and $tickValue -gt 0
+          $status = [ordered]@{
+            status = if ($verified) { 'BROKER_SESSION_VERIFIED_METADATA_USABLE' } else { 'BROKER_SESSION_NOT_VERIFIED' }
+            requested_symbol = $requestedSymbol
+            configured_server_label = if ($serverLabel -eq 'PepperstoneUK-Demo') { 'PepperstoneUK-Demo (display label)' } else { 'custom configured server (redacted)' }
+            broker_server_hostname_used = if ($serverLabel -eq 'PepperstoneUK-Demo') { 'mt5-demo01.pepperstone.com' } else { 'custom configured server (redacted)' }
+            server_value_used_verbatim = ($server -eq $serverLabel)
+            endpoint_dns_probe_applicable = ($null -ne $endpointHost)
+            endpoint_dns_resolved = $dnsResolved
+            endpoint_tcp_reachable = $tcpReachable
+            terminal_process_started = ($null -ne $proc)
+            contract_file_present = $contractPresent
+            terminal_connected = $connected
+            account_logged_in = $loggedIn
+            account_currency_present = -not [string]::IsNullOrWhiteSpace($accountCurrency)
+            positive_tick_value_present = $tickValue -gt 0
+            credential_values_printed = $false
+            credential_config_uploaded = $false
+            tester_executed = $false
+            diagnosis = if (-not $contractPresent) { 'EXPORTER_DID_NOT_WRITE_CONTRACT' } elseif (-not $connected) { 'MT5_TERMINAL_NOT_CONNECTED_TO_TRADE_SERVER' } elseif (-not $loggedIn) { 'ACCOUNT_LOGIN_NOT_CONFIRMED' } elseif ([string]::IsNullOrWhiteSpace($accountCurrency)) { 'ACCOUNT_CURRENCY_UNAVAILABLE' } elseif ($tickValue -le 0) { 'SYMBOL_TICK_VALUE_UNAVAILABLE' } else { 'VERIFIED' }
+            note = 'The configured server string was passed unchanged. This workflow sends no orders and does not run the strategy tester.'
+          }
+          $status | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $statusPath -Encoding UTF8
+          # Print only non-secret status fields in the job log to make failures diagnosable without opening artifacts.
+          "MT5_DIAGNOSTIC_STATUS=$($status.status)"
+          "MT5_DIAGNOSTIC_REASON=$($status.diagnosis)"
+          "MT5_CONNECTED=$connected; ACCOUNT_LOGIN_FLAG=$loggedIn; CURRENCY_PRESENT=$(-not [string]::IsNullOrWhiteSpace($accountCurrency)); POSITIVE_TICK_VALUE=$($tickValue -gt 0); CONTRACT_PRESENT=$contractPresent"
+          if (-not $verified) { throw "MT5 demo diagnostic failed: $($status.diagnosis). Download the non-secret artifact for sanitized journal details." }
+
+      - name: Upload non-secret diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mt5-demo-connection-check
+          path: ${{ runner.temp }}/mt5-demo-evidence/**
+          if-no-files-found: warn
+          retention-days: 14
+ -and $server -match '\.') {
             $endpointHost = $Matches.host
             if ($Matches.port) { $endpointPort = [int]$Matches.port }
             try {
