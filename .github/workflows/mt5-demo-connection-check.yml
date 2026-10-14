@@ -153,12 +153,6 @@ jobs:
           $accountCurrency = ''
           $tickValue = 0.0
           try {
-            try {
-              [void][Net.Dns]::GetHostAddresses('mt5-demo01.pepperstone.com')
-              $dnsResolved = $true
-              $tcp = Test-NetConnection -ComputerName 'mt5-demo01.pepperstone.com' -Port 443 -WarningAction SilentlyContinue
-              $tcpReachable = [bool]$tcp.TcpTestSucceeded
-            } catch {}
             $argsLine = '/portable /config:"' + $config + '"'
             $proc = Start-Process -FilePath (Join-Path $root 'terminal64.exe') -ArgumentList $argsLine -PassThru
             $deadline = (Get-Date).AddMinutes(4)
@@ -221,8 +215,6 @@ jobs:
             requested_symbol = $requestedSymbol
             configured_server_label = $serverLabel
             mt5_server_value_used = $server
-            endpoint_dns_resolved = $dnsResolved
-            endpoint_tcp_443_reachable = $tcpReachable
             terminal_process_started = ($null -ne $proc)
             contract_file_present = $contractPresent
             terminal_connected = $connected
