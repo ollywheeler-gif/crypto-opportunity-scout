@@ -137,6 +137,12 @@ jobs:
             'Period=D1',
             'ShutdownTerminal=1'
           ) -join [Environment]::NewLine
+          # Persist the transient startup configuration before passing its path to MT5.
+          # The file contains credentials, so it stays in the runner temp directory and is never uploaded.
+          Set-Content -LiteralPath $config -Value $ini -Encoding Unicode
+          if (-not (Test-Path -LiteralPath $config) -or (Get-Item -LiteralPath $config).Length -lt 40) {
+            throw 'Transient MT5 startup configuration was not written correctly.'
+          }
           Remove-Item Env:MT5_DEMO_PASSWORD -ErrorAction SilentlyContinue
           Remove-Item Env:MT5_DEMO_LOGIN -ErrorAction SilentlyContinue
           Remove-Item Env:MT5_DEMO_SERVER -ErrorAction SilentlyContinue
