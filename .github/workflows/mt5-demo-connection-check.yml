@@ -116,7 +116,267 @@ jobs:
           # Test DNS and TCP reachability for the configured demo endpoint without printing credentials.
           $endpointHost = $server
           $endpointPort = 443
-          if ($server -match '^([^:]+):(\d+) -or [string]::IsNullOrWhiteSpace($password) -or [string]::IsNullOrWhiteSpace($server)) { throw 'Demo login inputs are empty after trimming whitespace.' }
+          if ($server -match '^([^:]+):(\d+)
+          $outDir = Join-Path $env:RUNNER_TEMP 'mt5-demo-evidence'
+          New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+          $contractName = 'TradingLab_symbol_contract.csv'
+          $config = Join-Path $env:RUNNER_TEMP 'mt5-demo-transient.ini'
+          # Credentials exist only in this temporary file for the login attempt.
+          # Never print, upload, or retain this file.
+          # Record only whether a known friendly label was mapped; never emit the supplied secret value.
+          $serverMapping = if ($serverLabel -eq 'PepperstoneUK-Demo') { 'PepperstoneUK-Demo mapped to official demo endpoint mt5-demo01.pepperstone.com' } else { 'Using configured server identifier as supplied' }
+          $ini = @(
+            '[Common]',
+            ('Login=' + $login),
+            ('Password=' + $password),
+            ('Server=' + $server),
+            'KeepPrivate=1',
+            '',
+            '[Experts]',
+            'AllowLiveTrading=0',
+            'AllowDllImport=0',
+            '',
+            '[StartUp]',
+            'Script=TradingLab\ExportSymbolContract',
+            ('Symbol=' + $requestedSymbol),
+            'Period=D1',
+            'ShutdownTerminal=1'
+          ) -join "`r`n"
+          [IO.File]::WriteAllText($config,$ini,[Text.Encoding]::Unicode)
+          $launchStarted = Get-Date
+          Remove-Item Env:MT5_DEMO_PASSWORD -ErrorAction SilentlyContinue
+          Remove-Item Env:MT5_DEMO_LOGIN -ErrorAction SilentlyContinue
+          Remove-Item Env:MT5_DEMO_SERVER -ErrorAction SilentlyContinue
+          try {
+            $argsLine = '/portable /config:"' + $config + '"'
+            $proc = Start-Process -FilePath (Join-Path $root 'terminal64.exe') -ArgumentList $argsLine -PassThru
+            $filesDir = Join-Path $root 'MQL5\Files'
+            $contract = Join-Path $filesDir $contractName
+            $deadline = (Get-Date).AddMinutes(5)
+            while ((Get-Date) -lt $deadline -and -not (Test-Path $contract)) {
+              if ($proc.HasExited) { break }
+              Start-Sleep -Seconds 5
+            }
+            $contractCopy = Join-Path $outDir 'symbol-contract.csv'
+            $contractPresent = Test-Path $contract
+            $connected = $false
+            $loggedIn = $false
+            $accountCurrency = ''
+            $tickValue = 0.0
+            if ($contractPresent) {
+              Copy-Item $contract $contractCopy -Force
+              $rows = Import-Csv -LiteralPath $contractCopy
+              $map = @{}
+              foreach ($row in $rows) { $map[$row.field] = $row.value }
+              $connected = ($map['terminal_connected'] -eq 'true')
+              $loggedIn = ($map['account_logged_in'] -eq 'true')
+              $accountCurrency = [string]$map['account_currency']
+              [void][double]::TryParse([string]$map['tick_value'], [ref]$tickValue)
+            }
+            if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
+
+            # Capture enough journal context to identify why the broker session is offline.
+            # Remove exact secrets/server/login before general redaction; never upload raw logs.
+            $safeLogPath = Join-Path $outDir 'terminal-connection-log-sanitized.txt'
+            $logRoots = @((Join-Path $root 'logs'), (Join-Path $root 'MQL5\Logs'))
+            $safeLines = [System.Collections.Generic.List[string]]::new()
+            $logInventory = [System.Collections.Generic.List[string]]::new()
+            foreach ($logRoot in $logRoots) {
+              if (Test-Path $logRoot) {
+                $logFiles = @(Get-ChildItem -LiteralPath $logRoot -Filter '*.log' -File -ErrorAction SilentlyContinue |
+                  Sort-Object LastWriteTime -Descending | Select-Object -First 4)
+                $logInventory.Add(($logRoot + ': ' + $logFiles.Count + ' log files'))
+                foreach ($file in $logFiles) {
+                  $logInventory.Add(($file.Name + ' bytes=' + $file.Length + ' modified=' + $file.LastWriteTime.ToString('s')))
+                  Get-Content -LiteralPath $file.FullName -Tail 120 -ErrorAction SilentlyContinue | ForEach-Object {
+                    $line = [string]$_
+                    if ($line -match '(?i)terminal|network|connect|authoriz|login|server|timeout|failed|error|disconnected|resolve|socket|certificate|trade') {
+                      foreach ($secret in @($password,$login,$server)) {
+                        if (-not [string]::IsNullOrEmpty($secret)) { $line = $line.Replace($secret,'[REDACTED]') }
+                      }
+                      $line = $line -replace '(?i)(password|passwd|login|account|user)\s*[:=]\s*[^\s,;]+','$1=[REDACTED]'
+                      $line = $line -replace '\b\d{5,}\b','[NUMBER_REDACTED]'
+                      $line = $line -replace '(?i)(server\s*[:=]\s*)[^\s,;]+','$1[REDACTED]'
+                      $line = $line -replace ('(?i)' + [regex]::Escape($requestedSymbol)), '[SYMBOL]'
+                      if ($line.Length -gt 500) { $line = $line.Substring(0,500) }
+                      $safeLines.Add($line)
+                    }
+                  }
+                }
+              } else { $logInventory.Add(($logRoot + ': directory missing')) }
+            }
+            $logInventory | Set-Content -LiteralPath (Join-Path $outDir 'terminal-log-inventory.txt') -Encoding UTF8
+            if ($safeLines.Count -eq 0) { $safeLines.Add('No matching lines found in the most recent platform/Experts logs; inspect inventory for actual log locations.') }
+            $safeLines | Set-Content -LiteralPath $safeLogPath -Encoding UTF8
+
+            $verified = $contractPresent -and $connected -and $loggedIn -and -not [string]::IsNullOrWhiteSpace($accountCurrency) -and $tickValue -gt 0
+            $status = [ordered]@{
+              status = if ($verified) { 'BROKER_SESSION_VERIFIED_METADATA_USABLE' } else { 'BROKER_SESSION_NOT_VERIFIED' }
+              requested_symbol = $requestedSymbol
+              server_configuration = $serverMapping
+              endpoint_dns_resolved = $dnsResolved
+              endpoint_tcp_443_reachable = $tcpReachable
+              terminal_process_started = $true
+              contract_file_present = $contractPresent
+              terminal_connected = $connected
+              account_logged_in = $loggedIn
+              account_currency_present = -not [string]::IsNullOrWhiteSpace($accountCurrency)
+              positive_tick_value_present = $tickValue -gt 0
+              credential_values_printed = $false
+              credential_config_uploaded = $false
+              tester_executed = $false
+              note = 'A successful workflow run alone is not sufficient; accept the broker session only when connection, login, currency and tick-value checks all pass.'
+            }
+            $status | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $outDir 'connection-check.json') -Encoding UTF8
+            if (-not $verified) { throw 'Broker session could not be verified from connection state and usable account metadata. See uploaded non-secret diagnostic artifact.' }
+          } finally {
+            Remove-Item $config -Force -ErrorAction SilentlyContinue
+          }
+          "MT5_DEMO_EVIDENCE=$outDir" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Upload non-secret diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mt5-demo-connection-check
+          path: ${{ runner.temp }}/mt5-demo-evidence/**
+          if-no-files-found: warn
+          retention-days: 14
+) { $endpointHost = $Matches[1]; $endpointPort = [int]$Matches[2] }
+          $dnsResolved = $false
+          $tcpReachable = $false
+          try { [void][System.Net.Dns]::GetHostAddresses($endpointHost); $dnsResolved = $true } catch {}
+          try { $tcpReachable = Test-NetConnection -ComputerName $endpointHost -Port $endpointPort -InformationLevel Quiet -WarningAction SilentlyContinue } catch {}
+          if ([string]::IsNullOrWhiteSpace($login) -or [string]::IsNullOrWhiteSpace($password) -or [string]::IsNullOrWhiteSpace($server)) { throw 'Demo login inputs are empty after trimming whitespace.' }
+          $outDir = Join-Path $env:RUNNER_TEMP 'mt5-demo-evidence'
+          New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+          $contractName = 'TradingLab_symbol_contract.csv'
+          $config = Join-Path $env:RUNNER_TEMP 'mt5-demo-transient.ini'
+          # Credentials exist only in this temporary file for the login attempt.
+          # Never print, upload, or retain this file.
+          # Record only whether a known friendly label was mapped; never emit the supplied secret value.
+          $serverMapping = if ($serverLabel -eq 'PepperstoneUK-Demo') { 'PepperstoneUK-Demo mapped to official demo endpoint mt5-demo01.pepperstone.com' } else { 'Using configured server identifier as supplied' }
+          $ini = @(
+            '[Common]',
+            ('Login=' + $login),
+            ('Password=' + $password),
+            ('Server=' + $server),
+            'KeepPrivate=1',
+            '',
+            '[Experts]',
+            'AllowLiveTrading=0',
+            'AllowDllImport=0',
+            '',
+            '[StartUp]',
+            'Script=TradingLab\ExportSymbolContract',
+            ('Symbol=' + $requestedSymbol),
+            'Period=D1',
+            'ShutdownTerminal=1'
+          ) -join "`r`n"
+          [IO.File]::WriteAllText($config,$ini,[Text.Encoding]::Unicode)
+          $launchStarted = Get-Date
+          Remove-Item Env:MT5_DEMO_PASSWORD -ErrorAction SilentlyContinue
+          Remove-Item Env:MT5_DEMO_LOGIN -ErrorAction SilentlyContinue
+          Remove-Item Env:MT5_DEMO_SERVER -ErrorAction SilentlyContinue
+          try {
+            $argsLine = '/portable /config:"' + $config + '"'
+            $proc = Start-Process -FilePath (Join-Path $root 'terminal64.exe') -ArgumentList $argsLine -PassThru
+            $filesDir = Join-Path $root 'MQL5\Files'
+            $contract = Join-Path $filesDir $contractName
+            $deadline = (Get-Date).AddMinutes(5)
+            while ((Get-Date) -lt $deadline -and -not (Test-Path $contract)) {
+              if ($proc.HasExited) { break }
+              Start-Sleep -Seconds 5
+            }
+            $contractCopy = Join-Path $outDir 'symbol-contract.csv'
+            $contractPresent = Test-Path $contract
+            $connected = $false
+            $loggedIn = $false
+            $accountCurrency = ''
+            $tickValue = 0.0
+            if ($contractPresent) {
+              Copy-Item $contract $contractCopy -Force
+              $rows = Import-Csv -LiteralPath $contractCopy
+              $map = @{}
+              foreach ($row in $rows) { $map[$row.field] = $row.value }
+              $connected = ($map['terminal_connected'] -eq 'true')
+              $loggedIn = ($map['account_logged_in'] -eq 'true')
+              $accountCurrency = [string]$map['account_currency']
+              [void][double]::TryParse([string]$map['tick_value'], [ref]$tickValue)
+            }
+            if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
+
+            # Capture enough journal context to identify why the broker session is offline.
+            # Remove exact secrets/server/login before general redaction; never upload raw logs.
+            $safeLogPath = Join-Path $outDir 'terminal-connection-log-sanitized.txt'
+            $logRoots = @((Join-Path $root 'logs'), (Join-Path $root 'MQL5\Logs'))
+            $safeLines = [System.Collections.Generic.List[string]]::new()
+            $logInventory = [System.Collections.Generic.List[string]]::new()
+            foreach ($logRoot in $logRoots) {
+              if (Test-Path $logRoot) {
+                $logFiles = @(Get-ChildItem -LiteralPath $logRoot -Filter '*.log' -File -ErrorAction SilentlyContinue |
+                  Sort-Object LastWriteTime -Descending | Select-Object -First 4)
+                $logInventory.Add(($logRoot + ': ' + $logFiles.Count + ' log files'))
+                foreach ($file in $logFiles) {
+                  $logInventory.Add(($file.Name + ' bytes=' + $file.Length + ' modified=' + $file.LastWriteTime.ToString('s')))
+                  Get-Content -LiteralPath $file.FullName -Tail 120 -ErrorAction SilentlyContinue | ForEach-Object {
+                    $line = [string]$_
+                    if ($line -match '(?i)terminal|network|connect|authoriz|login|server|timeout|failed|error|disconnected|resolve|socket|certificate|trade') {
+                      foreach ($secret in @($password,$login,$server)) {
+                        if (-not [string]::IsNullOrEmpty($secret)) { $line = $line.Replace($secret,'[REDACTED]') }
+                      }
+                      $line = $line -replace '(?i)(password|passwd|login|account|user)\s*[:=]\s*[^\s,;]+','$1=[REDACTED]'
+                      $line = $line -replace '\b\d{5,}\b','[NUMBER_REDACTED]'
+                      $line = $line -replace '(?i)(server\s*[:=]\s*)[^\s,;]+','$1[REDACTED]'
+                      $line = $line -replace ('(?i)' + [regex]::Escape($requestedSymbol)), '[SYMBOL]'
+                      if ($line.Length -gt 500) { $line = $line.Substring(0,500) }
+                      $safeLines.Add($line)
+                    }
+                  }
+                }
+              } else { $logInventory.Add(($logRoot + ': directory missing')) }
+            }
+            $logInventory | Set-Content -LiteralPath (Join-Path $outDir 'terminal-log-inventory.txt') -Encoding UTF8
+            if ($safeLines.Count -eq 0) { $safeLines.Add('No matching lines found in the most recent platform/Experts logs; inspect inventory for actual log locations.') }
+            $safeLines | Set-Content -LiteralPath $safeLogPath -Encoding UTF8
+
+            $verified = $contractPresent -and $connected -and $loggedIn -and -not [string]::IsNullOrWhiteSpace($accountCurrency) -and $tickValue -gt 0
+            $status = [ordered]@{
+              status = if ($verified) { 'BROKER_SESSION_VERIFIED_METADATA_USABLE' } else { 'BROKER_SESSION_NOT_VERIFIED' }
+              requested_symbol = $requestedSymbol
+              server_configuration = $serverMapping
+              terminal_process_started = $true
+              contract_file_present = $contractPresent
+              terminal_connected = $connected
+              account_logged_in = $loggedIn
+              account_currency_present = -not [string]::IsNullOrWhiteSpace($accountCurrency)
+              positive_tick_value_present = $tickValue -gt 0
+              credential_values_printed = $false
+              credential_config_uploaded = $false
+              tester_executed = $false
+              note = 'A successful workflow run alone is not sufficient; accept the broker session only when connection, login, currency and tick-value checks all pass.'
+            }
+            $status | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $outDir 'connection-check.json') -Encoding UTF8
+            if (-not $verified) { throw 'Broker session could not be verified from connection state and usable account metadata. See uploaded non-secret diagnostic artifact.' }
+          } finally {
+            Remove-Item $config -Force -ErrorAction SilentlyContinue
+          }
+          "MT5_DEMO_EVIDENCE=$outDir" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Upload non-secret diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mt5-demo-connection-check
+          path: ${{ runner.temp }}/mt5-demo-evidence/**
+          if-no-files-found: warn
+          retention-days: 14
+) { $endpointHost = $Matches[1]; $endpointPort = [int]$Matches[2] }
+          $dnsResolved = $false
+          $tcpReachable = $false
+          try { [void][System.Net.Dns]::GetHostAddresses($endpointHost); $dnsResolved = $true } catch {}
+          try { $tcpReachable = Test-NetConnection -ComputerName $endpointHost -Port $endpointPort -InformationLevel Quiet -WarningAction SilentlyContinue } catch {}
+          if ([string]::IsNullOrWhiteSpace($login) -or [string]::IsNullOrWhiteSpace($password) -or [string]::IsNullOrWhiteSpace($server)) { throw 'Demo login inputs are empty after trimming whitespace.' }
           $outDir = Join-Path $env:RUNNER_TEMP 'mt5-demo-evidence'
           New-Item -ItemType Directory -Force -Path $outDir | Out-Null
           $contractName = 'TradingLab_symbol_contract.csv'
