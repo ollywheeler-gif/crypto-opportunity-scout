@@ -109,7 +109,9 @@ jobs:
           $login = $env:MT5_DEMO_LOGIN.Trim()
           $password = $env:MT5_DEMO_PASSWORD.Trim()
           $serverLabel = $env:MT5_DEMO_SERVER.Trim()
-          # Pepperstone's documented desktop MT5 demo connection address differs from the display label.
+          if ($serverLabel -cne 'PepperstoneUK-Demo') {
+            throw 'MT5_DEMO_SERVER secret does not exactly match the required server label PepperstoneUK-Demo.'
+          }
           $server = $serverLabel
           $requestedSymbol = $env:REQUESTED_SYMBOL.Trim()
           $outDir = Join-Path $env:RUNNER_TEMP 'mt5-demo-evidence'
