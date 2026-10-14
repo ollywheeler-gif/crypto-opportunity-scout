@@ -110,7 +110,7 @@ jobs:
           $password = $env:MT5_DEMO_PASSWORD.Trim()
           $serverLabel = $env:MT5_DEMO_SERVER.Trim()
           # Pepperstone's documented desktop MT5 demo connection address differs from the display label.
-          $server = if ($serverLabel -eq 'PepperstoneUK-Demo') { 'mt5-demo01.pepperstone.com' } else { $serverLabel }
+          $server = $serverLabel
           $requestedSymbol = $env:REQUESTED_SYMBOL.Trim()
           $outDir = Join-Path $env:RUNNER_TEMP 'mt5-demo-evidence'
           New-Item -ItemType Directory -Force -Path $outDir | Out-Null
@@ -222,7 +222,7 @@ jobs:
             status = if ($verified) { 'BROKER_SESSION_VERIFIED_METADATA_USABLE' } else { 'BROKER_SESSION_NOT_VERIFIED' }
             requested_symbol = $requestedSymbol
             configured_server_label = if ($serverLabel -eq 'PepperstoneUK-Demo') { 'PepperstoneUK-Demo' } else { 'custom configured server (redacted)' }
-            broker_server_hostname_used = if ($serverLabel -eq 'PepperstoneUK-Demo') { 'mt5-demo01.pepperstone.com' } else { 'custom configured server (redacted)' }
+            mt5_server_value_used = $server
             endpoint_dns_resolved = $dnsResolved
             endpoint_tcp_443_reachable = $tcpReachable
             terminal_process_started = ($null -ne $proc)
