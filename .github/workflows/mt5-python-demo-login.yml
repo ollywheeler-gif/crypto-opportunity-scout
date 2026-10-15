@@ -11,6 +11,9 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 10
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Check required GitHub Actions secrets
         shell: pwsh
         env:
