@@ -53,7 +53,7 @@ jobs:
           if ($sig.Status -ne 'Valid' -or $sig.SignerCertificate.Subject -notmatch 'MetaQuotes') {
             throw "Official MT5 installer signature check failed: $($sig.Status)"
           }
-          $installDir = 'C:\MT5DemoCheck'
+          $installDir = 'C:\\MT5DemoCheck'
           $p = Start-Process -FilePath $installer -ArgumentList ('/auto /path:"' + $installDir + '"') -Wait -PassThru
           $terminal = Join-Path $installDir 'terminal64.exe'
           $editor = Join-Path $installDir 'metaeditor64.exe'
@@ -66,7 +66,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $root = $env:MT5_INSTALL_DIR
           $terminal = Join-Path $root 'terminal64.exe'
-          $include = Join-Path $root 'MQL5\Include\Trade\Trade.mqh'
+          $include = Join-Path $root 'MQL5\\Include\\Trade\\Trade.mqh'
           $p = Start-Process -FilePath $terminal -ArgumentList '/portable' -PassThru
           $deadline = (Get-Date).AddSeconds(60)
           while ((Get-Date) -lt $deadline -and -not (Test-Path $include)) { Start-Sleep -Seconds 2 }
@@ -79,9 +79,9 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $root = $env:MT5_INSTALL_DIR
           $mql = Join-Path $root 'MQL5'
-          $include = Join-Path $mql 'Include\Trade\Trade.mqh'
+          $include = Join-Path $mql 'Include\\Trade\\Trade.mqh'
           if (-not (Test-Path $include)) { throw 'MT5 standard include directory missing; cannot compile exporter.' }
-          $src = Join-Path $mql 'Scripts\TradingLab\ExportSymbolContract.mq5'
+          $src = Join-Path $mql 'Scripts\\TradingLab\\ExportSymbolContract.mq5'
           New-Item -ItemType Directory -Force -Path (Split-Path $src -Parent) | Out-Null
           Copy-Item 'mt5-trading-lab/mql5/Scripts/TradingLab/ExportSymbolContract.mq5' $src -Force
           $log = [IO.Path]::ChangeExtension($src,'.log')
@@ -91,7 +91,7 @@ jobs:
           $p = Start-Process -FilePath $editor -ArgumentList @("/compile:`"$src`"", '/log') -Wait -PassThru
           if (-not (Test-Path $log)) { throw "Exporter compiler log missing (exit $($p.ExitCode))." }
           $logText = Get-Content $log -Raw
-          $summary = [regex]::Match($logText,'(?im)^\s*Result:\s*(\d+)\s+errors?,\s*(\d+)\s+warnings?')
+          $summary = [regex]::Match($logText,'(?im)^\\s*Result:\\s*(\\d+)\\s+errors?,\\s*(\\d+)\\s+warnings?')
           if (-not $summary.Success -or [int]$summary.Groups[1].Value -ne 0 -or [int]$summary.Groups[2].Value -ne 0 -or -not (Test-Path $ex5)) {
             throw 'Read-only symbol exporter must compile with zero errors and warnings.'
           }
@@ -116,11 +116,10 @@ jobs:
           $requestedSymbol = $env:REQUESTED_SYMBOL.Trim()
           $outDir = Join-Path $env:RUNNER_TEMP 'mt5-demo-evidence'
           New-Item -ItemType Directory -Force -Path $outDir | Out-Null
-          $filesDir = Join-Path $root 'MQL5\Files'
+          $filesDir = Join-Path $root 'MQL5\\Files'
           $contract = Join-Path $filesDir 'TradingLab_symbol_contract.csv'
           $contractCopy = Join-Path $outDir 'symbol-contract.csv'
           $config = Join-Path $env:RUNNER_TEMP 'mt5-demo-transient.ini'
-          $runStart = Get-Date
           Remove-Item $contract,$contractCopy -Force -ErrorAction SilentlyContinue
           $ini = @(
             '[Common]',
@@ -134,17 +133,23 @@ jobs:
             'AllowDllImport=0',
             '',
             '[StartUp]',
-            'Script=TradingLab\ExportSymbolContract',
+            'Script=TradingLab\\ExportSymbolContract',
             ('Symbol=' + $requestedSymbol),
-            'Period=D1',
-            '# Keep terminal open after exporter so CI can collect post-startup connection logs'
+            'Period=D1'
           ) -join [Environment]::NewLine
-          # Persist the transient startup configuration before passing its path to MT5.
-          # The file contains credentials, so it stays in the runner temp directory and is never uploaded.
+          # Credentials stay in a transient local file and are never uploaded.
           Set-Content -LiteralPath $config -Value $ini -Encoding Unicode
-          if (-not (Test-Path -LiteralPath $config) -or (Get-Item -LiteralPath $config).Length -lt 40) {
-            throw 'Transient MT5 startup configuration was not written correctly.'
+          $configText = Get-Content -LiteralPath $config -Raw
+          $configChecks = [ordered]@{
+            file_exists = Test-Path -LiteralPath $config
+            common_section_present = $configText.Contains('[Common]')
+            login_key_present = $configText -match '(?im)^Login=\\d+\\s*$'
+            password_key_present = $configText -match '(?im)^Password=.+$'
+            server_key_matches_expected = $configText -match '(?im)^Server=ICMarketsSC-Demo\\s*$'
+            startup_script_present = $configText -match '(?im)^Script=TradingLab\\ExportSymbolContract\\s*$'
           }
+          $configChecks | ConvertTo-Json | Set-Content (Join-Path $outDir 'startup-config-checks.json') -Encoding UTF8
+          if (-not ($configChecks.Values -notcontains $false)) { throw 'MT5 startup configuration did not pass structural validation.' }
           Remove-Item Env:MT5_DEMO_PASSWORD -ErrorAction SilentlyContinue
           Remove-Item Env:MT5_DEMO_LOGIN -ErrorAction SilentlyContinue
           Remove-Item Env:MT5_DEMO_SERVER -ErrorAction SilentlyContinue
@@ -159,8 +164,6 @@ jobs:
             $proc = Start-Process -FilePath (Join-Path $root 'terminal64.exe') -ArgumentList $argsLine -PassThru
             $deadline = (Get-Date).AddMinutes(4)
             while ((Get-Date) -lt $deadline) {
-              # A contract file can be written before login succeeds. Only stop early
-              # when the exported fields prove a connected, authenticated session and usable tick value.
               if (Test-Path $contract) {
                 try {
                   $rows = Import-Csv -LiteralPath $contract
@@ -169,11 +172,8 @@ jobs:
                     foreach ($row in $rows) { $probe[$row.field] = $row.value }
                     $probeTickValue = 0.0
                     [void][double]::TryParse([string]$probe['tick_value'], [ref]$probeTickValue)
-                    $probeVerified = ($probe['terminal_connected'] -eq 'true' -and
-                      $probe['account_logged_in'] -eq 'true' -and
-                      -not [string]::IsNullOrWhiteSpace([string]$probe['account_currency']) -and
-                      $probeTickValue -gt 0)
-                    if ($probeVerified) { break }
+                    if ($probe['terminal_connected'] -eq 'true' -and $probe['account_logged_in'] -eq 'true' -and
+                      -not [string]::IsNullOrWhiteSpace([string]$probe['account_currency']) -and $probeTickValue -gt 0) { break }
                   }
                 } catch {}
               }
@@ -191,30 +191,31 @@ jobs:
               [void][double]::TryParse([string]$map['tick_value'], [ref]$tickValue)
             }
           } finally {
+            # Preserve journal files first; stop the terminal only after the four-minute observation window.
             if ($proc -and -not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
             Remove-Item $config -Force -ErrorAction SilentlyContinue
           }
 
-          # Capture terminal journals recursively (excluding MetaEditor), including non-keyword
-          # lines around connection attempts. Never upload the transient INI or raw logs.
+          # Collect the newest journals even if MT5 stopped updating them before the timeout.
+          # Filter by recency only when selecting the most recent files; do not discard old-but-relevant journals.
           $safeLines = [System.Collections.Generic.List[string]]::new()
           $inventory = [System.Collections.Generic.List[string]]::new()
-          $logRoots = @((Join-Path $root 'logs'),(Join-Path $root 'MQL5\Logs'))
+          $logRoots = @((Join-Path $root 'logs'),(Join-Path $root 'MQL5\\Logs'))
           foreach ($logRoot in $logRoots) {
             if (-not (Test-Path $logRoot)) { $inventory.Add(($logRoot + ': directory missing')); continue }
             $logFiles = @(Get-ChildItem -LiteralPath $logRoot -Filter '*.log' -File -Recurse -ErrorAction SilentlyContinue |
-              Where-Object { $_.LastWriteTime -ge $runStart.AddMinutes(-2) -and $_.FullName -notmatch '(?i)metaeditor' } |
+              Where-Object { $_.FullName -notmatch '(?i)metaeditor' } |
               Sort-Object LastWriteTime -Descending | Select-Object -First 10)
-            $inventory.Add(($logRoot + ': ' + $logFiles.Count + ' recent terminal log files'))
+            $inventory.Add(($logRoot + ': ' + $logFiles.Count + ' newest terminal log files'))
             foreach ($file in $logFiles) {
-              $inventory.Add(($file.FullName.Substring($root.Length).TrimStart('\') + ' bytes=' + $file.Length))
+              $inventory.Add(($file.FullName.Substring($root.Length).TrimStart('\\') + ' bytes=' + $file.Length))
               foreach ($raw in (Get-Content -LiteralPath $file.FullName -Tail 1000 -ErrorAction SilentlyContinue)) {
                 $line = [string]$raw
                 foreach ($secret in @($password,$login,$server,$serverLabel)) {
                   if (-not [string]::IsNullOrEmpty($secret)) { $line = $line.Replace($secret,'[REDACTED]') }
                 }
-                $line = $line -replace '(?i)(password|passwd|login|account|user)\s*[:=]\s*[^\s,;]+','$1=[REDACTED]'
-                $line = $line -replace '\b\d{5,}\b','[NUMBER_REDACTED]'
+                $line = $line -replace '(?i)(password|passwd|login|account|user)\\s*[:=]\\s*[^\\s,;]+','$1=[REDACTED]'
+                $line = $line -replace '\\b\\d{5,}\\b','[NUMBER_REDACTED]'
                 $line = $line -replace ('(?i)' + [regex]::Escape($requestedSymbol)), '[SYMBOL]'
                 if ($line.Length -gt 500) { $line = $line.Substring(0,500) }
                 if (-not [string]::IsNullOrWhiteSpace($line)) { $safeLines.Add($line) }
@@ -222,7 +223,7 @@ jobs:
             }
           }
           $inventory | Set-Content -LiteralPath (Join-Path $outDir 'terminal-log-inventory.txt') -Encoding UTF8
-          if ($safeLines.Count -eq 0) { $safeLines.Add('No terminal journal lines were found for this run.') }
+          if ($safeLines.Count -eq 0) { $safeLines.Add('No terminal journal lines were found.') }
           $safeLines | Set-Content -LiteralPath (Join-Path $outDir 'terminal-connection-log-sanitized.txt') -Encoding UTF8
 
           $authFailure = @($safeLines | Where-Object { $_ -match '(?i)authori[sz]ation.{0,50}(failed|denied|invalid)|invalid account|login.{0,30}(failed|invalid)|password.{0,30}(incorrect|invalid)|account.{0,30}(disabled|blocked)|not authorized|access denied' }).Count -gt 0
@@ -231,7 +232,7 @@ jobs:
             status = if ($verified) { 'BROKER_SESSION_VERIFIED_METADATA_USABLE' } else { 'BROKER_SESSION_NOT_VERIFIED' }
             requested_symbol = $requestedSymbol
             configured_server_label = $serverLabel
-            mt5_server_value_used = $server
+            startup_config_checks = $configChecks
             terminal_process_started = ($null -ne $proc)
             contract_file_present = $contractPresent
             terminal_connected = $connected
@@ -244,7 +245,7 @@ jobs:
             diagnosis = if ($authFailure) { 'AUTHORIZATION_FAILED_CHECK_DEMO_LOGIN_PASSWORD_AND_SERVER' } elseif (-not $contractPresent) { 'EXPORTER_DID_NOT_WRITE_CONTRACT' } elseif (-not $connected) { 'MT5_TERMINAL_NOT_CONNECTED_TO_TRADE_SERVER' } elseif (-not $loggedIn) { 'ACCOUNT_LOGIN_NOT_CONFIRMED' } elseif ([string]::IsNullOrWhiteSpace($accountCurrency)) { 'ACCOUNT_CURRENCY_UNAVAILABLE' } elseif ($tickValue -le 0) { 'SYMBOL_TICK_VALUE_UNAVAILABLE' } else { 'VERIFIED' }
             note = 'No orders are sent and the strategy tester is not run.'
           }
-          $status | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $outDir 'connection-check.json') -Encoding UTF8
+          $status | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $outDir 'connection-check.json') -Encoding UTF8
           "MT5_DIAGNOSTIC_STATUS=$($status.status)"
           "MT5_DIAGNOSTIC_REASON=$($status.diagnosis)"
           "MT5_CONNECTED=$connected; ACCOUNT_LOGIN_FLAG=$loggedIn; CURRENCY_PRESENT=$(-not [string]::IsNullOrWhiteSpace($accountCurrency)); POSITIVE_TICK_VALUE=$($tickValue -gt 0); CONTRACT_PRESENT=$contractPresent"
