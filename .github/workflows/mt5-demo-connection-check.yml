@@ -91,7 +91,7 @@ jobs:
           $p = Start-Process -FilePath $editor -ArgumentList @("/compile:`"$src`"", '/log') -Wait -PassThru
           if (-not (Test-Path $log)) { throw "Exporter compiler log missing (exit $($p.ExitCode))." }
           $logText = Get-Content $log -Raw
-          $summary = [regex]::Match($logText,'(?im)^\\s*Result:\\s*(\\d+)\\s+errors?,\\s*(\\d+)\\s+warnings?')
+          $summary = [regex]::Match($logText,'(?im)^\s*Result:\s*(\d+)\s+errors?,\s*(\d+)\s+warnings?')
           if (-not $summary.Success -or [int]$summary.Groups[1].Value -ne 0 -or [int]$summary.Groups[2].Value -ne 0 -or -not (Test-Path $ex5)) {
             throw 'Read-only symbol exporter must compile with zero errors and warnings.'
           }
