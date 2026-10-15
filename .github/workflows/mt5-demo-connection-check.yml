@@ -139,14 +139,126 @@ jobs:
           ) -join [Environment]::NewLine
           # Credentials stay in a transient local file and are never uploaded.
           Set-Content -LiteralPath $config -Value $ini -Encoding Unicode
-          $configText = Get-Content -LiteralPath $config -Raw
+          $configLines = @(Get-Content -LiteralPath $config)
           $configChecks = [ordered]@{
             file_exists = Test-Path -LiteralPath $config
-            common_section_present = $configText.Contains('[Common]')
-            login_key_present = $configText -match '(?im)^Login=\\d+\\s*$'
-            password_key_present = $configText -match '(?im)^Password=.+$'
-            server_key_matches_expected = $configText -match '(?im)^Server=ICMarketsSC-Demo\\s*$'
-            startup_script_present = $configText -match '(?im)^Script=TradingLab\\ExportSymbolContract\\s*$'
+            common_section_present = $configLines -contains '[Common]'
+            login_key_present = @($configLines | Where-Object { $_ -match '^Login=\d+
+          $configChecks | ConvertTo-Json | Set-Content (Join-Path $outDir 'startup-config-checks.json') -Encoding UTF8
+          if (-not ($configChecks.Values -notcontains $false)) { throw 'MT5 startup configuration did not pass structural validation.' }
+          Remove-Item Env:MT5_DEMO_PASSWORD -ErrorAction SilentlyContinue
+          Remove-Item Env:MT5_DEMO_LOGIN -ErrorAction SilentlyContinue
+          Remove-Item Env:MT5_DEMO_SERVER -ErrorAction SilentlyContinue
+          $proc = $null
+          $contractPresent = $false
+          $connected = $false
+          $loggedIn = $false
+          $accountCurrency = ''
+          $tickValue = 0.0
+          try {
+            $argsLine = '/portable /config:"' + $config + '"'
+            $proc = Start-Process -FilePath (Join-Path $root 'terminal64.exe') -ArgumentList $argsLine -PassThru
+            $deadline = (Get-Date).AddMinutes(4)
+            while ((Get-Date) -lt $deadline) {
+              if (Test-Path $contract) {
+                try {
+                  $rows = Import-Csv -LiteralPath $contract
+                  if ($rows.Count -gt 0) {
+                    $probe = @{}
+                    foreach ($row in $rows) { $probe[$row.field] = $row.value }
+                    $probeTickValue = 0.0
+                    [void][double]::TryParse([string]$probe['tick_value'], [ref]$probeTickValue)
+                    if ($probe['terminal_connected'] -eq 'true' -and $probe['account_logged_in'] -eq 'true' -and
+                      -not [string]::IsNullOrWhiteSpace([string]$probe['account_currency']) -and $probeTickValue -gt 0) { break }
+                  }
+                } catch {}
+              }
+              if ($proc.HasExited) { break }
+              Start-Sleep -Seconds 2
+            }
+            if (Test-Path $contract) {
+              Copy-Item $contract $contractCopy -Force
+              $contractPresent = $true
+              $map = @{}
+              foreach ($row in (Import-Csv -LiteralPath $contractCopy)) { $map[$row.field] = $row.value }
+              $connected = ($map['terminal_connected'] -eq 'true')
+              $loggedIn = ($map['account_logged_in'] -eq 'true')
+              $accountCurrency = [string]$map['account_currency']
+              [void][double]::TryParse([string]$map['tick_value'], [ref]$tickValue)
+            }
+          } finally {
+            # Preserve journal files first; stop the terminal only after the four-minute observation window.
+            if ($proc -and -not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
+            Remove-Item $config -Force -ErrorAction SilentlyContinue
+          }
+
+          # Collect the newest journals even if MT5 stopped updating them before the timeout.
+          # Filter by recency only when selecting the most recent files; do not discard old-but-relevant journals.
+          $safeLines = [System.Collections.Generic.List[string]]::new()
+          $inventory = [System.Collections.Generic.List[string]]::new()
+          $logRoots = @((Join-Path $root 'logs'),(Join-Path $root 'MQL5\\Logs'))
+          foreach ($logRoot in $logRoots) {
+            if (-not (Test-Path $logRoot)) { $inventory.Add(($logRoot + ': directory missing')); continue }
+            $logFiles = @(Get-ChildItem -LiteralPath $logRoot -Filter '*.log' -File -Recurse -ErrorAction SilentlyContinue |
+              Where-Object { $_.FullName -notmatch '(?i)metaeditor' } |
+              Sort-Object LastWriteTime -Descending | Select-Object -First 10)
+            $inventory.Add(($logRoot + ': ' + $logFiles.Count + ' newest terminal log files'))
+            foreach ($file in $logFiles) {
+              $inventory.Add(($file.FullName.Substring($root.Length).TrimStart('\\') + ' bytes=' + $file.Length))
+              foreach ($raw in (Get-Content -LiteralPath $file.FullName -Tail 1000 -ErrorAction SilentlyContinue)) {
+                $line = [string]$raw
+                foreach ($secret in @($password,$login,$server,$serverLabel)) {
+                  if (-not [string]::IsNullOrEmpty($secret)) { $line = $line.Replace($secret,'[REDACTED]') }
+                }
+                $line = $line -replace '(?i)(password|passwd|login|account|user)\\s*[:=]\\s*[^\\s,;]+','$1=[REDACTED]'
+                $line = $line -replace '\\b\\d{5,}\\b','[NUMBER_REDACTED]'
+                $line = $line -replace ('(?i)' + [regex]::Escape($requestedSymbol)), '[SYMBOL]'
+                if ($line.Length -gt 500) { $line = $line.Substring(0,500) }
+                if (-not [string]::IsNullOrWhiteSpace($line)) { $safeLines.Add($line) }
+              }
+            }
+          }
+          $inventory | Set-Content -LiteralPath (Join-Path $outDir 'terminal-log-inventory.txt') -Encoding UTF8
+          if ($safeLines.Count -eq 0) { $safeLines.Add('No terminal journal lines were found.') }
+          $safeLines | Set-Content -LiteralPath (Join-Path $outDir 'terminal-connection-log-sanitized.txt') -Encoding UTF8
+
+          $authFailure = @($safeLines | Where-Object { $_ -match '(?i)authori[sz]ation.{0,50}(failed|denied|invalid)|invalid account|login.{0,30}(failed|invalid)|password.{0,30}(incorrect|invalid)|account.{0,30}(disabled|blocked)|not authorized|access denied' }).Count -gt 0
+          $verified = $contractPresent -and $connected -and $loggedIn -and -not [string]::IsNullOrWhiteSpace($accountCurrency) -and $tickValue -gt 0
+          $status = [ordered]@{
+            status = if ($verified) { 'BROKER_SESSION_VERIFIED_METADATA_USABLE' } else { 'BROKER_SESSION_NOT_VERIFIED' }
+            requested_symbol = $requestedSymbol
+            configured_server_label = $serverLabel
+            startup_config_checks = $configChecks
+            terminal_process_started = ($null -ne $proc)
+            contract_file_present = $contractPresent
+            terminal_connected = $connected
+            account_logged_in = $loggedIn
+            account_currency_present = -not [string]::IsNullOrWhiteSpace($accountCurrency)
+            positive_tick_value_present = $tickValue -gt 0
+            credential_values_printed = $false
+            credential_config_uploaded = $false
+            tester_executed = $false
+            diagnosis = if ($authFailure) { 'AUTHORIZATION_FAILED_CHECK_DEMO_LOGIN_PASSWORD_AND_SERVER' } elseif (-not $contractPresent) { 'EXPORTER_DID_NOT_WRITE_CONTRACT' } elseif (-not $connected) { 'MT5_TERMINAL_NOT_CONNECTED_TO_TRADE_SERVER' } elseif (-not $loggedIn) { 'ACCOUNT_LOGIN_NOT_CONFIRMED' } elseif ([string]::IsNullOrWhiteSpace($accountCurrency)) { 'ACCOUNT_CURRENCY_UNAVAILABLE' } elseif ($tickValue -le 0) { 'SYMBOL_TICK_VALUE_UNAVAILABLE' } else { 'VERIFIED' }
+            note = 'No orders are sent and the strategy tester is not run.'
+          }
+          $status | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $outDir 'connection-check.json') -Encoding UTF8
+          "MT5_DIAGNOSTIC_STATUS=$($status.status)"
+          "MT5_DIAGNOSTIC_REASON=$($status.diagnosis)"
+          "MT5_CONNECTED=$connected; ACCOUNT_LOGIN_FLAG=$loggedIn; CURRENCY_PRESENT=$(-not [string]::IsNullOrWhiteSpace($accountCurrency)); POSITIVE_TICK_VALUE=$($tickValue -gt 0); CONTRACT_PRESENT=$contractPresent"
+          if (-not $verified) { throw "MT5 demo diagnostic failed: $($status.diagnosis). See sanitized terminal log artifact." }
+
+      - name: Upload non-secret diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mt5-demo-connection-check
+          path: ${{ runner.temp }}/mt5-demo-evidence/**
+          if-no-files-found: warn
+          retention-days: 14
+ }).Count -eq 1
+            password_key_present = @($configLines | Where-Object { $_.StartsWith('Password=') -and $_.Length -gt 9 }).Count -eq 1
+            server_key_matches_expected = $configLines -contains 'Server=ICMarketsSC-Demo'
+            startup_script_present = $configLines -contains 'Script=TradingLab\ExportSymbolContract'
           }
           $configChecks | ConvertTo-Json | Set-Content (Join-Path $outDir 'startup-config-checks.json') -Encoding UTF8
           if (-not ($configChecks.Values -notcontains $false)) { throw 'MT5 startup configuration did not pass structural validation.' }
