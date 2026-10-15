@@ -66,9 +66,10 @@ jobs:
           # Keep credentials in a temporary config file, never in the repository or artifacts.
           $ini = @(
             '[Common]',
+            # Select the broker server first, then supply the account credentials.
+            ('Server=' + $env:MT5_DEMO_SERVER.Trim()),
             ('Login=' + $env:MT5_DEMO_LOGIN.Trim()),
             ('Password=' + $env:MT5_DEMO_PASSWORD),
-            ('Server=' + $env:MT5_DEMO_SERVER.Trim()),
             'KeepPrivate=1',
             '',
             '[StartUp]',
