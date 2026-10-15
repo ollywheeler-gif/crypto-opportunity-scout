@@ -31,7 +31,7 @@ def main() -> int:
 
     # First establish terminal IPC independently of broker credentials. This helps
     # distinguish terminal/Python communication failures from account login failures.
-    if not mt5.initialize(str(terminal), timeout=60000, portable=False):
+    if not mt5.initialize(str(terminal), timeout=60000, portable=True):
         print(f"FAIL: terminal initialize() failed before account login; last_error={mt5.last_error()!r}")
         mt5.shutdown()
         return 1
