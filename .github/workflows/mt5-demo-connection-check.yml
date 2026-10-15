@@ -137,7 +137,7 @@ jobs:
             'Script=TradingLab\ExportSymbolContract',
             ('Symbol=' + $requestedSymbol),
             'Period=D1',
-            'ShutdownTerminal=1'
+            '# Keep terminal open after exporter so CI can collect post-startup connection logs'
           ) -join [Environment]::NewLine
           # Persist the transient startup configuration before passing its path to MT5.
           # The file contains credentials, so it stays in the runner temp directory and is never uploaded.
