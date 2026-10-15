@@ -53,7 +53,7 @@ jobs:
           if ($sig.Status -ne 'Valid' -or $sig.SignerCertificate.Subject -notmatch 'MetaQuotes') {
             throw "Official MT5 installer signature check failed: $($sig.Status)"
           }
-          $installDir = 'C:\\MT5DemoCheck'
+          $installDir = 'C:\MT5DemoCheck'
           $p = Start-Process -FilePath $installer -ArgumentList ('/auto /path:"' + $installDir + '"') -Wait -PassThru
           $terminal = Join-Path $installDir 'terminal64.exe'
           $editor = Join-Path $installDir 'metaeditor64.exe'
@@ -66,7 +66,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $root = $env:MT5_INSTALL_DIR
           $terminal = Join-Path $root 'terminal64.exe'
-          $include = Join-Path $root 'MQL5\\Include\\Trade\\Trade.mqh'
+          $include = Join-Path $root 'MQL5\Include\Trade\Trade.mqh'
           $p = Start-Process -FilePath $terminal -ArgumentList '/portable' -PassThru
           $deadline = (Get-Date).AddSeconds(60)
           while ((Get-Date) -lt $deadline -and -not (Test-Path $include)) { Start-Sleep -Seconds 2 }
@@ -79,9 +79,9 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $root = $env:MT5_INSTALL_DIR
           $mql = Join-Path $root 'MQL5'
-          $include = Join-Path $mql 'Include\\Trade\\Trade.mqh'
+          $include = Join-Path $mql 'Include\Trade\Trade.mqh'
           if (-not (Test-Path $include)) { throw 'MT5 standard include directory missing; cannot compile exporter.' }
-          $src = Join-Path $mql 'Scripts\\TradingLab\\ExportSymbolContract.mq5'
+          $src = Join-Path $mql 'Scripts\TradingLab\ExportSymbolContract.mq5'
           New-Item -ItemType Directory -Force -Path (Split-Path $src -Parent) | Out-Null
           Copy-Item 'mt5-trading-lab/mql5/Scripts/TradingLab/ExportSymbolContract.mq5' $src -Force
           $log = [IO.Path]::ChangeExtension($src,'.log')
@@ -116,7 +116,7 @@ jobs:
           $requestedSymbol = $env:REQUESTED_SYMBOL.Trim()
           $outDir = Join-Path $env:RUNNER_TEMP 'mt5-demo-evidence'
           New-Item -ItemType Directory -Force -Path $outDir | Out-Null
-          $filesDir = Join-Path $root 'MQL5\\Files'
+          $filesDir = Join-Path $root 'MQL5\Files'
           $contract = Join-Path $filesDir 'TradingLab_symbol_contract.csv'
           $contractCopy = Join-Path $outDir 'symbol-contract.csv'
           $config = Join-Path $env:RUNNER_TEMP 'mt5-demo-transient.ini'
@@ -133,7 +133,7 @@ jobs:
             'AllowDllImport=0',
             '',
             '[StartUp]',
-            'Script=TradingLab\\ExportSymbolContract',
+            'Script=TradingLab\ExportSymbolContract',
             ('Symbol=' + $requestedSymbol),
             'Period=D1'
           ) -join [Environment]::NewLine
@@ -146,7 +146,7 @@ jobs:
             login_key_present = @($configLines | Where-Object { $_ -match '^Login=\d+$' }).Count -eq 1
             password_key_present = @($configLines | Where-Object { $_.StartsWith('Password=') -and $_.Length -gt 9 }).Count -eq 1
             server_key_matches_expected = $configLines -contains 'Server=ICMarketsSC-Demo'
-            startup_script_present = $configLines -contains 'Script=TradingLab\\ExportSymbolContract'
+            startup_script_present = $configLines -contains 'Script=TradingLab\ExportSymbolContract'
           }
           $configChecks | ConvertTo-Json | Set-Content (Join-Path $outDir 'startup-config-checks.json') -Encoding UTF8
           if ($configChecks.Values -contains $false) { throw 'MT5 startup configuration did not pass structural validation.' }
@@ -200,7 +200,7 @@ jobs:
           # Filter by recency only when selecting the most recent files; do not discard old-but-relevant journals.
           $safeLines = [System.Collections.Generic.List[string]]::new()
           $inventory = [System.Collections.Generic.List[string]]::new()
-          $logRoots = @((Join-Path $root 'logs'),(Join-Path $root 'MQL5\\Logs'))
+          $logRoots = @((Join-Path $root 'logs'),(Join-Path $root 'MQL5\Logs'))
           foreach ($logRoot in $logRoots) {
             if (-not (Test-Path $logRoot)) { $inventory.Add(($logRoot + ': directory missing')); continue }
             $logFiles = @(Get-ChildItem -LiteralPath $logRoot -Filter '*.log' -File -Recurse -ErrorAction SilentlyContinue |
@@ -208,14 +208,14 @@ jobs:
               Sort-Object LastWriteTime -Descending | Select-Object -First 10)
             $inventory.Add(($logRoot + ': ' + $logFiles.Count + ' newest terminal log files'))
             foreach ($file in $logFiles) {
-              $inventory.Add(($file.FullName.Substring($root.Length).TrimStart('\\') + ' bytes=' + $file.Length))
+              $inventory.Add(($file.FullName.Substring($root.Length).TrimStart('\') + ' bytes=' + $file.Length))
               foreach ($raw in (Get-Content -LiteralPath $file.FullName -Tail 1000 -ErrorAction SilentlyContinue)) {
                 $line = [string]$raw
                 foreach ($secret in @($password,$login,$server,$serverLabel)) {
                   if (-not [string]::IsNullOrEmpty($secret)) { $line = $line.Replace($secret,'[REDACTED]') }
                 }
-                $line = $line -replace '(?i)(password|passwd|login|account|user)\\s*[:=]\\s*[^\\s,;]+','$1=[REDACTED]'
-                $line = $line -replace '\\b\\d{5,}\\b','[NUMBER_REDACTED]'
+                $line = $line -replace '(?i)(password|passwd|login|account|user)\s*[:=]\s*[^\s,;]+','$1=[REDACTED]'
+                $line = $line -replace '\b\d{5,}\b','[NUMBER_REDACTED]'
                 $line = $line -replace ('(?i)' + [regex]::Escape($requestedSymbol)), '[SYMBOL]'
                 if ($line.Length -gt 500) { $line = $line.Substring(0,500) }
                 if (-not [string]::IsNullOrWhiteSpace($line)) { $safeLines.Add($line) }
@@ -316,7 +316,7 @@ jobs:
           # Filter by recency only when selecting the most recent files; do not discard old-but-relevant journals.
           $safeLines = [System.Collections.Generic.List[string]]::new()
           $inventory = [System.Collections.Generic.List[string]]::new()
-          $logRoots = @((Join-Path $root 'logs'),(Join-Path $root 'MQL5\\Logs'))
+          $logRoots = @((Join-Path $root 'logs'),(Join-Path $root 'MQL5\Logs'))
           foreach ($logRoot in $logRoots) {
             if (-not (Test-Path $logRoot)) { $inventory.Add(($logRoot + ': directory missing')); continue }
             $logFiles = @(Get-ChildItem -LiteralPath $logRoot -Filter '*.log' -File -Recurse -ErrorAction SilentlyContinue |
@@ -324,14 +324,14 @@ jobs:
               Sort-Object LastWriteTime -Descending | Select-Object -First 10)
             $inventory.Add(($logRoot + ': ' + $logFiles.Count + ' newest terminal log files'))
             foreach ($file in $logFiles) {
-              $inventory.Add(($file.FullName.Substring($root.Length).TrimStart('\\') + ' bytes=' + $file.Length))
+              $inventory.Add(($file.FullName.Substring($root.Length).TrimStart('\') + ' bytes=' + $file.Length))
               foreach ($raw in (Get-Content -LiteralPath $file.FullName -Tail 1000 -ErrorAction SilentlyContinue)) {
                 $line = [string]$raw
                 foreach ($secret in @($password,$login,$server,$serverLabel)) {
                   if (-not [string]::IsNullOrEmpty($secret)) { $line = $line.Replace($secret,'[REDACTED]') }
                 }
-                $line = $line -replace '(?i)(password|passwd|login|account|user)\\s*[:=]\\s*[^\\s,;]+','$1=[REDACTED]'
-                $line = $line -replace '\\b\\d{5,}\\b','[NUMBER_REDACTED]'
+                $line = $line -replace '(?i)(password|passwd|login|account|user)\s*[:=]\s*[^\s,;]+','$1=[REDACTED]'
+                $line = $line -replace '\b\d{5,}\b','[NUMBER_REDACTED]'
                 $line = $line -replace ('(?i)' + [regex]::Escape($requestedSymbol)), '[SYMBOL]'
                 if ($line.Length -gt 500) { $line = $line.Substring(0,500) }
                 if (-not [string]::IsNullOrWhiteSpace($line)) { $safeLines.Add($line) }
