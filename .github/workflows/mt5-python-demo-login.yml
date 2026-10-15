@@ -1,0 +1,72 @@
+name: Fresh MT5 Python demo login verification
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-demo-login:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check required GitHub Actions secrets
+        shell: pwsh
+        env:
+          MT5_DEMO_LOGIN: ${{ secrets.MT5_DEMO_LOGIN }}
+          MT5_DEMO_PASSWORD: ${{ secrets.MT5_DEMO_PASSWORD }}
+          MT5_DEMO_SERVER: ${{ secrets.MT5_DEMO_SERVER }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ([string]::IsNullOrWhiteSpace($env:MT5_DEMO_LOGIN) -or
+              [string]::IsNullOrWhiteSpace($env:MT5_DEMO_PASSWORD) -or
+              [string]::IsNullOrWhiteSpace($env:MT5_DEMO_SERVER)) {
+            throw 'Missing required Actions secrets: MT5_DEMO_LOGIN, MT5_DEMO_PASSWORD, MT5_DEMO_SERVER.'
+          }
+          if ($env:MT5_DEMO_LOGIN -notmatch '^\d+$') {
+            throw 'MT5_DEMO_LOGIN must be the numeric demo account number.'
+          }
+          if ($env:MT5_DEMO_SERVER -cne 'ICMarketsSC-Demo') {
+            throw 'MT5_DEMO_SERVER must exactly equal ICMarketsSC-Demo.'
+          }
+          'Required secrets are present. Secret values will not be printed.'
+
+      - name: Install and verify the official MetaTrader terminal
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installer = Join-Path $env:RUNNER_TEMP 'mt5setup-python-check.exe'
+          $installDir = 'C:\MT5PythonDemo'
+          Invoke-WebRequest 'https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe' -OutFile $installer
+          $signature = Get-AuthenticodeSignature -FilePath $installer
+          if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'MetaQuotes') {
+            throw "MetaTrader installer signature validation failed: $($signature.Status)"
+          }
+          $process = Start-Process -FilePath $installer -ArgumentList ('/auto /path:"' + $installDir + '"') -Wait -PassThru
+          $terminal = Join-Path $installDir 'terminal64.exe'
+          if (-not (Test-Path $terminal)) {
+            throw "MetaTrader terminal installation failed (installer exit code $($process.ExitCode))."
+          }
+          "MT5_TERMINAL_PATH=$terminal" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          'Official MetaTrader terminal installed and installer signature verified.'
+
+      - name: Install MetaTrader official Python integration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          py -3 -m pip install --disable-pip-version-check MetaTrader5
+          py -3 -c "import MetaTrader5 as mt5; print('MetaTrader5 Python package version:', mt5.__version__)"
+
+      - name: Authenticate and verify account via official Python API
+        shell: pwsh
+        env:
+          MT5_DEMO_LOGIN: ${{ secrets.MT5_DEMO_LOGIN }}
+          MT5_DEMO_PASSWORD: ${{ secrets.MT5_DEMO_PASSWORD }}
+          MT5_DEMO_SERVER: ${{ secrets.MT5_DEMO_SERVER }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          py -3 .github/scripts/verify_mt5_demo_login.py
+          if ($LASTEXITCODE -ne 0) {
+            throw "Official MetaTrader Python login verification failed with exit code $LASTEXITCODE."
+          }
