@@ -1,0 +1,60 @@
+name: Set up MT5 on registered VPS
+
+on:
+  workflow_dispatch:
+
+# This job will only run after a Windows machine has been explicitly registered
+# as a self-hosted GitHub Actions runner with the label "mt5-vps".
+# Do not put VPS passwords or RDP credentials in this workflow.
+permissions:
+  contents: read
+
+concurrency:
+  group: mt5-vps-setup
+  cancel-in-progress: false
+
+jobs:
+  setup:
+    name: Install and diagnose MT5 on VPS
+    runs-on: [self-hosted, Windows, X64, mt5-vps]
+    timeout-minutes: 45
+    steps:
+      - name: Check out trusted repository code
+        uses: actions/checkout@v4
+        with:
+          ref: vps-bootstrap-diagnostics
+          persist-credentials: false
+
+      - name: Confirm runner identity and Windows version
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Write-Host "Computer: $env:COMPUTERNAME"
+          Write-Host "User: $([System.Security.Principal.WindowsIdentity]::GetCurrent().Name)"
+          Get-CimInstance Win32_OperatingSystem |
+            Select-Object Caption, Version, OSArchitecture |
+            Format-List
+
+      - name: Run MT5 and Python installation diagnostics
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $scriptPath = Join-Path $PWD 'scripts/vps/bootstrap-mt5-vps.ps1'
+          if (-not (Test-Path -LiteralPath $scriptPath)) {
+            throw "Setup script not found: $scriptPath"
+          }
+          & $scriptPath
+          if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
+            throw "Setup script returned exit code $LASTEXITCODE"
+          }
+
+      - name: Show diagnostic summary (no credentials)
+        if: always()
+        shell: powershell
+        run: |
+          $report = 'C:\MT5VPS\logs\ipc-diagnostic.json'
+          if (Test-Path -LiteralPath $report) {
+            Get-Content -LiteralPath $report
+          } else {
+            Write-Host "Diagnostic report not created. Check the setup step logs."
+          }
