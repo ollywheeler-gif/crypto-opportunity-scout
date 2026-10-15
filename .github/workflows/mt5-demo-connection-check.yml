@@ -143,7 +143,11 @@ jobs:
           $configChecks = [ordered]@{
             file_exists = Test-Path -LiteralPath $config
             common_section_present = $configLines -contains '[Common]'
-            login_key_present = @($configLines | Where-Object { $_ -match '^Login=\d+
+            login_key_present = @($configLines | Where-Object { $_ -match '^Login=\d+$' }).Count -eq 1
+            password_key_present = @($configLines | Where-Object { $_.StartsWith('Password=') -and $_.Length -gt 9 }).Count -eq 1
+            server_key_matches_expected = $configLines -contains 'Server=ICMarketsSC-Demo'
+            startup_script_present = $configLines -contains 'Script=TradingLab\\ExportSymbolContract'
+          }
           $configChecks | ConvertTo-Json | Set-Content (Join-Path $outDir 'startup-config-checks.json') -Encoding UTF8
           if (-not ($configChecks.Values -notcontains $false)) { throw 'MT5 startup configuration did not pass structural validation.' }
           Remove-Item Env:MT5_DEMO_PASSWORD -ErrorAction SilentlyContinue
