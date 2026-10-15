@@ -149,7 +149,7 @@ jobs:
             startup_script_present = $configLines -contains 'Script=TradingLab\\ExportSymbolContract'
           }
           $configChecks | ConvertTo-Json | Set-Content (Join-Path $outDir 'startup-config-checks.json') -Encoding UTF8
-          if (-not ($configChecks.Values -notcontains $false)) { throw 'MT5 startup configuration did not pass structural validation.' }
+          if ($configChecks.Values -contains $false) { throw 'MT5 startup configuration did not pass structural validation.' }
           Remove-Item Env:MT5_DEMO_PASSWORD -ErrorAction SilentlyContinue
           Remove-Item Env:MT5_DEMO_LOGIN -ErrorAction SilentlyContinue
           Remove-Item Env:MT5_DEMO_SERVER -ErrorAction SilentlyContinue
