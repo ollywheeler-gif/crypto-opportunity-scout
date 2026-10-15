@@ -1,7 +1,6 @@
 """Verify an IC Markets MT5 demo login using MetaTrader's official Python API."""
 import os
 import sys
-import time
 from pathlib import Path
 
 import MetaTrader5 as mt5
@@ -19,25 +18,27 @@ def main() -> int:
     if server != "ICMarketsSC-Demo":
         print("FAIL: MT5_DEMO_SERVER must exactly equal ICMarketsSC-Demo.")
         return 2
+
     terminal = Path(terminal_path)
     if not terminal.is_file():
         print("FAIL: MetaTrader terminal executable was not found at the expected install path.")
         return 2
 
     login = int(login_text)
-    print("Connecting through MetaTrader5.initialize() using the official MetaTrader Python integration...")
+    print("Connecting using MetaTrader's official Python initialize() API.")
     print(f"Requested server: {server}")
     print(f"Requested account: {login}")
+    print(f"Terminal executable: {terminal}")
 
-    # Initialize explicitly with the installed terminal and named account arguments.
-    # Never print or persist the password.
+    # Match MetaTrader's documented signature: initialize(path, login=..., password=...,
+    # server=..., timeout=..., portable=False). Never print or persist the password.
     initialized = mt5.initialize(
-        path=str(terminal),
+        str(terminal),
         login=login,
         password=password,
         server=server,
         timeout=60000,
-        portable=True,
+        portable=False,
     )
     if not initialized:
         print(f"FAIL: initialize() returned False; MetaTrader last_error={mt5.last_error()!r}")
