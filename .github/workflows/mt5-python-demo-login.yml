@@ -2,6 +2,12 @@ name: Fresh MT5 Python demo login verification
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/mt5-python-demo-login.yml'
+      - '.github/scripts/verify_mt5_demo_login.py'
 
 permissions:
   contents: read
