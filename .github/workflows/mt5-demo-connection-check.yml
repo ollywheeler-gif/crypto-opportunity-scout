@@ -159,8 +159,23 @@ jobs:
             $proc = Start-Process -FilePath (Join-Path $root 'terminal64.exe') -ArgumentList $argsLine -PassThru
             $deadline = (Get-Date).AddMinutes(4)
             while ((Get-Date) -lt $deadline) {
+              # A contract file can be written before login succeeds. Only stop early
+              # when the exported fields prove a connected, authenticated session and usable tick value.
               if (Test-Path $contract) {
-                try { $rows = Import-Csv -LiteralPath $contract; if ($rows.Count -gt 0) { break } } catch {}
+                try {
+                  $rows = Import-Csv -LiteralPath $contract
+                  if ($rows.Count -gt 0) {
+                    $probe = @{}
+                    foreach ($row in $rows) { $probe[$row.field] = $row.value }
+                    $probeTickValue = 0.0
+                    [void][double]::TryParse([string]$probe['tick_value'], [ref]$probeTickValue)
+                    $probeVerified = ($probe['terminal_connected'] -eq 'true' -and
+                      $probe['account_logged_in'] -eq 'true' -and
+                      -not [string]::IsNullOrWhiteSpace([string]$probe['account_currency']) -and
+                      $probeTickValue -gt 0)
+                    if ($probeVerified) { break }
+                  }
+                } catch {}
               }
               if ($proc.HasExited) { break }
               Start-Sleep -Seconds 2
