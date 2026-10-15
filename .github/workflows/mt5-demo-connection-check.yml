@@ -180,37 +180,37 @@ jobs:
             Remove-Item $config -Force -ErrorAction SilentlyContinue
           }
 
-          # Read only terminal journals, not the very large MetaEditor compile journal.
+          # Capture terminal journals recursively (excluding MetaEditor), including non-keyword
+          # lines around connection attempts. Never upload the transient INI or raw logs.
           $safeLines = [System.Collections.Generic.List[string]]::new()
           $inventory = [System.Collections.Generic.List[string]]::new()
-          foreach ($logRoot in @((Join-Path $root 'logs'),(Join-Path $root 'MQL5\Logs'))) {
+          $logRoots = @((Join-Path $root 'logs'),(Join-Path $root 'MQL5\Logs'))
+          foreach ($logRoot in $logRoots) {
             if (-not (Test-Path $logRoot)) { $inventory.Add(($logRoot + ': directory missing')); continue }
-            $logFiles = @(Get-ChildItem -LiteralPath $logRoot -Filter '*.log' -File -ErrorAction SilentlyContinue |
-              Where-Object { $_.LastWriteTime -ge $runStart.AddMinutes(-1) -and $_.Name -notmatch 'metaeditor' } |
-              Sort-Object LastWriteTime -Descending | Select-Object -First 3)
+            $logFiles = @(Get-ChildItem -LiteralPath $logRoot -Filter '*.log' -File -Recurse -ErrorAction SilentlyContinue |
+              Where-Object { $_.LastWriteTime -ge $runStart.AddMinutes(-2) -and $_.FullName -notmatch '(?i)metaeditor' } |
+              Sort-Object LastWriteTime -Descending | Select-Object -First 10)
             $inventory.Add(($logRoot + ': ' + $logFiles.Count + ' recent terminal log files'))
             foreach ($file in $logFiles) {
-              $inventory.Add(($file.Name + ' bytes=' + $file.Length))
-              foreach ($raw in (Get-Content -LiteralPath $file.FullName -Tail 500 -ErrorAction SilentlyContinue)) {
+              $inventory.Add(($file.FullName.Substring($root.Length).TrimStart('\') + ' bytes=' + $file.Length))
+              foreach ($raw in (Get-Content -LiteralPath $file.FullName -Tail 1000 -ErrorAction SilentlyContinue)) {
                 $line = [string]$raw
-                if ($line -match '(?i)terminal|network|connect|authoriz|login|server|timeout|failed|error|disconnected|resolve|socket|certificate|trade|account|demo|broker|ping|request|response') {
-                  foreach ($secret in @($password,$login,$server,$serverLabel)) {
-                    if (-not [string]::IsNullOrEmpty($secret)) { $line = $line.Replace($secret,'[REDACTED]') }
-                  }
-                  $line = $line -replace '(?i)(password|passwd|login|account|user)\s*[:=]\s*[^\s,;]+','$1=[REDACTED]'
-                  $line = $line -replace '\b\d{5,}\b','[NUMBER_REDACTED]'
-                  $line = $line -replace ('(?i)' + [regex]::Escape($requestedSymbol)), '[SYMBOL]'
-                  if ($line.Length -gt 500) { $line = $line.Substring(0,500) }
-                  $safeLines.Add($line)
+                foreach ($secret in @($password,$login,$server,$serverLabel)) {
+                  if (-not [string]::IsNullOrEmpty($secret)) { $line = $line.Replace($secret,'[REDACTED]') }
                 }
+                $line = $line -replace '(?i)(password|passwd|login|account|user)\s*[:=]\s*[^\s,;]+','$1=[REDACTED]'
+                $line = $line -replace '\b\d{5,}\b','[NUMBER_REDACTED]'
+                $line = $line -replace ('(?i)' + [regex]::Escape($requestedSymbol)), '[SYMBOL]'
+                if ($line.Length -gt 500) { $line = $line.Substring(0,500) }
+                if (-not [string]::IsNullOrWhiteSpace($line)) { $safeLines.Add($line) }
               }
             }
           }
           $inventory | Set-Content -LiteralPath (Join-Path $outDir 'terminal-log-inventory.txt') -Encoding UTF8
-          if ($safeLines.Count -eq 0) { $safeLines.Add('No matching terminal journal lines were found for this run.') }
+          if ($safeLines.Count -eq 0) { $safeLines.Add('No terminal journal lines were found for this run.') }
           $safeLines | Set-Content -LiteralPath (Join-Path $outDir 'terminal-connection-log-sanitized.txt') -Encoding UTF8
 
-          $authFailure = @($safeLines | Where-Object { $_ -match '(?i)authorization.*failed|invalid account' }).Count -gt 0
+          $authFailure = @($safeLines | Where-Object { $_ -match '(?i)authori[sz]ation.{0,50}(failed|denied|invalid)|invalid account|login.{0,30}(failed|invalid)|password.{0,30}(incorrect|invalid)|account.{0,30}(disabled|blocked)|not authorized|access denied' }).Count -gt 0
           $verified = $contractPresent -and $connected -and $loggedIn -and -not [string]::IsNullOrWhiteSpace($accountCurrency) -and $tickValue -gt 0
           $status = [ordered]@{
             status = if ($verified) { 'BROKER_SESSION_VERIFIED_METADATA_USABLE' } else { 'BROKER_SESSION_NOT_VERIFIED' }
