@@ -12,7 +12,7 @@ void OnStart()
 {
    // A startup script can execute before the terminal has finished connecting.
    // Wait briefly for an authenticated, connected session; never export cached/offline metadata as verified.
-   datetime deadline = TimeLocal() + 90;
+   datetime deadline = TimeLocal() + 210;
    while(TimeLocal() < deadline)
    {
       bool connected = (bool)TerminalInfoInteger(TERMINAL_CONNECTED);
